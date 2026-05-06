@@ -1,28 +1,28 @@
+import os
 import openai
 import json 
 
-from toolset import linguistic_tools
-from toolset import linguisticTools
-
-from tools_to_write import write_tools
-from tools_to_write import FolderRestrictedAgent 
+from tools import all_tool_definitions, tool_handlers
 
 
-
-# Merge all tools into one list for the LLM
-tools = linguistic_tools + write_tools
-
-DEEPSEEK_KEY = json.load(open("config.json"))["DEEPSEEK_KEY"]  
+DEEPSEEK_KEY = json.load(open(os.path.join(os.path.dirname(__file__), "database/.gitignore", "envariables.json")))["DEEPSEEK_KEY"]  
 
 client = openai.OpenAI(api_key=DEEPSEEK_KEY, base_url="https://api.deepseek.com")
 
-def run_pipeline(user_prompt, system_prompt="..."):
-    # 1. Initialize all toolkits
-    ling_handler = linguisticTools() 
-    file_handler = FolderRestrictedAgent(folder_path="output")
+def run_pipeline(user_prompt, system_prompt="You are a helpful assistant that can analyze text and write markdown reports."):
+    # Pass the pre-built schemas directly to the LLM
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[{"role": "user", "content": user_prompt}],
+        tools=all_tool_definitions,
+        tool_choice="auto"
+    )
     
-    # 2. Centralized Dispatcher Map
-    # Key: The name the LLM sees | Value: The actual method to run
+    # Initialize handlers only when needed
+    ling_handler = tool_handlers["linguistic"]()
+    file_handler = tool_handlers["writer"](folder_path="output/graphs")
+
+    # This map links the LLM function name to the actual method
     tool_map = {
         "get_linguistic_annotations": ling_handler.get_linguistic_annotations,
         "write_file": file_handler.write_file
@@ -37,7 +37,7 @@ def run_pipeline(user_prompt, system_prompt="..."):
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=messages,
-        tools=tools, # Combined list from both suites
+        tools=all_tool_definitions,
         tool_choice="auto"
     )
     
@@ -74,10 +74,11 @@ def run_pipeline(user_prompt, system_prompt="..."):
     return response_message.content
 
 
-system_prompt = json.load(open("system_prompt.json"))["system_prompt"]
+system_prompt = json.load(open(os.path.join(os.path.dirname(__file__), "database", "system_prompt.json")))["system_prompt"]
 print(f"System Prompt: {system_prompt}\n")  
 # system_prompt = "You are a sarcastic weather reporter who hates rain."
-prompt = """Create a markdown report summarizing the linguistic features of the following text: "Maya and Patrick had an apointment at the cafe, but it was canceled due to the rain." Include tokenization, POS tags, and named entities. Save the report using the write_file tool."""
+# prompt = json.load(open(os.path.join(os.path.dirname(__file__), "database", "prompts.json")))["ex_visualization"]
+prompt = "Create a file with the content of an analysis of the following text: 'The cat sat on the mat. The dog barked loudly.' Include a dependency parse visualization and named entity recognition in the report."
 response = run_pipeline(prompt, system_prompt=system_prompt) 
 print(response)
 

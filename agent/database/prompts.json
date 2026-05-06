@@ -1,0 +1,6 @@
+{
+    "ex_prompt": "You are a helpful assistant that can analyze text and write markdown reports.",
+    "ex_analysis": "Analyze the following text and create a report on the phrase: 'The quick brown fox jumps over the lazy dog.'",
+    "ex_visualization": "Analyze the following text and create a report on the phrase: 'The quick brown fox jumps over the lazy dog', create a visualization of the analysis.",
+    "ex_file": "Analyze the following text and create a report on the phrase: 'The quick brown fox jumps over the lazy dog', write the report to a markdown file named 'report.md'."
+}

@@ -1,0 +1,7 @@
+cat <<EOF > .gitignore
+database/envariables.json
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+EOF
+agent/output/graphs/*.svg

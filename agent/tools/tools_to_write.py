@@ -1,7 +1,7 @@
 import os
 from pydantic import BaseModel, Field, field_validator, ValidationError
 
-from utils import generate_tool_metadata
+from .utils import generate_tool_metadata
 
 # 1. The "Schema Annotation" (Keep this for validation)
 class WriteFileInput(BaseModel):

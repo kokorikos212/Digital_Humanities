@@ -6,7 +6,7 @@ from spacy import displacy
 from pathlib import Path
 from typing import Literal
 
-from utils import generate_tool_metadata
+from .utils import generate_tool_metadata
 
 
 class LinguisticInput(BaseModel):
