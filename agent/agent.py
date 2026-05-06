@@ -5,80 +5,79 @@ import json
 from tools import all_tool_definitions, tool_handlers
 
 
-DEEPSEEK_KEY = json.load(open(os.path.join(os.path.dirname(__file__), "database/.gitignore", "envariables.json")))["DEEPSEEK_KEY"]  
+DEEPSEEK_KEY = json.load(open(os.path.join(os.path.dirname(__file__), "database/", "envariables.json")))["DEEPSEEK_KEY"]  
 
 client = openai.OpenAI(api_key=DEEPSEEK_KEY, base_url="https://api.deepseek.com")
 
-def run_pipeline(user_prompt, system_prompt="You are a helpful assistant that can analyze text and write markdown reports."):
-    # Pass the pre-built schemas directly to the LLM
-    response = client.chat.completions.create(
-        model="deepseek-chat",
-        messages=[{"role": "user", "content": user_prompt}],
-        tools=all_tool_definitions,
-        tool_choice="auto"
-    )
-    
-    # Initialize handlers only when needed
-    ling_handler = tool_handlers["linguistic"]()
-    file_handler = tool_handlers["writer"](folder_path="output/graphs")
+def run_pipeline(user_prompt, system_prompt="You are a helpful assistant."):
+    ling_handler = tool_handlers["linguistic"](output_dir="output/graphs")
+    file_handler = tool_handlers["writer"](folder_path="output")
 
-    # This map links the LLM function name to the actual method
     tool_map = {
-        "get_linguistic_annotations": ling_handler.get_linguistic_annotations,
-        "write_file": file_handler.write_file
+        "get_tags": ling_handler.get_tags,
+        "generate_viz": ling_handler.generate_viz,
+        "write_file": file_handler.write_file,
+        # Safety net for common LLM hallucinations:
+        "visualize_syntax": ling_handler.generate_viz 
     }
     
     messages = [
         {"role": "system", "content": system_prompt},
         {"role": "user", "content": user_prompt}
     ]
-    
-    # First LLM call to decide tool use
-    response = client.chat.completions.create(
-        model="deepseek-chat",
-        messages=messages,
-        tools=all_tool_definitions,
-        tool_choice="auto"
-    )
-    
-    response_message = response.choices[0].message
-    tool_calls = response_message.tool_calls
 
-    if tool_calls:
+    iterations = 0
+    max_iterations = 30
+
+    while iterations < max_iterations:
+        iterations += 1
+        
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=messages,
+            tools=all_tool_definitions,
+            tool_choice="auto"
+        )
+        
+        response_message = response.choices[0].message
+        tool_calls = response_message.tool_calls
+
+        # If there are no more tool calls, the LLM has finished its task
+        if not tool_calls:
+            return response_message.content
+
+        # Add the assistant's request to the conversation history
         messages.append(response_message)
         
         for tool_call in tool_calls:
             func_name = tool_call.function.name
             args = json.loads(tool_call.function.arguments)
             
-            # DYNAMIC CALLING
+            print(f"DEBUG [Iter {iterations}]: LLM called {func_name}")
+            
             if func_name in tool_map:
-                print(f"[EXECUTE] {func_name} with {args}")
-                result = tool_map[func_name](**args)
+                try:
+                    result = tool_map[func_name](**args)
+                except Exception as e:
+                    result = f"Error executing tool: {str(e)}"
             else:
-                result = f"Error: Tool {func_name} is not registered in the tool_map."
+                result = f"Error: Tool {func_name} is not registered."
 
+            # Append the result to messages so the LLM sees it in the next loop
             messages.append({
                 "role": "tool",
                 "tool_call_id": tool_call.id,
                 "content": json.dumps(result) 
             })
-        
-        # Final LLM call to summarize results
-        final_response = client.chat.completions.create(
-            model="deepseek-chat",
-            messages=messages
-        )
-        return final_response.choices[0].message.content
 
-    return response_message.content
+    return "Max iterations reached without a final answer."
 
 
 system_prompt = json.load(open(os.path.join(os.path.dirname(__file__), "database", "system_prompt.json")))["system_prompt"]
-print(f"System Prompt: {system_prompt}\n")  
+# print(f"System Prompt: {system_prompt}\n")  
 # system_prompt = "You are a sarcastic weather reporter who hates rain."
-# prompt = json.load(open(os.path.join(os.path.dirname(__file__), "database", "prompts.json")))["ex_visualization"]
-prompt = "Create a file with the content of an analysis of the following text: 'The cat sat on the mat. The dog barked loudly.' Include a dependency parse visualization and named entity recognition in the report."
+prompt = json.load(open(os.path.join(os.path.dirname(__file__), "database", "prompts.json")))["ex_file"]
+# prompt = "You cannot use the tools i have provided the schema for. Try to understand why this is the case.'"
 response = run_pipeline(prompt, system_prompt=system_prompt) 
 print(response)
 

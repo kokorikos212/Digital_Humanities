@@ -1,55 +1,51 @@
-import json
-import spacy
 from pydantic import BaseModel, Field
-from typing import Type, List
-from spacy import displacy
-from pathlib import Path
 from typing import Literal
+from typing import Type, List
+from pathlib import Path
+import spacy
+import os
+import time
 
-from .utils import generate_tool_metadata
+# Ensure these names match the ones in __init__.py
+class AnalysisInput(BaseModel):
+    """Input for basic linguistic analysis."""
+    text: str = Field(..., description="The sentence to be analyzed for POS and entities.")
 
-
-class LinguisticInput(BaseModel):
-    """Analyze text for POS, dependencies, or entities with professional visualization."""
-    text: str = Field(..., description="The sentence to be analyzed.")
-    visualize: bool = Field(False, description="Whether to generate a visualization.")
+class VisualizationInput(BaseModel):
+    """Input for creating a visual representation of text."""
+    text: str = Field(..., description="The sentence to visualize.")
     style: Literal["dep", "ent"] = Field(
         "dep", 
-        description="The style of visualization: 'dep' for syntax trees, 'ent' for named entities."
+        description="Style: 'dep' for syntax trees, 'ent' for entities."
     )
 
-# 2. The Container Class
-# 2. The Updated Toolkit Class
 class linguisticTools:
-    def __init__(self):
+    def __init__(self, output_dir="visualizations"):
+        # Load spacy once during initialization
         self.nlp = spacy.load("en_core_web_sm")
-        self.viz_options = {
-            "dep": {"compact": False, "color": "#F0F0F0", "bg": "#2C3E50", "font": "Verdana"},
-            "ent": {"colors": {"ORG": "#7aecec", "PRODUCT": "#bfe1d9"}} # Custom colors for entities
-        }
+        self.output_dir = output_dir
+        os.makedirs(self.output_dir, exist_ok=True)
 
-    def get_linguistic_annotations(self, text: str, visualize: bool = False, style: str = "dep"):
+    def get_tags(self, text: str):
+        """Method for the 'analyze_text' tool."""
         doc = self.nlp(text)
-        
-        # 1. Prepare Data Output
-        results = {
-            "tokens": [{"text": t.text, "pos": t.pos_} for t in doc],
-            "entities": [{"text": ent.text, "label": ent.label_} for ent in doc.ents]
+        return {
+            "tokens": [t.text for t in doc],
+            "pos": [t.pos_ for t in doc],
+            "entities": [(ent.text, ent.label_) for ent in doc.ents]
         }
 
-        # 2. Handle Visualization (Entity vs Dependency)
-        if visualize:
-            # We use displacy.render (non-blocking) instead of .serve
-            options = self.viz_options.get(style, {})
-            svg = displacy.render(doc, style=style, options=options, jupyter=False)
-            
-            file_name = f"viz_{style}.svg"
-            Path(file_name).write_text(svg, encoding="utf-8")
-            results["visualization_saved"] = file_name
-            results["view_type"] = "Named Entity Recognition" if style == "ent" else "Dependency Parse"
-
-        return results
-
+    def generate_viz(self, text: str, style: str = "dep"):
+        """Method for the 'visualize_text' tool."""
+        doc = self.nlp(text)
+        svg = spacy.displacy.render(doc, style=style, page=False)
+        filename = f"viz_{style}_{int(time.time())}.svg"
+        full_path = os.path.join(self.output_dir, filename)
+        
+        with open(full_path, "w", encoding="utf-8") as f:
+            f.write(svg)
+        return {"status": "success", "saved_at": full_path}
+    
     @staticmethod
     def generate_tool_metadata(name: str, model: Type[BaseModel]) -> dict:
         """Helper to convert Pydantic models to the Tool Dictionary format."""
@@ -72,7 +68,8 @@ class linguisticTools:
 # 3. Scaling: The Registry
 # To add more functions, just add the model and name to this list
 linguistic_registry = [
-    ("get_linguistic_annotations", LinguisticInput)
+    ("get_tags", AnalysisInput),
+    ("generate_viz", VisualizationInput)
 ]
 
-linguistic_tools = [generate_tool_metadata(n, m) for n, m in linguistic_registry]
+linguistic_tools = [linguisticTools.generate_tool_metadata(n, m) for n, m in linguistic_registry]
