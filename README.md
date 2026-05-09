@@ -26,7 +26,7 @@ Here is the link to the conference site: (https://talos-ai4ssh.uoc.gr/events/con
 │   ├── agent.py                # Main execution logic
 │   ├── database/               # Local data & configuration
 │   │   ├── config.json         # Tool and model parameters
-│   │   ├── envariables.json    # API Keys (⚠️ DO NOT PUSH)
+│   │   ├── envariables.json    # API Keys schema
 │   │   └── system_prompt.json  # Persona definitions
 │   ├── output/graphs/          # Generated SVGs (Linguistic & Graph Viz)
 │   ├── tools/                  # The Agent's functional toolset
