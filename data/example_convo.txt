@@ -1,0 +1,6 @@
+Speaker_A: John Rawls argues that justice must be understood as fairness, meaning societal structures should prioritize the least advantaged.
+Speaker_B: But Robert Nozick completely rejects that framework. Nozick asserts that distributive justice violates individual property rights if wealth distribution is forced.
+Speaker_A: Nozick overlooks structural inequality. Individual liberty is meaningless if a citizen lacks the basic material conditions to exercise it.
+Speaker_C: Friedrich Hayek actually offers a middle ground here. Hayek claims that the market is a spontaneous order; it is neither just nor unjust, so forcing an outcome destroys the system's efficiency.
+
+

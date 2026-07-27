@@ -1,0 +1,28 @@
+# ── Secrets ────────────────────────────────────────────────────────────────
+.env
+
+# ── Python ─────────────────────────────────────────────────────────────────
+__pycache__/
+*.pyc
+*.pyo
+venv/
+
+# ── Jupyter ────────────────────────────────────────────────────────────────
+.ipynb_checkpoints/
+
+# ── Large data (Convokit corpora, downloaded models, etc.) ─────────────────
+data/conversations-gone-awry-corpus/
+data/winning-args-corpus/
+data/*.zip
+
+# ── Generated output (SVGs, RDF, HTML graphs, Obsidian notes, reports) ─────
+output/
+!output/.gitkeep
+
+# ── OS junk ────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── Test artifacts ─────────────────────────────────────────────────────────
+.pytest_cache/
+resources/poster.pdf

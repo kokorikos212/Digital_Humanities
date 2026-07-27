@@ -1,0 +1,27 @@
+# Full research/development dependencies.
+# Includes the core stack + Convokit, PyTorch, and analysis libraries.
+#
+# Install with: pip install -r requirements-dev.txt
+
+# ── Core stack ─────────────────────────────────────────────────────────────
+-r requirements.txt
+
+# ── Conversation analysis ──────────────────────────────────────────────────
+convokit>=4.1
+pandas>=2.0
+scipy>=1.10
+scikit-learn>=1.3
+nltk>=3.9
+
+# ── ML & Transformers (needed by Convokit pragmatics) ──────────────────────
+torch>=2.0
+transformers>=4.30
+sentence-transformers>=2.2
+
+# ── Jupyter & exploration ──────────────────────────────────────────────────
+ipython>=8.0
+ipykernel>=6.0
+jupyter>=1.0
+
+# ── Additional analysis ────────────────────────────────────────────────────
+matplotlib>=3.7

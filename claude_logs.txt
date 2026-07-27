@@ -1,0 +1,129 @@
+================================================================================
+  CLAUDE CODE TASK LOG — Digital Humanities Project
+  Started: 2026-07-27
+================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+  TASK LINE #1 — Repository Audit & Full Refactoring
+  Completed: 2026-07-27
+────────────────────────────────────────────────────────────────────────────────
+
+WHAT WAS REQUESTED:
+  A complete diagnostic of the codebase followed by a full restructuring
+  to prepare for a Gradio Web UI, Hugging Face Spaces deployment, and
+  GitHub Pages embedding (kokorikos212.github.io).
+
+ARCHITECTURAL DECISIONS MADE:
+  - UI Framework: Gradio (ML-native, tabbed views, streaming)
+  - Package name: src/ (conventional Python project layout)
+  - Dependencies: Lightweight first (no torch/convokit in core requirements.txt)
+  - UI Layout: Dynamic tool-selector via gr.CheckboxGroup
+  - Historical outputs: Consolidated to single root output/
+
+WHAT WAS DONE:
+
+  Phase 1 — Critical Pre-Refactoring:
+    - Created src/config.py — centralized Config dataclass with lazy .load_env()
+    - Created src/prompts.py — SYSTEM_PROMPT, NAMED_PROMPTS, build_analysis_prompt()
+    - Copied agent/schemas.py → src/schemas.py
+    - Created src/tools/ with all 7 tool modules renamed for clarity:
+      toolset.py → linguistics.py
+      tools_to_write.py → writer.py
+      triple_generator.py → triples.py
+      conversation_analyzer.py → conversation.py
+      obsidian_builder.py → obsidian.py
+      graph_builder.py → graph.py
+      utils.py (kept)
+    - Created src/tools/__init__.py with filter_tool_definitions() and
+      get_enabled_handler_categories() for runtime tool toggling
+    - Created src/pipeline.py — was agent/agent.py, rewritten to:
+      * Create OpenAI client per-call (no module-level side effects)
+      * Accept enabled_tools: Set[str] to filter which tools the LLM sees
+      * Lazy-instantiate only the handler categories needed
+    - Created src/cli.py — extracted argparsing from run_pipeline.py
+    - Rewrote run_pipeline.py — thin wrapper importing from src.cli
+
+  Phase 2 — Cleanup:
+    - Deleted dead code: text_cleaner.py, preprocess.py, expe.py, expe.ipynb
+    - Deleted agent/database/ (prompts migrated to src/prompts.py)
+    - Deleted agent/output/ (consolidated into root output/)
+    - Deleted entire agent/ directory after all migrations
+
+  Phase 3 — Requirements Split:
+    - requirements.txt: 15 core packages (openai, spacy, pydantic, networkx,
+      pyvis, rdflib, pyyaml, gradio, python-dotenv, pytest)
+    - requirements-dev.txt: full stack with Convokit, PyTorch, transformers
+
+  Phase 4 — Test Suite (46/46 PASSING):
+    - tests/test_config.py — 8 tests (path resolution, env loading, dir creation)
+    - tests/test_tools.py — 27 tests covering all 6 tools:
+      * LinguisticTool (6 tests): get_tags keys, tokens, entities, deps, viz, empty
+      * TripleGenerator (5 tests): keys, file save, count, Turtle prefixes, empty
+      * GraphBuilder (6 tests): keys, HTML creation, node/edge counts, empty, layout
+      * ObsidianBuilder (5 tests): keys, frontmatter, wikilinks, sanitization, defaults
+      * WriterTool (2 tests): save markdown, reject non-.md
+      * ConversationAnalyzer (3 tests): ad-hoc utterances, error on missing input, save
+    - tests/test_pipeline.py — 11 tests:
+      * ToolFiltering (8 tests): empty set, single/multi filter, unknown, UI labels,
+        handler categories empty/single/multiple
+      * ToolDefinitionsValidity (3 tests): schema validity, no duplicates, essential tools
+
+  Phase 5 — Gradio UI (app.py):
+    - gr.Blocks layout with Soft theme, responsive design
+    - Text input + example selector dropdown (4 pre-loaded examples)
+    - 6 tool checkboxes (2 enabled by default: linguistics + triples)
+    - 4 output tabs: JSON Summary, RDF Turtle, Semantic Graph HTML, Obsidian Note
+    - Async execution with status indicator
+    - iframe-ready with minimal chrome
+
+FILES CREATED (21 new):
+  src/__init__.py
+  src/config.py
+  src/pipeline.py
+  src/prompts.py
+  src/schemas.py
+  src/cli.py
+  src/tools/__init__.py
+  src/tools/utils.py
+  src/tools/linguistics.py
+  src/tools/writer.py
+  src/tools/triples.py
+  src/tools/conversation.py
+  src/tools/obsidian.py
+  src/tools/graph.py
+  tests/__init__.py
+  tests/test_config.py
+  tests/test_tools.py
+  tests/test_pipeline.py
+  app.py
+  requirements-dev.txt
+  analysis.txt
+
+FILES MODIFIED (3):
+  run_pipeline.py — rewrote as thin wrapper
+  requirements.txt — slimmed to 15 core packages
+  .gitignore — updated for new directory structure
+
+FILES DELETED (7+):
+  agent/ (entire directory tree removed)
+  agent/tools/text_cleaner.py (dead code, never imported)
+  agent/tools/preprocess.py (dead code, never imported)
+  agent/expe.py (hardcoded absolute path)
+  agent/expe.ipynb (hardcoded absolute path)
+  agent/database/ (prompts migrated to src/prompts.py, secrets to .env)
+  agent/output/ (consolidated into root output/)
+
+VERIFICATION:
+  [PASS] pytest: 46/46 tests passed in 24.64s
+  [PASS] CLI: python run_pipeline.py --list-prompts → 7 prompts listed
+  [PASS] App import: from app import create_ui → imports cleanly
+  [PASS] All tool paths resolve against config.project_root (no CWD dependency)
+  [PASS] No module-level API key loading or client creation
+  [PASS] filter_tool_definitions() correctly gates tool definitions by user selection
+
+OUTSTANDING:
+  - The Gradio UI has been written but not yet launched/end-to-end tested
+  - Hugging Face Spaces deployment config not yet created
+  - GitHub Pages iframe embedding not yet tested
+
+================================================================================

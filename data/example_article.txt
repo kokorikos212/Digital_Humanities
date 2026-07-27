@@ -1,0 +1,78 @@
+AI report
+In May 2019, the Czech Republic released its National AI strategy (Czech Republic, 2019) that builds on both the Innovation strategy 2019–2030 and the Digital Czech Republic strategy. The aim of this AI strategy is to improve the national economic growth and competitiveness in AI by means of:
+
+A responsible and trusted AI ecosystem;
+The digitalisation of enterprises, in particular SMEs;
+Equitable opportunities and benefits in AI to boost the economic development of society.
+To achieve these objectives, the Czech Government envisages policy actions across key areas like education, R&D support, financing, industry, social impacts, regulation and international cooperation. The Ministry of Industry and Trade will coordinate the overall AI strategy, while the Ministry of competence will coordinate each specific key area.
+
+The strategy follows this structure: for each key area, it highlights the responsible Ministry, the policy initiatives to develop, the cooperating entities, and the key objectives until 2021, 2027 and 2035 respectively.
+
+The strategy provides annexes of facts and figures on employment and on AI applications in public and private institutions. It also includes funding estimations for public research teams in AI, but lacks budget allocations for the implementation of the national AI strategy. However, since the launch of the strategy, the Technology Agency of the Czech Republic supported various AI projects for a total of EUR 120 million.
+
+Czech Republic AI Policies on OECD.AI dashboard
+
+Human capital
+The Czech Republic envisages actions to reform the primary, secondary and higher education towards AI learning. Primary and secondary education systems will teach courses on IT, digital literacy, AI, and on soft skills (i.e. creative thinking) for AI. Higher education will provide Master and Doctoral Programmes in AI. Finally, the Czech Industrial Strategy foresees a governmental programme to support innovative academic programmes entirely on AI.
+
+The Strategy for the education policy of the Czech Republic up to 2030+ also aims to support educators in upgrading their teaching curricula with digital technologies. In 2021 new curricula for elementary education was approved, doubling the number of computer science classes and introducing new digital key competences.
+
+The Czech strategy emphasises the importance of lifelong learning, vocational training and reskilling opportunities. Since educational reforms should track the labour market dynamics, the Czech Government will closely monitor the labour market by commissioning analyses to predict the jobs’ creation and loss due to AI. The predictions on future labour requirements will enter into the National Register of Professions and the Central Competence Database for a systematic promotion of updated jobs by means of career guidance, worker mobility and reskilling opportunities.
+
+From the lab to the market
+An adequate support to basic and applied research in the field of AI is key to deploy AI successfully. To this purpose, the Czech Government will cooperate to establish a Centre of Excellence in AI Research, Digital Innovation Hubs (DIHs) and a Centre for Humanities and Social Science to analyse the impact of AI on the economy. In April 2021, the Czech Republic counted 8 DIHs that are fully operational and 4 in preparation stage performing in 8 regions.
+
+Stimulating breakthrough innovations in AI through an efficient AI entrepreneurial ecosystem is key for the Czech Government. The Innovation Hub in AI (IHAI), co-funded by CzechInvest, and the start-up support programmes and accelerator instruments, among others, will prompt AI economic activities and innovations.
+
+The Czech Government introduced the 2019-2030 Innovation strategy with a roadmap to improve the innovation system as for the strategic management (e.g., education and research), and trends of digital technologies and skills. “The Country for the Future” (CFF) programme by the Ministry of Industry and Trade is the implementation tool for the Innovation Strategy as it allocates a budget of CZK 6.1 billion (approx. EUR 232.6 million) to support innovative companies, digital services and R&D-based innovations.
+
+The Czech strategy envisages financial instruments to support AI in the private and public sector. The Digital Czech Republic Programme will fund the Centre of Excellence in AI research with resources from the City of Prague ad private partners. In the long-term, the Czech Republic plans to set up grant programmes for AI with funds from the Grant Agency of the Czech Republic (GA CR) and the Technology Agency of the Czech Republic (TA CR). In addition, the access to finance for AI businesses will expand to market-based financial instruments of the Czech-Moravian Guarantee and Development Bank. On top, European initiatives like Digital Europe, Horizon Europe, and Connecting Europe Facility will support additional AI developments. The Czech Government will also develop specific grants and investment programmes for SMEs, start-ups and spinoffs with highly innovative services and business models. Although many financing tools address the private sector, the Czech Ministries envisage programmes to support AI start-ups and applications in the public sector too.
+
+Finally, the effectiveness of all support programmes will be regularly evaluated and integrated with alternative forms of financing.
+
+Networking
+The Czech strategy foresees policy recommendations to foster both national and international partnerships. The Czech Government suggests to include AI into the V4 priorities in order to increase collaboration in this field across Poland, Czech Republic, Slovakia, and Hungary. Bilateral collaborations are very important too, like 1) the Czech-German strategic dialogue on research, development and innovation, 2) the Czech-French Strategic partnership on digitisation and 3) the Czech-Slovak partnership on education and industry 4.0. Finally, the Czech Government will increase networking opportunities by participating to working groups of international organisations (EC, OECD, UN), by creating the European Centre of Excellence in AI Research and by establishing Digital Innovation Hubs.
+
+Collaborations between SMEs, start-ups and scientific research centres will receive support form specific programmes like the Knowledge Transfer Partnerships for the development of a mutually beneficial partnerships between the business community and research organisations. The Czech Republic will also launch calls for tenders to foster the development of AI innovations in multidisciplinary teams. In addition, an expert group made of representatives from academia, research centres and the private sector will support collaborative investment programmes in AI.
+
+The Czech Government foresees policies actions to increase the international attractiveness of the country, and to attract and retain foreign talent in AI. For example, the Czech strategy aims to revise the Act on the Residence of Foreigners and long-term residence permits for scientific researchers. The upcoming governmental programme will introduce simplified procedures that will help researchers and their families to acquire the residence and working permits faster. Scientific researchers will be able to remain in the Czech Republic for nine more months after the end of their work contract to search for another job in the country.
+
+The Czech Republic recommends the promotion of the Czech AI ecosystem, inside the country and abroad, to enhance the dissemination and uptake of AI in the economy. In collaboration with CzechInvest, the Confederation of Industry and AICZECHIA, the Ministry of Industry and Trade has prepared an interactive web mapping of actors from the private sector, academia and other AI institutions in the Czech Republic. Forthcoming in-depth analyses will study the socio-economic impact of AI.
+
+Regulation
+A human-centric AI requires an effective regulation to protect human rights, and to clarify responsibilities, intellectual property rights and liabilities. The Czech strategy dedicates a section to legal and social aspects of AI with reference to ethics, consumer protection and security issues.
+
+The objective is to define an ethical and legal regulation that also releases the development of AI technologies from needless regulatory constraints. First, the Czech Republic plans to identify the sectors whose research and development efforts in AI are mostly refrained by inappropriate legislations. All issues of data access, data ownership and (personal) data protection will receive strong consideration within a sector-specific approach to the heterogeneous legislations of different sectors. For instance, an AI Committee will analyse the current Czech legislative framework for autonomous cars. Other examples relate to certificates and standards for cybersecurity, and specific data regulations for the healthcare sector. Regulatory sandboxes will also contribute optimal conditions for testing AI concepts.
+
+Lastly, the Czech Republic launched the AI Observatory and Forum (AIO&F), an expert platform on legal aspects of AI to create a favourable social and legal environment for research, development and use of responsible AI. Audits in the public and private sector will also detect the existence of legal barriers.
+
+Infrastructure
+A well-functioning data infrastructure is a key prerequisite of AI developments. Therefore, the Czech Republic has set up a National strategy on open access to research information for the period 2017-2020 to start opening the access to scientific information at national level.
+
+The modernisation of the digital and telecommunication infrastructure will foster the provision of high-quality data. Within the context of the EuroHPC JU initiative, the Czech Government plans to expand the IT4Innovations national supercomputing centre with the petascale HPC system Karolina, participates in the LUMI consortium aiming to build pre-exascale HPC systems and supports the EuroHPC research and innovation call.
+
+The Digital Czech Republic strategy highlights that the Government will prioritise connectivity improvements on the internet infrastructure to deploy the 5G networks in the country during the coming years. To this purpose, the Ministry of Industry and Trade of the Czech Republic and the Bavarian State Chancellery aim to create a common 5G-corridor between Munich and Prague, which should also become part of the programme "Connecting Europe Facility" of the European Commission.
+
+AI to address societal challenges
+Climate and environment
+
+The upsurge of global temperatures caused by increasing carbon emissions calls for new tools to help to better manage the impacts of climate change and to protect the planet. According to a recent analysis of PwC consultancy, technologies with potential for addressing climate change are: advanced materials, cloud technology including big data, autonomous vehicles, including drones, synthetic biology, virtual and augmented reality, AI, robots; blockchain, 3D printing and the Internet of things (IoT).
+
+Furthermore, the Digital Czech Republic strategy highlights the importance of a public and political debate to find new and innovative ways of adapting to the emerging climate change through digital and AI-enhanced technologies and tools.
+
+COVID-19 pandemic
+
+During the outbreak of the COVID-19 pandemic, several initiatives and projects using AI have been developed. The Czech Republic has released a tracing system of Smart Quarantine based on AI principles and also developed an AI-enabled chatbot for answering COVID-19 related questions. As an interesting use case, the mapping application Mapy.cz uses location sharing in relation to COVID-19 to alert citizens of potential risky encounters. Developers are further attempting to obtain anonymous data about people who tested positive and compare it with the location of users by means of advanced algorithms. This would help identifying cases of probable contacts with a person who has been confirmed positive for COVID-19.
+
+The Hack the Crisis hackathon has also contributed to the development of AI based applications (e.g. mapping of people density in public spaces, strengthening cybersecurity of the hospitals against cyberattacks using AI during the pandemic, evaluation of personal protective equipment and determining its FFP standard).
+
+The Czech Government also intends to focus on Digital Innovation Hubs and Testing and Experimentation Facilities (TEFs) for different applications of AI in the health sector. For the TEFs, a concept for the cooperation of hospitals with technical capacities is in consideration. Moreover, the TREND Programme from the Technology Agency of the Czech Republic subsidises, among others, projects aiming to counteract the COVID-19 pandemic and using 5G technology.
+
+Monitoring and future update
+While the Ministry of Industry and Trade will coordinate the national AI strategy of the Czech Republic, an AI committee will supervise its implementation. The AI committee is a subcommittee of the Steering Committee of the Digital Czech Republic strategy. This strategy consists of seven chapters with dedicated working groups on education, R&D support, financing, industry, social impacts, regulation and international cooperation. Each working group is responsible to monitor the fulfilment of the strategic objectives. Once a year, the Steering Committee and the Czech Government will receive a progress report on the strategy implementation. The national AI strategy will be updated along the goals of the 2021 review of the Coordinate Plan on AI.
+
+The Ministry of Industry and Trade is preparing a call to co-finance Digital Innovation Hubs in the upcoming Digital Europe Programme with the aim to create an interconnected and sustainable EDIH ecosystem in the Czech Republic. With other sources as ESIF, the Czech Republic plans to boost also a network of national DIH to address the local needs of companies.
+
+References
+Czech Republic (2019). National Artificial Intelligence Strategy of the Czech Republic. Ministry of Industry and Trade. https://www.mpo.cz/assets/en/guidepost/for-the-media/press-releases/2019/5/NAIS_eng_web.pdf
+
