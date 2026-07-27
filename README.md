@@ -9,7 +9,7 @@ python_version: "3.10"
 app_file: app.py
 fullWidth: true
 header: mini
-short_description: Agentic pipeline converting raw discourse into RDF graphs and Obsidian vaults via DeepSeek.
+short_description: Raw discourse → RDF triples, semantic graphs & Obsidian vaults via DeepSeek
 tags:
   - nlp
   - knowledge-graph
