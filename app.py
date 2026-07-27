@@ -218,22 +218,20 @@ def load_example(name: str) -> str:
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+UI_CSS = """
+.app-container { max-width: 960px; margin: 0 auto; }
+.output-box textarea { font-family: 'JetBrains Mono', 'Fira Code', monospace !important; font-size: 13px !important; }
+footer { display: none !important; }
+#title { text-align: center; margin-bottom: 0; }
+#subtitle { text-align: center; color: #888; margin-top: 0; }
+"""
+
+
 def create_ui() -> gr.Blocks:
     """Build the Gradio interface."""
 
-    css = """
-    .app-container { max-width: 960px; margin: 0 auto; }
-    .output-box textarea { font-family: 'JetBrains Mono', 'Fira Code', monospace !important; font-size: 13px !important; }
-    footer { display: none !important; }
-    #title { text-align: center; margin-bottom: 0; }
-    #subtitle { text-align: center; color: #888; margin-top: 0; }
-    """
-
     with gr.Blocks(
-        css=css,
         title="Ontological Discourse Analysis",
-        theme=gr.themes.Soft(),
-        head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">""",
     ) as app:
 
         # ── Header ──────────────────────────────────────────────────
@@ -319,7 +317,6 @@ def create_ui() -> gr.Blocks:
             with gr.TabItem("🐢 RDF Triples (Turtle)"):
                 rdf_output = gr.Code(
                     label="RDF Serialization",
-                    language="turtle",
                     lines=20,
                     elem_classes="output-box",
                 )
@@ -411,4 +408,7 @@ if __name__ == "__main__":
         server_port=args.port,
         share=args.share,
         show_error=True,
+        css=UI_CSS,
+        theme=gr.themes.Soft(),
+        head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">""",
     )

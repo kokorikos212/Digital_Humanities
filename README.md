@@ -1,3 +1,25 @@
+---
+title: Agentic Linguistic Analysis & Semantic Graphs
+emoji: 🕸️
+colorFrom: blue
+colorTo: purple
+sdk: gradio
+sdk_version: 4.20.0
+python_version: "3.10"
+app_file: app.py
+fullWidth: true
+header: mini
+short_description: Agentic pipeline converting raw discourse into RDF graphs and Obsidian vaults via DeepSeek.
+tags:
+  - nlp
+  - knowledge-graph
+  - rdf
+  - deepseek
+  - digital-humanities
+disable_embedding: false
+pinned: false
+---
+
 # Digital Humanities: Agentic Ontological Discourse Analysis
 
 An interdisciplinary framework integrating **Computational Linguistics**, **Knowledge Representation (RDF/OWL)**, and **Agentic LLM Workflows** to extract structured ontologies from conversational text and visualize discourse as interactive knowledge graphs.
@@ -40,9 +62,24 @@ python run_pipeline.py --text "Dr. Chen presented the research at Stanford Unive
 python run_pipeline.py --text "Alice: Hello Professor! Could you review my thesis?
 Bob: Of course, Alice. I'll have comments by Friday."
 
-# 5. See all options
+# 5. Launch the Gradio Web UI
+python app.py                  # http://localhost:7860
+python app.py --share          # public link for embedding
+
+# 6. See all CLI options
 python run_pipeline.py --help
 ```
+
+---
+
+## Gradio Web UI
+
+Launch `python app.py` for an interactive dashboard with:
+
+- **Text input** + pre-loaded example selector
+- **Dynamic tool checkboxes** — enable/disable Linguistic Parsing, RDF Triples, Semantic Graphs, Obsidian Notes, Conversation Analysis, and Dependency Viz
+- **Tabbed output**: JSON summary, Turtle RDF, interactive semantic graph HTML, and Obsidian markdown preview
+- Designed for **iframe embedding** in GitHub Pages (`kokorikos212.github.io`)
 
 ---
 
@@ -50,28 +87,45 @@ python run_pipeline.py --help
 
 ```text
 .
-├── run_pipeline.py                 # 🚀 Entry point — pass text, get an ontology
+├── run_pipeline.py                 # 🚀 CLI entry point — pass text, get an ontology
+├── app.py                          # 🖥️ Gradio Web UI — interactive dashboard
 ├── .env.example                    # API key template (copy to .env)
-├── requirements.txt                # Python dependencies
+├── requirements.txt                # Core dependencies (lightweight)
+├── requirements-dev.txt            # Full research stack (Convokit, PyTorch)
 ├── README.md
 ├── citations.md                    # Academic references
 │
-├── agent/                          # Core agent environment
-│   ├── agent.py                    # DeepSeek tool-calling loop
-│   ├── schemas.py                  # Pydantic output schema (OntologicalAnalysis, …)
-│   ├── database/
-│   │   ├── system_prompt.json      # LLM persona ("laconic linguistic ontologist")
-│   │   └── prompts.json            # Example prompts
-│   ├── tools/
-│   │   ├── __init__.py             # Tool registration & handler mapping
-│   │   ├── toolset.py              # linguisticTools: spaCy POS/NER/dep/Viz
-│   │   ├── tools_to_write.py       # FolderRestrictedAgent: safe .md writer
-│   │   ├── triple_generator.py     # TripleGenerator: entities → RDF triples
-│   │   ├── conversation_analyzer.py# ConversationAnalyzer: Convokit + pragmatics
-│   │   ├── obsidian_builder.py     # ObsidianBuilder: YAML frontmatter + [[wikilinks]]
-│   │   ├── graph_builder.py        # GraphBuilder: networkx + pyvis semantic net
-│   │   └── utils.py                # Shared metadata helpers
-│   └── data/                       # Convokit corpora (gitignored — large files)
+├── src/                            # Core pipeline package
+│   ├── config.py                   # Centralized Config dataclass
+│   ├── pipeline.py                 # DeepSeek tool-calling loop
+│   ├── schemas.py                  # Pydantic output schema (OntologicalAnalysis)
+│   ├── prompts.py                  # System prompt + named prompt templates
+│   ├── cli.py                      # CLI argument parsing
+│   └── tools/
+│       ├── __init__.py             # Tool registry + filter_tool_definitions()
+│       ├── linguistics.py          # spaCy POS/NER/dep + displaCy SVG
+│       ├── writer.py               # Folder-restricted .md file writer
+│       ├── triples.py              # RDF triple generation (rdflib)
+│       ├── conversation.py         # Conversation analysis (Convokit + ad-hoc)
+│       ├── obsidian.py             # Obsidian markdown notes with [[wikilinks]]
+│       ├── graph.py                # networkx + pyvis semantic networks
+│       └── utils.py                # Shared metadata helpers
+│
+├── tests/                          # Test suite (57 tests, all offline)
+│   ├── test_config.py
+│   ├── test_tools.py
+│   ├── test_pipeline.py
+│   └── test_app.py
+│
+├── data/                           # Convokit corpora (gitignored)
+│   ├── example_article.txt
+│   └── example_convo.txt
+│
+├── output/                         # Generated artifacts (gitignored)
+│   ├── graphs/                     # SVG + interactive HTML visualizations
+│   ├── rdf/                        # Turtle RDF serializations
+│   ├── conversations/              # Conversation analysis JSON
+│   └── verse/                      # Obsidian vault with [[wikilinks]]
 │
 └── resources/
     └── poster.pdf                  # Conference poster (SAW 2026, Rethymno)
@@ -97,7 +151,7 @@ The agent chains these tools autonomously — the system prompt gives it a stric
 
 ## Output Schema
 
-The pipeline produces an `OntologicalAnalysis` (see `agent/schemas.py`):
+The pipeline produces an `OntologicalAnalysis` (see `src/schemas.py`):
 
 ```
 OntologicalAnalysis
@@ -110,7 +164,7 @@ OntologicalAnalysis
 └── summary              →  human-readable narrative
 ```
 
-Open `agent/output/verse/` as an Obsidian vault to browse the extracted knowledge graph interactively.
+Open `output/verse/` as an Obsidian vault to browse the extracted knowledge graph interactively.
 
 ---
 
@@ -134,7 +188,7 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 
 # Download Convokit corpora (optional — for conversation analysis)
-# Place conversation-gone-awry-corpus/ and winning-args-corpus/ under agent/data/
+# Place conversation-gone-awry-corpus/ and winning-args-corpus/ under data/
 ```
 
 ---
@@ -143,4 +197,3 @@ python -m spacy download en_core_web_sm
 
 - The `.env` file (containing `DEEPSEEK_KEY`) is **gitignored** — never commit it.
 - If you previously committed a key, **rotate it** at [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys).
-- The legacy `agent/database/envariables.json` is also gitignored; use `.env` instead.

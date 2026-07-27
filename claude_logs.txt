@@ -127,3 +127,56 @@ OUTSTANDING:
   - GitHub Pages iframe embedding not yet tested
 
 ================================================================================
+
+────────────────────────────────────────────────────────────────────────────────
+  TASK LINE #2 — End-to-End Validation, HF Config & Deployment Prep
+  Completed: 2026-07-27
+────────────────────────────────────────────────────────────────────────────────
+
+WHAT WAS REQUESTED:
+  - Create tests/test_app.py for Gradio UI validation
+  - Run full test suite (100% pass rate)
+  - Update README.md with Hugging Face Space YAML header
+  - Prepare for git push to Hugging Face
+
+WHAT WAS DONE:
+
+  test_app.py (11 tests):
+    - test_app_imports_cleanly — app.py imports without error
+    - test_create_ui_returns_blocks — create_ui() returns gr.Blocks
+    - test_examples_all_have_content — 4 pre-loaded examples are non-empty
+    - test_load_example_returns_text — correct text for known key
+    - test_load_example_unknown_returns_empty — returns '' for bad key
+    - test_run_analysis_empty_text — shows warning without crashing
+    - test_run_analysis_whitespace_only — whitespace treated as empty
+    - test_all_tools_disabled_outputs_warning — graceful when no tools selected
+    - test_wrap_graph_for_iframe_returns_html — passthrough works
+    - test_tool_checkbox_mapping — 6 checkboxes → 6 distinct tool names
+    - test_ui_respects_disabled_graph — placeholder shown when graph disabled
+
+  Gradio 6.0 compatibility fixes in app.py:
+    - Moved css/theme/head from gr.Blocks() to .launch() (Gradio 6.0 API change)
+    - Removed unsupported language="turtle" from gr.Code (changed to default)
+    - Extracted UI_CSS to module-level constant for launch() access
+
+  README.md updates:
+    - Added full HF Space YAML header:
+      title, emoji, colorFrom/To, sdk, sdk_version, python_version, app_file,
+      fullWidth, header: mini, short_description, tags (5), disable_embedding
+    - Updated Project Structure tree to reflect src/ layout
+    - Added Gradio Web UI section with feature list
+    - Fixed stale agent/ references: agent/schemas.py → src/schemas.py,
+      agent/output/verse/ → output/verse/, agent/data/ → data/
+    - Removed legacy envariables.json security note
+
+VERIFICATION:
+  [PASS] pytest: 57/57 tests passed in 13.18s (was 46/46, +11 app tests)
+  [PASS] README.md HF header validated with all required fields
+  [PASS] app.py imports and initializes cleanly with Gradio 6.0
+
+OUTSTANDING:
+  - git commit and push to hf remote (pending user authorization)
+  - End-to-end test with live DeepSeek API call via Gradio UI
+  - GitHub Pages iframe embedding test at kokorikos212.github.io
+
+================================================================================
