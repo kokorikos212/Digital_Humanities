@@ -15,32 +15,18 @@ from typing import Dict
 # ═══════════════════════════════════════════════════════════════════════════════
 
 SYSTEM_PROMPT = (
-    "You are a precise linguistic ontologist. Your purpose is to map "
-    "conversational text to structured ontologies. You have access to "
-    "these tools: (1) get_tags — POS tagging, NER, dependency parsing; "
-    "(2) generate_viz — displaCy SVG trees; "
-    "(3) analyze_conversation — conversation structure and pragmatics via Convokit; "
-    "(4) generate_triples — convert entities+relations into RDF triples; "
-    "(5) build_obsidian_note — save ontological findings as Obsidian .md "
-    "with YAML frontmatter and [[wikilinks]]; "
-    "(6) generate_semantic_graph — interactive pyvis HTML graph of entities "
-    "and relations; (7) write_file — save arbitrary markdown reports. "
-    "Follow this execution logic strictly: "
-    "1. Call get_tags on the text to obtain tokens, entities, dependencies, "
-    "and noun chunks. "
-    "2. If the text is conversational (has speaker turns), call "
-    "analyze_conversation to extract speaker structure and pragmatics. "
-    "3. Call generate_triples with the entities and relations extracted "
-    "from steps 1-2. "
-    "4. Call build_obsidian_note to persist the ontological structures as "
-    "an Obsidian note with [[wikilinks]] linking entities. "
-    "5. Call generate_semantic_graph to produce an interactive network "
-    "visualization of the ontology. "
-    "6. Optionally call write_file for a final narrative summary. "
-    "Do not narrate your process or comment on tool outputs. When you have "
-    "completed the tool chain, provide a concise JSON summary following the "
-    "OntologicalAnalysis schema with analysis_id, source_text, ontology "
-    "(entities and triples), obsidian_notes, visualizations, and summary fields."
+    "You are a laconic linguistic ontologist. Your sole purpose is to map "
+    "conversational text to structured ontologies using specialized tools. "
+    "Do not narrate your process or comment on tool outputs and do not "
+    "create any visualizations unless you are specifically asked to do so. "
+    "Follow this execution logic: "
+    "1. Linguistic Analysis: Call for POS tagging, NER, and syntax visualization. "
+    "2. Storage: Save all findings as .md files in the 'output' folder using "
+    "the file management tool. "
+    "If requested to analyze and save, you must chain these tools: execute "
+    "the analysis first, then pass the raw data to the write tool immediately. "
+    "When saving files, always use the 'write_file' tool with the 'filename' "
+    "and 'content' parameters exactly as defined in the schema."
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════
@@ -88,6 +74,41 @@ NAMED_PROMPTS: Dict[str, str] = {
         "analyze_conversation for the dialogue structure, generate_triples "
         "for the entities and relations, build_obsidian_note for the knowledge "
         "graph, and generate_semantic_graph for visualization."
+    ),
+    "ex_maya": (
+        "Analyze the following text and create a report on the dialogue: "
+        "'Maya: Hi there! How are you doing today? \n"
+        "Patrick: I'm doing well, thanks for asking! How about you? \n"
+        "Maya: I'm great, just enjoying the weather. \n"
+        "Patrick: That's good to hear. Do you have any plans for the weekend? \n"
+        "Maya: Not yet, but I'm thinking of going hiking. What about you? \n"
+        "Patrick: I might go to the beach if the weather stays nice. \n"
+        "Maya: That sounds fun! Maybe we can go together. \n"
+        "Patrick: I'd love that! Let's plan for it.'"
+    ),
+    "ex_maya_visualization": (
+        "Analyze the following text and create a report on the dialogue: "
+        "'Maya: Hi there! How are you doing today? \n"
+        "Patrick: I'm doing well, thanks for asking! How about you? \n"
+        "Maya: I'm great, just enjoying the weather. \n"
+        "Patrick: That's good to hear. Do you have any plans for the weekend? \n"
+        "Maya: Not yet, but I'm thinking of going hiking. What about you? \n"
+        "Patrick: I might go to the beach if the weather stays nice. \n"
+        "Maya: That sounds fun! Maybe we can go together. \n"
+        "Patrick: I'd love that! Let's plan for it.', "
+        "create a visualization of the analysis."
+    ),
+    "ex_maya_file": (
+        "Analyze the following text and create a report on the dialogue: "
+        "'Maya: Hi there! How are you doing today? \n"
+        "Patrick: I'm doing well, thanks for asking! How about you? \n"
+        "Maya: I'm great, just enjoying the weather. \n"
+        "Patrick: That's good to hear. Do you have any plans for the weekend? \n"
+        "Maya: Not yet, but I'm thinking of going hiking. What about you? \n"
+        "Patrick: I might go to the beach if the weather stays nice. \n"
+        "Maya: That sounds fun! Maybe we can go together. \n"
+        "Patrick: I'd love that! Let's plan for it.', "
+        "write the report to a markdown file named 'report.md'."
     ),
 }
 

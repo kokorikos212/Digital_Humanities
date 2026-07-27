@@ -64,7 +64,7 @@ def _build_tool_map(enabled_tools: Set[str]) -> Dict:
 
 def run_pipeline(
     user_prompt: str,
-    system_prompt: str = "You are a helpful assistant.",
+    system_prompt: str | None = None,
     max_iterations: int = 30,
     model: str = "deepseek-chat",
     enabled_tools: Optional[Set[str]] = None,
@@ -89,6 +89,11 @@ def run_pipeline(
     -------
     The final text response from the LLM, or an error message.
     """
+    # ── Resolve system prompt ─────────────────────────────────────────
+    if system_prompt is None:
+        from src.prompts import SYSTEM_PROMPT as _DEFAULT_SYSTEM_PROMPT
+        system_prompt = _DEFAULT_SYSTEM_PROMPT
+
     # ── Resolve enabled tools ─────────────────────────────────────────
     tools_enabled = enabled_tools or set()
     tool_defs = filter_tool_definitions(tools_enabled)
