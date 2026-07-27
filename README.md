@@ -9,7 +9,7 @@ python_version: "3.10"
 app_file: app.py
 fullWidth: true
 header: mini
-short_description: Raw discourse → RDF triples, semantic graphs & Obsidian vaults via DeepSeek
+short_description: Raw discourse → RDF triples, graphs & Obsidian vaults
 tags:
   - nlp
   - knowledge-graph
