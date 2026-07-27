@@ -231,7 +231,10 @@ def create_ui() -> gr.Blocks:
     """Build the Gradio interface."""
 
     with gr.Blocks(
+        theme=gr.themes.Soft(),
+        head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">""",
         title="Ontological Discourse Analysis",
+        css=UI_CSS,
     ) as app:
 
         # ── Header ──────────────────────────────────────────────────
@@ -408,7 +411,4 @@ if __name__ == "__main__":
         server_port=args.port,
         share=args.share,
         show_error=True,
-        css=UI_CSS,
-        theme=gr.themes.Soft(),
-        head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">""",
     )
