@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Agentic Ontological Discourse Analysis</title>
+<style>
+  :root {
+    --bg: #f8f9fa; --card-bg: #fff; --text: #1a1a2e; --muted: #6c757d;
+    --accent: #4a6cf7; --border: #e9ecef; --shadow: 0 2px 12px rgba(0,0,0,0.06);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root { --bg: #0d1117; --card-bg: #161b22; --text: #c9d1d9; --muted: #8b949e; --border: #30363d; --shadow: 0 2px 12px rgba(0,0,0,0.3); }
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: var(--bg); color: var(--text); line-height: 1.6; }
+  .container { max-width: 960px; margin: 0 auto; padding: 2rem 1.5rem; }
+  header { text-align: center; padding: 3rem 0 2rem; }
+  h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+  .subtitle { color: var(--muted); font-size: 1.1rem; max-width: 600px; margin: 0.5rem auto 1rem; }
+  .badges { display: flex; gap: 0.5rem; justify-content: center; flex-wrap: wrap; margin: 1rem 0; }
+  .badge { display: inline-block; padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.8rem; font-weight: 600; background: var(--card-bg); border: 1px solid var(--border); }
+  .badge.python { background: #30699820; border-color: #30699840; color: #306998; }
+  .badge.gradio { background: #f9731620; border-color: #f9731640; color: #f97316; }
+  .badge.deepseek { background: #4a6cf720; border-color: #4a6cf740; color: #4a6cf7; }
+  iframe.demo { width: 100%; height: 780px; border: none; border-radius: 12px; box-shadow: var(--shadow); background: var(--card-bg); }
+  .section { padding: 2rem 0; }
+  h2 { font-size: 1.4rem; margin-bottom: 1rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 1rem; }
+  .card { background: var(--card-bg); border: 1px solid var(--border); border-radius: 10px; padding: 1.25rem; box-shadow: var(--shadow); }
+  .card h3 { font-size: 1rem; margin-bottom: 0.5rem; }
+  .card p { font-size: 0.9rem; color: var(--muted); }
+  .links { display: flex; gap: 1rem; justify-content: center; flex-wrap: wrap; margin: 1.5rem 0; }
+  .links a { color: var(--accent); text-decoration: none; font-weight: 500; }
+  .links a:hover { text-decoration: underline; }
+  footer { text-align: center; padding: 2rem 0; color: var(--muted); font-size: 0.85rem; }
+</style>
+</head>
+<body>
+<div class="container">
+
+<header>
+  <h1>🔬 Agentic Ontological Discourse Analysis</h1>
+  <p class="subtitle">An LLM-powered pipeline that autonomously maps conversational text to structured ontologies — RDF triples, semantic networks, and Obsidian knowledge graphs.</p>
+  <div class="badges">
+    <span class="badge python">Python 3.10</span>
+    <span class="badge gradio">Gradio</span>
+    <span class="badge deepseek">DeepSeek</span>
+    <span class="badge">spaCy</span>
+    <span class="badge">rdflib</span>
+  </div>
+  <div class="links">
+    <a href="https://github.com/kokorikos212/Digital_Humanities">📁 GitHub Repository</a>
+    <a href="https://huggingface.co/spaces/NospaDIss/agentic-linguistic-analysis">🤗 Hugging Face Space</a>
+  </div>
+</header>
+
+<section class="section">
+  <h2>🖥️ Live Demo</h2>
+  <iframe class="demo" src="https://nospadiss-agentic-linguistic-analysis.hf.space" title="Agentic Linguistic Analysis Demo" loading="lazy"></iframe>
+</section>
+
+<section class="section">
+  <h2>🔍 How It Works</h2>
+  <div class="grid">
+    <div class="card">
+      <h3>🧠 Linguistic Parsing</h3>
+      <p>spaCy-powered POS tagging, named entity recognition, and dependency tree parsing. Each token is annotated with lemma, morphology, and syntactic role.</p>
+    </div>
+    <div class="card">
+      <h3>🦉 RDF Triples</h3>
+      <p>Extracted entities and relations are serialized into W3C-standard RDF (Turtle/JSON-LD) via <code>rdflib</code> with custom ontology vocabularies.</p>
+    </div>
+    <div class="card">
+      <h3>🕸️ Semantic Networks</h3>
+      <p>Interactive <code>pyvis</code> network graphs with force-directed layout. Nodes represent ontological entities; edges represent typed relations.</p>
+    </div>
+    <div class="card">
+      <h3>📝 Obsidian Vault</h3>
+      <p>Generated Markdown notes with YAML frontmatter and <code>[[wikilinks]]</code> for browsing the extracted knowledge graph in Obsidian's graph view.</p>
+    </div>
+  </div>
+</section>
+
+<section class="section">
+  <h2>📦 Output Schema</h2>
+  <pre style="background:var(--card-bg);border:1px solid var(--border);border-radius:8px;padding:1rem;font-size:0.85rem;overflow-x:auto;">
+OntologicalAnalysis
+├── analysis_id, source_text, source_corpus
+├── linguistic_analysis  → tokens, entities, dependencies, noun_chunks
+├── conversation         → speakers, utterances, reply_graph, pragmatics
+├── ontology             → entities (rdf:type + properties), triples, prefixes
+├── obsidian_notes       → generated .md files with [[wikilinks]]
+├── visualizations       → paths to SVG / HTML artifacts
+└── summary              → human-readable narrative</pre>
+</section>
+
+<footer>
+  <p>Presented at SAW 2026 (Rethymno, Crete) · Digital Humanities Minor · University of Crete</p>
+  <p style="margin-top:0.5rem">Built with 🐍 Python · Gradio · spaCy · rdflib · DeepSeek</p>
+</footer>
+
+</div>
+</body>
+</html>
