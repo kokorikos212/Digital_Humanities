@@ -1,3 +1,4 @@
+<!--
 ---
 title: Agentic Linguistic Analysis & Semantic Graphs
 emoji: 🕸️
@@ -19,6 +20,7 @@ tags:
 disable_embedding: false
 pinned: false
 ---
+-->
 
 # Agentic Ontological Discourse Analysis
 
