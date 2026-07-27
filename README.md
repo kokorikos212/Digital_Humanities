@@ -20,180 +20,151 @@ disable_embedding: false
 pinned: false
 ---
 
-# Digital Humanities: Agentic Ontological Discourse Analysis
+# Agentic Ontological Discourse Analysis
 
-An interdisciplinary framework integrating **Computational Linguistics**, **Knowledge Representation (RDF/OWL)**, and **Agentic LLM Workflows** to extract structured ontologies from conversational text and visualize discourse as interactive knowledge graphs.
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
+[![Gradio UI](https://img.shields.io/badge/Gradio-Live_Demo-orange.svg?style=flat-square)](https://nospadiss-agentic-linguistic-analysis.hf.space)
+[![RDF/OWL](https://img.shields.io/badge/Ontology-RDF%2FTurtle-blue.svg?style=flat-square)](https://www.w3.org/TR/turtle/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
 
----
+An interdisciplinary framework bridging **Computational Linguistics**, **Knowledge Representation (RDF/OWL)**, and **Agentic LLM Workflows**. The pipeline autonomously extracts structured semantic networks from natural language text and serializes discourse into interactive knowledge graphs and Obsidian graph vaults.
 
-## Overview
+Originally presented at the **Semantic Annotation for the Ancient World (SAW 2026)** conference at the University of Crete.
 
-This project empowers an LLM with a suite of linguistic and knowledge-graph tools. Given a text or conversation, the agent autonomously:
-
-1. **Parses** — POS tagging, dependency parsing, named entity recognition (spaCy)
-2. **Structurizes** — Speaker turns, reply chains, pragmatic features (Convokit)
-3. **Ontologizes** — Extracts entities and relations into RDF triples (rdflib)
-4. **Visualizes** — Renders dependency trees, entity displays, and interactive semantic networks (pyvis)
-5. **Persists** — Writes Obsidian-compatible markdown notes with YAML frontmatter and `[[wikilinks]]` for graph browsing
-
-The final output is an `OntologicalAnalysis` — a structured JSON envelope containing entities, RDF triples, visualization paths, and Obsidian note references.
+[**Live Interactive Demo**](https://nospadiss-agentic-linguistic-analysis.hf.space) &nbsp;|&nbsp; [**GitHub Pages Portfolio**](https://kokorikos212.github.io/Digital_Humanities/) &nbsp;|&nbsp; [**Research Poster (PDF)**](resources/poster.pdf)
 
 ---
 
-## Quickstart
+## Architectural Workflow
+
+```text
+               +-------------------------------------------------------+
+               |                  Unstructured Text                    |
+               +---------------------------+---------------------------+
+                                           |
+                                           v
+               +-------------------------------------------------------+
+               |              DeepSeek Agent Orchestrator             |
+               +---------------------------+---------------------------+
+                                           |
+                   +-----------------------+-----------------------+
+                   |                       |                       |
+                   v                       v                       v
+        +---------------------+ +---------------------+ +---------------------+
+        |  Linguistic Tool    | |   RDF Serializer    | | Pyvis Network Graph |
+        |  (spaCy POS/NER)    | |  (rdflib Turtle)    | |  (Interactive HTML) |
+        +----------+----------+ +----------+----------+ +----------+----------+
+                   |                       |                       |
+                   +-----------------------+-----------------------+
+                                           |
+                                           v
+               +-------------------------------------------------------+
+               |        Obsidian Vault Node Generation ([[links]])    |
+               +-------------------------------------------------------+
+```
+
+## Technical Highlights
+
+- **Dynamic Tool Gating:** The agent toolset is conditionally initialized at runtime based on user selection, preventing redundant computation during API execution.
+- **Formal Semantic Serialization:** Generates valid RDF/Turtle triples with predefined namespaces (`owl:`, `rdf:`, `rdfs:`, custom domain ontologies).
+- **Obsidian Graph Integration:** Generates `.md` notes complete with YAML frontmatter metadata and `[[wikilinks]]` for direct graph visualization inside Obsidian.
+- **Deterministic Output Contract:** Employs Pydantic schemas (`OntologicalAnalysis`) to guarantee structured outputs across agent execution cycles.
+
+## Tool Dispatch Registry
+
+The agent autonomously orchestrates execution across a modular tool suite:
+
+| Component | Class / Module | Primary Responsibility | Target Output |
+|-----------|---------------|----------------------|---------------|
+| Linguistics | `LinguisticTools` | POS tagging, dependency trees, NER, noun chunks | Struct Dict / SVG render |
+| Triples Engine | `TripleGenerator` | Entity-relation extraction & RDF predicate binding | Turtle (.ttl) / JSON-LD |
+| Graph Visualizer | `GraphBuilder` | Semantic network construction & layout physics | Pyvis HTML network |
+| Vault Engine | `ObsidianBuilder` | Structured Markdown page generation with graph linkages | .md with [[wikilinks]] |
+| Conversation | `ConversationAnalyzer` | Utterance structure, pragmatic attributes, reply graphs | Structural JSON |
+| File Dispatch | `FolderRestrictedAgent` | Safe file persistence within project boundaries | Markdown reports |
+
+## Quickstart & Local Setup
+
+### 1. Environment Configuration
 
 ```bash
-# 1. Clone and set up
-git clone <repo-url>
+# Clone repository
+git clone https://github.com/kokorikos212/Digital_Humanities.git
 cd Digital_Humanities
+
+# Virtual environment & lightweight core install
 python3 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
+
+# Download spaCy language model
 python -m spacy download en_core_web_sm
-
-# 2. Add your API key
-cp .env.example .env
-# Edit .env and paste your DeepSeek key
-
-# 3. Run the pipeline
-python run_pipeline.py --text "Dr. Chen presented the research at Stanford University."
-
-# 4. Or analyze a conversation
-python run_pipeline.py --text "Alice: Hello Professor! Could you review my thesis?
-Bob: Of course, Alice. I'll have comments by Friday."
-
-# 5. Launch the Gradio Web UI
-python app.py                  # http://localhost:7860
-python app.py --share          # public link for embedding
-
-# 6. See all CLI options
-python run_pipeline.py --help
 ```
 
----
+### 2. API Key Provisioning
 
-## Gradio Web UI
+```bash
+cp .env.example .env
+# Open .env and populate DEEPSEEK_KEY=sk-...
+```
 
-Launch `python app.py` for an interactive dashboard with:
+### 3. CLI Execution
 
-- **Text input** + pre-loaded example selector
-- **Dynamic tool checkboxes** — enable/disable Linguistic Parsing, RDF Triples, Semantic Graphs, Obsidian Notes, Conversation Analysis, and Dependency Viz
-- **Tabbed output**: JSON summary, Turtle RDF, interactive semantic graph HTML, and Obsidian markdown preview
-- Designed for **iframe embedding** in GitHub Pages (`kokorikos212.github.io`)
+```bash
+# Analyze a single statement
+python run_pipeline.py --text "Dr. Chen presented the research at Stanford University."
 
----
+# Analyze a conversational exchange
+python run_pipeline.py --text "Alice: Could you review my thesis?
+Bob: Of course, Alice. I'll have comments by Friday."
+```
+
+### 4. Interactive Web Interface
+
+```bash
+# Launch local Gradio dashboard
+python app.py
+```
 
 ## Project Structure
 
 ```text
 .
-├── run_pipeline.py                 # 🚀 CLI entry point — pass text, get an ontology
-├── app.py                          # 🖥️ Gradio Web UI — interactive dashboard
-├── .env.example                    # API key template (copy to .env)
-├── requirements.txt                # Core dependencies (lightweight)
-├── requirements-dev.txt            # Full research stack (Convokit, PyTorch)
-├── README.md
-├── citations.md                    # Academic references
-│
-├── src/                            # Core pipeline package
-│   ├── config.py                   # Centralized Config dataclass
-│   ├── pipeline.py                 # DeepSeek tool-calling loop
-│   ├── schemas.py                  # Pydantic output schema (OntologicalAnalysis)
-│   ├── prompts.py                  # System prompt + named prompt templates
-│   ├── cli.py                      # CLI argument parsing
-│   └── tools/
-│       ├── __init__.py             # Tool registry + filter_tool_definitions()
-│       ├── linguistics.py          # spaCy POS/NER/dep + displaCy SVG
-│       ├── writer.py               # Folder-restricted .md file writer
-│       ├── triples.py              # RDF triple generation (rdflib)
-│       ├── conversation.py         # Conversation analysis (Convokit + ad-hoc)
-│       ├── obsidian.py             # Obsidian markdown notes with [[wikilinks]]
-│       ├── graph.py                # networkx + pyvis semantic networks
-│       └── utils.py                # Shared metadata helpers
-│
-├── tests/                          # Test suite (57 tests, all offline)
-│   ├── test_config.py
-│   ├── test_tools.py
-│   ├── test_pipeline.py
-│   └── test_app.py
-│
-├── data/                           # Convokit corpora (gitignored)
-│   ├── example_article.txt
-│   └── example_convo.txt
-│
-├── output/                         # Generated artifacts (gitignored)
-│   ├── graphs/                     # SVG + interactive HTML visualizations
-│   ├── rdf/                        # Turtle RDF serializations
-│   ├── conversations/              # Conversation analysis JSON
-│   └── verse/                      # Obsidian vault with [[wikilinks]]
-│
-└── resources/
-    └── poster.pdf                  # Conference poster (SAW 2026, Rethymno)
+├── app.py                     # Gradio UI application entry point
+├── run_pipeline.py            # CLI entry point wrapper
+├── requirements.txt           # Core lightweight deployment dependencies
+├── requirements-dev.txt       # Full research stack (Convokit, PyTorch)
+├── src/                       # Package core
+│   ├── config.py              # Centralized environment & path resolver
+│   ├── pipeline.py            # Agent orchestration & tool execution loop
+│   ├── schemas.py             # Pydantic data contracts
+│   ├── prompts.py             # System prompt definitions & templates
+│   ├── cli.py                 # CLI argument parsing
+│   └── tools/                 # Tool implementations
+│       ├── linguistics.py     # spaCy & displaCy integration
+│       ├── triples.py         # rdflib Turtle generation
+│       ├── graph.py           # pyvis network visualizer
+│       ├── obsidian.py        # Obsidian vault writer
+│       ├── conversation.py    # Discourse structure analyzer
+│       └── writer.py          # Sandboxed file persistence
+├── tests/                     # Offline test suite (pytest)
+└── docs/                      # GitHub Pages landing site & integration notes
 ```
 
----
+## Academic Context & Citation
 
-## Tools — What the Agent Can Do
+Developed as part of the Digital Humanities Minor (Talos Project) at the University of Crete and presented at the **Semantic Annotation for the Ancient World (SAW 2026)** conference in Rethymno, Crete.
 
-| # | Tool | What It Produces |
-|---|------|-----------------|
-| 1 | `get_tags` | Tokens, POS tags, lemmas, dependencies, NER, noun chunks |
-| 2 | `generate_viz` | displaCy SVG dependency tree or entity display |
-| 3 | `analyze_conversation` | Speaker structure, reply graph, pragmatics (politeness, toxicity, dialogue acts) |
-| 4 | `generate_triples` | RDF triples (Turtle/JSON-LD) from entities + relations |
-| 5 | `build_obsidian_note` | `.md` file with YAML frontmatter and `[[wikilinks]]` for Obsidian's graph view |
-| 6 | `generate_semantic_graph` | Interactive pyvis HTML semantic network (nodes = entities, edges = relations) |
-| 7 | `write_file` | Plain markdown report |
-
-The agent chains these tools autonomously — the system prompt gives it a strict execution order.
-
----
-
-## Output Schema
-
-The pipeline produces an `OntologicalAnalysis` (see `src/schemas.py`):
-
-```
-OntologicalAnalysis
-├── analysis_id, source_text, source_corpus
-├── linguistic_analysis  →  tokens, entities, dependencies, noun_chunks
-├── conversation         →  speakers, utterances, reply_graph, pragmatics
-├── ontology             →  entities (rdf:type + properties), triples, prefixes
-├── obsidian_notes       →  generated .md files with [[wikilinks]]
-├── visualizations       →  paths to SVG / HTML artifacts
-└── summary              →  human-readable narrative
+```bibtex
+@inproceedings{mavroudis2026agentic,
+  title={Argument Modeling with Agentic Workflows for Discourse Analysis},
+  author={Mavroudis, Panagiotis},
+  booktitle={Semantic Annotation for the Ancient World (SAW 2026)},
+  year={2026},
+  organization={University of Crete & Talos AI4SSH}
+}
 ```
 
-Open `output/verse/` as an Obsidian vault to browse the extracted knowledge graph interactively.
+## License
 
----
-
-## Conference
-
-Presented at **"Semantic Annotation for the Ancient World"** (Rethymno, Crete, 2026).
-
-- **Affiliation:** Digital Humanities Minor, Talos — University of Crete
-- **Topic:** Argument Modeling with Agentic Workflows
-- **Conference site:** [SAW 2026](https://talos-ai4ssh.uoc.gr/events/conferences/semantic-annotation-for-the-ancient-world-conference-2026/)
-
-📄 **[View the Research Poster (PDF)](resources/poster.pdf)**
-
----
-
-## Setup for Development
-
-```bash
-# Install dependencies
-pip install -r requirements.txt
-python -m spacy download en_core_web_sm
-
-# Download Convokit corpora (optional — for conversation analysis)
-# Place conversation-gone-awry-corpus/ and winning-args-corpus/ under data/
-```
-
----
-
-## Security
-
-- The `.env` file (containing `DEEPSEEK_KEY`) is **gitignored** — never commit it.
-- If you previously committed a key, **rotate it** at [platform.deepseek.com/api_keys](https://platform.deepseek.com/api_keys).
+Distributed under the MIT License.
