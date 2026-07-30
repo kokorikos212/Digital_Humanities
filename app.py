@@ -227,6 +227,14 @@ footer { display: none !important; }
 """
 
 
+def _safe_code(**kwargs) -> gr.Code:
+    """Create a gr.Code component with show_copy_button when supported (Gradio 4.x)."""
+    try:
+        return gr.Code(show_copy_button=True, **kwargs)
+    except TypeError:
+        return gr.Code(**kwargs)
+
+
 def create_ui() -> gr.Blocks:
     """Build the Gradio interface."""
 
@@ -310,7 +318,7 @@ def create_ui() -> gr.Blocks:
         # ── Output Tabs ─────────────────────────────────────────────
         with gr.Tabs():
             with gr.TabItem("📊 JSON Summary"):
-                json_output = gr.Code(
+                json_output = _safe_code(
                     label="Analysis Result",
                     language="json",
                     lines=20,
@@ -318,7 +326,7 @@ def create_ui() -> gr.Blocks:
                 )
 
             with gr.TabItem("🐢 RDF Triples (Turtle)"):
-                rdf_output = gr.Code(
+                rdf_output = _safe_code(
                     label="RDF Serialization",
                     lines=20,
                     elem_classes="output-box",
@@ -333,7 +341,7 @@ def create_ui() -> gr.Blocks:
                 )
 
             with gr.TabItem("📝 Obsidian Note"):
-                obsidian_output = gr.Code(
+                obsidian_output = _safe_code(
                     label="Generated Markdown",
                     language="markdown",
                     lines=20,
