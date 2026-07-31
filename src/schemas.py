@@ -11,7 +11,21 @@ from __future__ import annotations
 from enum import Enum
 from typing import Any, Dict, List, Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field
+
+
+def _sanitize_additional_properties(schema: Dict[str, Any]) -> None:
+    """Recursively replace boolean additionalProperties with an empty dict."""
+    if isinstance(schema, dict):
+        if schema.get("additionalProperties") is True:
+            schema["additionalProperties"] = {}
+        for value in schema.values():
+            if isinstance(value, dict):
+                _sanitize_additional_properties(value)
+            elif isinstance(value, list):
+                for item in value:
+                    if isinstance(item, dict):
+                        _sanitize_additional_properties(item)
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -181,6 +195,8 @@ class LinguisticAnalysis(BaseModel):
 class Speaker(BaseModel):
     """A participant in a conversation."""
 
+    model_config = ConfigDict(json_schema_extra=_sanitize_additional_properties)
+
     id: str = Field(..., description="Unique speaker identifier")
     label: Optional[str] = Field(None, description="Display name if available")
     metadata: Dict[str, Any] = Field(
@@ -230,6 +246,8 @@ class Utterance(BaseModel):
 class Conversation(BaseModel):
     """A multi-turn conversation with structure and metadata."""
 
+    model_config = ConfigDict(json_schema_extra=_sanitize_additional_properties)
+
     id: str = Field(..., description="Unique conversation identifier")
     corpus: Optional[str] = Field(None, description="Source corpus name")
     utterances: List[Utterance] = Field(
@@ -259,6 +277,11 @@ class OntologicalEntity(BaseModel):
     becomes [[Professor_Entity]] in markdown).
     """
 
+    model_config = ConfigDict(
+        populate_by_name=True,
+        json_schema_extra=_sanitize_additional_properties,
+    )
+
     id: str = Field(
         ...,
         description="Unique entity ID; also used as the Obsidian wikilink slug",
@@ -274,9 +297,6 @@ class OntologicalEntity(BaseModel):
     source_utterance: Optional[str] = Field(
         None, description="Utterance ID where this entity was extracted"
     )
-
-    class Config:
-        populate_by_name = True
 
 
 class Triple(BaseModel):
@@ -295,8 +315,7 @@ class Triple(BaseModel):
         None, description="XML Schema datatype for literal objects"
     )
 
-    class Config:
-        populate_by_name = True
+    model_config = ConfigDict(populate_by_name=True)
 
 
 class OntologyGraph(BaseModel):
@@ -336,6 +355,8 @@ class ObsidianNote(BaseModel):
     The frontmatter carries the structured ontology data; the body provides
     a human-readable narrative with [[wikilinks]] connecting related concepts.
     """
+
+    model_config = ConfigDict(json_schema_extra=_sanitize_additional_properties)
 
     filename: str = Field(
         ..., description="Base filename (e.g. 'utterance_001.md')"
