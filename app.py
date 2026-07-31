@@ -24,9 +24,6 @@ from pathlib import Path
 from typing import Dict, List, Optional, Set
 
 import gradio as gr
-from packaging import version
-
-_HAS_COPY_BUTTON = version.parse(gr.__version__) < version.parse("5.0.0")
 
 # Ensure the project root is on sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent
@@ -230,13 +227,6 @@ footer { display: none !important; }
 """
 
 
-def _code_opts(**extra) -> dict:
-    """Build kwargs for gr.Code, adding show_copy_button only on Gradio 4.x."""
-    if _HAS_COPY_BUTTON:
-        extra.setdefault("show_copy_button", True)
-    return extra
-
-
 def create_ui() -> gr.Blocks:
     """Build the Gradio interface."""
 
@@ -320,19 +310,19 @@ def create_ui() -> gr.Blocks:
         # ── Output Tabs ─────────────────────────────────────────────
         with gr.Tabs():
             with gr.TabItem("📊 JSON Summary"):
-                json_output = gr.Code(**_code_opts(
+                json_output = gr.Code(
                     label="Analysis Result",
                     language="json",
                     lines=20,
                     elem_classes="output-box",
-                ))
+                )
 
             with gr.TabItem("🐢 RDF Triples (Turtle)"):
-                rdf_output = gr.Code(**_code_opts(
+                rdf_output = gr.Code(
                     label="RDF Serialization",
                     lines=20,
                     elem_classes="output-box",
-                ))
+                )
 
             with gr.TabItem("🕸️ Semantic Graph"):
                 graph_output = gr.HTML(
@@ -343,12 +333,12 @@ def create_ui() -> gr.Blocks:
                 )
 
             with gr.TabItem("📝 Obsidian Note"):
-                obsidian_output = gr.Code(**_code_opts(
+                obsidian_output = gr.Code(
                     label="Generated Markdown",
                     language="markdown",
                     lines=20,
                     elem_classes="output-box",
-                ))
+                )
 
         # ── Event Handlers ──────────────────────────────────────────
 
