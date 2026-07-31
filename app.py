@@ -392,9 +392,15 @@ def create_ui() -> gr.Blocks:
 
 
 # ═══════════════════════════════════════════════════════════════════════════
-# Entry point
+# HF Spaces requires the Blocks object at module level as `demo`
 # ═══════════════════════════════════════════════════════════════════════════
 
+demo = create_ui()
+demo.queue()
+
+# ═══════════════════════════════════════════════════════════════════════════
+# Entry point (local dev)
+# ═══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(
@@ -414,8 +420,7 @@ if __name__ == "__main__":
     )
     args = parser.parse_args()
 
-    app = create_ui()
-    app.launch(
+    demo.launch(
         server_name=args.host,
         server_port=args.port,
         share=args.share,
