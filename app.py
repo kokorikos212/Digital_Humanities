@@ -29,10 +29,13 @@ import gradio as gr
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
 
+import html as _html
+
 from src.config import config
 from src.pipeline import run_pipeline
 from src.prompts import SYSTEM_PROMPT, NAMED_PROMPTS, build_analysis_prompt
 from src.tools import TOOL_UI_LABELS
+from src.visualizer import render_rdf_graph
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
@@ -179,17 +182,8 @@ def run_analysis(
         if ttl_files:
             rdf_output = ttl_files[0].read_text(encoding="utf-8")
 
-    # 3. Semantic graph HTML — most recent .html
-    graph_html = "<p style='color:#888'>No graph generated — enable Semantic Network Visualizer.</p>"
-    graphs_dir = config.graphs_dir
-    if graphs_dir.exists():
-        html_files = sorted(
-            graphs_dir.glob("semantic_*.html"), reverse=True
-        )
-        if html_files:
-            graph_html = html_files[0].read_text(encoding="utf-8")
-            # Return the HTML inline for the iframe tab
-            graph_html = _wrap_graph_for_iframe(graph_html, html_files[0])
+    # 3. Semantic graph HTML — render RDF via Talos visualizer
+    graph_html = _format_graph_html(rdf_output)
 
     # 4. Obsidian notes — most recent .md
     obsidian_md = ""
@@ -202,10 +196,25 @@ def run_analysis(
     return json_output, rdf_output, graph_html, obsidian_md
 
 
-def _wrap_graph_for_iframe(html: str, filepath: Path) -> str:
-    """Wrap pyvis HTML so it renders well in a Gradio HTML component."""
-    # Return the raw HTML — Gradio's gr.HTML will render it inline
-    return html
+def _format_graph_html(ttl_data: str) -> str:
+    """Render TTL string to PyVis HTML and wrap in an iframe for Gradio."""
+    if not ttl_data or not ttl_data.strip():
+        return (
+            "<div style='padding:20px;text-align:center;color:#666;'>"
+            "No graph data available.</div>"
+        )
+    try:
+        raw_html = render_rdf_graph(ttl_data, height="650px")
+        return (
+            f'<iframe srcdoc="{_html.escape(raw_html)}" '
+            f'width="100%" height="670px" '
+            f'style="border:none;border-radius:8px;"></iframe>'
+        )
+    except Exception as exc:
+        return (
+            f"<div style='color:red;padding:20px;'>"
+            f"Error rendering graph: {_html.escape(str(exc))}</div>"
+        )
 
 
 def load_example(name: str) -> str:

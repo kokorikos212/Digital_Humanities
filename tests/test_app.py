@@ -119,13 +119,25 @@ class TestGradioApp:
             # Acceptable: the pipeline may fail without an API key
             assert "DEEPSEEK_KEY" in str(exc) or "key" in str(exc).lower()
 
-    def test_wrap_graph_for_iframe_returns_html(self):
-        """_wrap_graph_for_iframe should return the HTML unchanged."""
-        from app import _wrap_graph_for_iframe
+    def test_format_graph_html_no_data(self):
+        """_format_graph_html with empty data shows placeholder."""
+        from app import _format_graph_html
 
-        html = "<html><body><p>Test</p></body></html>"
-        result = _wrap_graph_for_iframe(html, Path("/tmp/test.html"))
-        assert "Test" in result
+        result = _format_graph_html("")
+        assert "No graph data" in result
+
+    def test_format_graph_html_with_ttl(self):
+        """_format_graph_html with valid TTL renders an iframe."""
+        from app import _format_graph_html
+
+        ttl = """
+        @prefix ex: <http://example.org/> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        ex:A a ex:Thing ; rdfs:label "Test" .
+        """
+        result = _format_graph_html(ttl)
+        assert "iframe" in result
+        assert "srcdoc" in result
 
     def test_tool_checkbox_mapping(self):
         """The 6 checkbox booleans should map to the correct tool names."""
