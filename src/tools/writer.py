@@ -12,6 +12,7 @@ import os
 from pydantic import BaseModel, Field, field_validator
 
 from src.config import config
+from src.visualizer import render_rdf_graph
 
 
 # ── Input schema ──────────────────────────────────────────────────────────
@@ -63,6 +64,32 @@ class FolderRestrictedAgent:
             return f"Successfully saved to {safe_path}"
         except Exception as e:
             return f"Tool Error: {str(e)}"
+
+    def export_graph_html(self, ttl_data: str, base_name: str = "graph") -> str:
+        """Render *ttl_data* to an interactive PyVis HTML file.
+
+        Parameters
+        ----------
+        ttl_data:
+            Turtle/RDF string to render.
+        base_name:
+            Base filename without extension (default: ``"graph"``).
+
+        Returns
+        -------
+        A status message with the saved file path, or an error string.
+        """
+        if not ttl_data or not ttl_data.strip():
+            return "Tool Error: No RDF data provided for graph export."
+        try:
+            html_content = render_rdf_graph(ttl_data, height="650px")
+            safe_name = f"{base_name}.html"
+            safe_path = self._verify_path(safe_name)
+            with open(safe_path, "w", encoding="utf-8") as f:
+                f.write(html_content)
+            return f"Graph exported to {safe_path}"
+        except Exception as e:
+            return f"Tool Error: Graph export failed: {str(e)}"
 
 
 # ── Registry helpers ──────────────────────────────────────────────────────

@@ -389,6 +389,32 @@ class TestWriterTool:
 
         assert "Tool Error" in result or "Only .md" in result
 
+    def test_export_graph_html_empty_data(self):
+        """export_graph_html with empty data returns error."""
+        from src.tools.writer import FolderRestrictedAgent
+
+        writer = FolderRestrictedAgent()
+        result = writer.export_graph_html("", "test")
+        assert "Tool Error" in result
+
+    def test_export_graph_html_creates_file(self):
+        """export_graph_html with valid TTL creates an HTML file."""
+        from src.tools.writer import FolderRestrictedAgent
+
+        ttl = """
+        @prefix ex: <http://example.org/> .
+        @prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+        ex:A a ex:Thing ; rdfs:label "Test" .
+        """
+        writer = FolderRestrictedAgent()
+        result = writer.export_graph_html(ttl, "test_graph")
+        assert "Graph exported to" in result
+        saved_path = Path(result.split("Graph exported to ")[1])
+        assert saved_path.exists()
+        content = saved_path.read_text()
+        assert "<html" in content.lower() or "pyvis" in content.lower()
+        assert "Test" in content
+
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Conversation Analyzer (ad-hoc mode, no Convokit required)
