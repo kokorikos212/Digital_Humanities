@@ -23,6 +23,9 @@ import traceback
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
+import os as _os
+_os.environ.setdefault("GRADIO_SERVER_NAME", "0.0.0.0")
+
 import gradio as gr
 
 # Ensure the project root is on sys.path
