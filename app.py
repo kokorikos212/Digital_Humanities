@@ -22,9 +22,9 @@ import traceback
 from pathlib import Path
 from typing import Dict, List, Optional, Set
 
-import os as _os
-_os.environ.setdefault("GRADIO_SERVER_NAME", "0.0.0.0")
-_os.environ.setdefault("GRADIO_SERVER_PORT", "7860")
+import os
+os.environ["GRADIO_SERVER_NAME"] = "0.0.0.0"
+os.environ["GRADIO_SERVER_PORT"] = "7860"
 
 import gradio as gr
 
