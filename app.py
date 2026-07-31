@@ -15,7 +15,6 @@ Usage:
 
 from __future__ import annotations
 
-import argparse
 import json
 import sys
 import time
@@ -25,6 +24,7 @@ from typing import Dict, List, Optional, Set
 
 import os as _os
 _os.environ.setdefault("GRADIO_SERVER_NAME", "0.0.0.0")
+_os.environ.setdefault("GRADIO_SERVER_PORT", "7860")
 
 import gradio as gr
 
@@ -406,26 +406,8 @@ demo.queue()
 # ═══════════════════════════════════════════════════════════════════════════
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(
-        description="Gradio UI for Ontological Discourse Analysis"
-    )
-    parser.add_argument(
-        "--share", action="store_true",
-        help="Create a public Gradio share link",
-    )
-    parser.add_argument(
-        "--port", type=int, default=7860,
-        help="Port to listen on (default: 7860)",
-    )
-    parser.add_argument(
-        "--host", type=str, default="0.0.0.0",
-        help="Host to bind to (default: 0.0.0.0)",
-    )
-    args = parser.parse_args()
-
     demo.launch(
-        server_name=args.host,
-        server_port=args.port,
-        share=args.share,
-        show_error=True,
+        server_name="0.0.0.0",
+        server_port=int(_os.environ.get("PORT", 7860)),
+        share=False,
     )
