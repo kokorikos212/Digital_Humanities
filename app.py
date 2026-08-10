@@ -217,7 +217,11 @@ def _save_precomputed(name: str, ttl: str, md: str, json_str: str) -> str:
         html = render_rdf_graph(ttl, height="650px")
         (folder / "graph.html").write_text(html, encoding="utf-8")
         (folder / "note.md").write_text(md if md else "# No note generated.", encoding="utf-8")
-        summary = json.loads(json_str) if json_str.strip() else {"note": "No summary."}
+        try:
+            summary = json.loads(json_str.strip())
+        except (json.JSONDecodeError, ValueError):
+            # json_output may contain markdown or plain text, not valid JSON
+            summary = {"raw_output": json_str.strip()[:2000]}
         (folder / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
         return f"✅ Saved to assets/precomputed/{safe}/"
     except Exception as exc:
