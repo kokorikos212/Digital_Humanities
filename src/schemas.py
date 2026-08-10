@@ -392,6 +392,105 @@ class VisualizationSpec(BaseModel):
 
 
 # ═══════════════════════════════════════════════════════════════════════════
+# Mental-Tool Schema  (MT_k = ⟨ID, C_valid, M_mech, D_demo, R_rel⟩)
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+class ProvenanceMetadata(BaseModel):
+    """Origin and maturity tracking for a Mental-Tool."""
+
+    source_journal_date: Optional[str] = Field(
+        None, description="ISO Date string YYYY-MM-DD"
+    )
+    narrative_layer_1: Optional[str] = Field(
+        None, description="Narrative scene or story identifier"
+    )
+    maturity_stage: str = Field(
+        "Hypothesis",
+        description="Stage: Hypothesis | Tested | Core_Principle",
+    )
+
+
+class ContextualValidity(BaseModel):
+    """When and where a Mental-Tool applies."""
+
+    trigger_friction: str = Field(
+        ..., description="Description of the explicit impasse/dissonance"
+    )
+    friction_type: str = Field(
+        ...,
+        description="Procedural_Confusion | Political_Apathy | Ideological_Impasse",
+    )
+    applicable_contexts: List[str] = Field(default_factory=list)
+    irrelevant_contexts: List[str] = Field(default_factory=list)
+
+
+class OperationalMechanics(BaseModel):
+    """Cognitive transformation mechanics."""
+
+    from_state: str = Field(
+        ..., description="Initial cognitive/emotional state (S_from)"
+    )
+    to_state: str = Field(
+        ..., description="Target cognitive/actionable state (S_to)"
+    )
+    reframing_vector: str = Field(
+        ..., description="Explanation of how perception shifts"
+    )
+    actionable_output: str = Field(
+        ..., description="Concrete decision or response enabled"
+    )
+    failure_modes: List[str] = Field(default_factory=list)
+
+
+class MultimodalDemonstrations(BaseModel):
+    """Poetic, case-study, and narrative demonstrations."""
+
+    model_config = ConfigDict(json_schema_extra=_sanitize_additional_properties)
+
+    poetic_instantiations: List[dict] = Field(default_factory=list)
+    case_studies: List[str] = Field(default_factory=list)
+    narrative_allegories: List[str] = Field(default_factory=list)
+
+
+class OntologicalRelations(BaseModel):
+    """Links to other Mental-Tools and Hub-Nodes."""
+
+    prerequisite_concepts: List[str] = Field(
+        default_factory=list, description="[[MT-XXX]] links"
+    )
+    synergizes_with: List[str] = Field(
+        default_factory=list, description="[[MT-XXX]] links"
+    )
+    conflicts_with: List[str] = Field(
+        default_factory=list, description="[[MT-XXX]] links"
+    )
+    resolves_hub_nodes: List[str] = Field(
+        default_factory=list, description="[[Hub_XXX]] links"
+    )
+
+
+class MentalTool(BaseModel):
+    """Primary Mental-Tool schema: MT_k = ⟨ID, C_valid, M_mech, D_demo, R_rel⟩."""
+
+    model_config = ConfigDict(
+        extra="ignore",
+        json_schema_extra=_sanitize_additional_properties,
+    )
+
+    id: str = Field(..., description="Unique URI or identifier (e.g., 'MT-000')")
+    label: str = Field(..., description="Canonical name of the Mental-Tool")
+    definition: str = Field(
+        ..., description="1-2 sentence core cognitive transformation summary"
+    )
+    provenance: Optional[ProvenanceMetadata] = None
+    contextual_validity: ContextualValidity
+    mechanics: OperationalMechanics
+    demonstrations: Optional[MultimodalDemonstrations] = None
+    relations: OntologicalRelations
+
+
+# ═══════════════════════════════════════════════════════════════════════════
 # Top-Level Agent Output (the envelope the LLM is expected to produce)
 # ═══════════════════════════════════════════════════════════════════════════
 
@@ -439,6 +538,10 @@ class OntologicalAnalysis(BaseModel):
     ontology: OntologyGraph = Field(
         default_factory=OntologyGraph,
         description="Entities, triples, and prefix definitions",
+    )
+    mental_tools: List[MentalTool] = Field(
+        default_factory=list,
+        description="Extracted Mental-Tool (MT) cognitive transformation schemas",
     )
 
     # ── Artifacts ────────────────────────────────────────────────────────
