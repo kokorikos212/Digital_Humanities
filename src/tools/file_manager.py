@@ -70,3 +70,45 @@ def delete_project_item(user_id: str, project_id: str, rel_path: str) -> str:
         return f"✅ Deleted '{rel_path}'."
     except Exception as exc:
         return f"Delete failed: {exc}"
+
+
+def prepare_download(user_id: str, project_id: str, rel_path: str) -> str:
+    """Prepare a file or folder for download.
+
+    - Single file → returns its absolute path directly.
+    - Folder → creates a temporary ``.zip`` inside the project sandbox and
+      returns the zip path.
+
+    Returns an error string starting with ``"Error:"`` on failure.
+    """
+    if not user_id or not project_id or not rel_path.strip():
+        return "Error: No path specified."
+
+    project_root = resolve_project_dir(user_id, project_id).resolve()
+    target = (project_root / rel_path).resolve()
+
+    if not str(target).startswith(str(project_root)):
+        return "Error: Path outside project sandbox."
+    if not target.exists():
+        return f"Error: '{rel_path}' does not exist."
+
+    # Single file — return directly
+    if target.is_file():
+        return str(target)
+
+    # Folder — create zip
+    import tempfile
+    import zipfile
+
+    tmp_dir = project_root / ".tmp"
+    tmp_dir.mkdir(exist_ok=True)
+    zip_path = tmp_dir / f"{target.name}.zip"
+
+    try:
+        with zipfile.ZipFile(str(zip_path), "w", zipfile.ZIP_DEFLATED) as zf:
+            for f in target.rglob("*"):
+                if f.is_file():
+                    zf.write(f, f.relative_to(target))
+        return str(zip_path)
+    except Exception as exc:
+        return f"Error: ZIP creation failed: {exc}"

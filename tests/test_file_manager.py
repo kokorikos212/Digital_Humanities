@@ -29,6 +29,39 @@ class TestFileManager:
         assert not (proj / "test_delete.txt").exists()
         shutil.rmtree(config.project_root / "data" / "users" / "fm_user", ignore_errors=True)
 
+    def test_zip_download_folder(self):
+        """Downloading a folder creates a valid .zip inside the sandbox."""
+        import zipfile
+        proj = resolve_project_dir("fm_user", "fm_proj")
+        sub = proj / "test_zip"
+        sub.mkdir(exist_ok=True)
+        (sub / "a.txt").write_text("hello")
+        (sub / "b.md").write_text("world")
+
+        from src.tools.file_manager import prepare_download
+        result = prepare_download("fm_user", "fm_proj", "test_zip")
+        assert result.endswith(".zip")
+        assert Path(result).exists()
+
+        with zipfile.ZipFile(result, "r") as zf:
+            names = zf.namelist()
+            assert "a.txt" in names
+            assert "b.md" in names
+
+        shutil.rmtree(config.project_root / "data" / "users" / "fm_user", ignore_errors=True)
+
+    def test_download_single_file(self):
+        """Downloading a single file returns its path directly."""
+        proj = resolve_project_dir("fm_user", "fm_proj")
+        (proj / "single.txt").write_text("data")
+
+        from src.tools.file_manager import prepare_download
+        result = prepare_download("fm_user", "fm_proj", "single.txt")
+        assert result.endswith("single.txt")
+        assert Path(result).exists()
+
+        shutil.rmtree(config.project_root / "data" / "users" / "fm_user", ignore_errors=True)
+
     def test_delete_nonexistent(self):
         """Deleting a non-existent path returns error."""
         result = delete_project_item("fm_user", "fm_proj", "ghost.txt")

@@ -651,6 +651,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                     # Left: File Explorer
                     with gr.Column(scale=1):
                         gr.Markdown("### 📁 File Explorer")
+                        file_path_status = gr.Markdown("📍 `/`")
                         file_tree_df = gr.Dataframe(
                             headers=["Name", "Type", "Size", "Relative Path"],
                             interactive=False,
@@ -660,6 +661,10 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                             delete_path = gr.Textbox(label="Relative Path to Delete")
                             delete_btn = gr.Button("🗑️ Delete", variant="stop")
                             delete_status = gr.Markdown("")
+                        with gr.Accordion("Download File / Folder", open=False):
+                            dl_path = gr.Textbox(label="Relative Path to Download")
+                            dl_btn = gr.Button("📥 Prepare Download", variant="secondary")
+                            dl_output = gr.File(label="Download", visible=True)
 
                     # Right: Terminal
                     with gr.Column(scale=1):
@@ -762,7 +767,9 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         # ── Terminal & File Manager handlers ─────────────────────────
 
         from src.tools.terminal import execute_project_bash
-        from src.tools.file_manager import list_project_directory, delete_project_item
+        from src.tools.file_manager import (
+            list_project_directory, delete_project_item, prepare_download,
+        )
 
         def _handle_terminal(uid, pid, cmd, cwd):
             if not cmd.strip():
@@ -771,12 +778,23 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             return f"$ {cmd}\n{out}\n", new_cwd
 
         def _handle_list_files(uid, pid, cwd):
-            return list_project_directory(uid, pid, cwd)
+            df = list_project_directory(uid, pid, cwd)
+            path_label = f"📍 `/{cwd or ''}`"
+            return df, path_label
 
         def _handle_delete(uid, pid, rel):
             if not rel.strip():
                 return "⚠️ Enter a relative path to delete."
             return delete_project_item(uid, pid, rel)
+
+        def _handle_download(uid, pid, rel):
+            if not rel.strip():
+                return None
+            result = prepare_download(uid, pid, rel)
+            if result.startswith("Error:"):
+                print(f"[DEBUG] Download error: {result}")
+                return None
+            return result
 
         run_cmd_btn.click(
             fn=_handle_terminal,
@@ -787,13 +805,19 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         refresh_files_btn.click(
             fn=_handle_list_files,
             inputs=[user_state, project_state, cwd_state],
-            outputs=[file_tree_df],
+            outputs=[file_tree_df, file_path_status],
         )
 
         delete_btn.click(
             fn=_handle_delete,
             inputs=[user_state, project_state, delete_path],
             outputs=[delete_status],
+        )
+
+        dl_btn.click(
+            fn=_handle_download,
+            inputs=[user_state, project_state, dl_path],
+            outputs=[dl_output],
         )
 
         run_query_btn.click(
