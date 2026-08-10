@@ -15,7 +15,7 @@ import json
 import os
 import sys
 import time
-from typing import Dict, List, Optional, Set
+from typing import Dict, List, Optional, Set, Any
 
 import openai
 
@@ -91,8 +91,8 @@ def run_pipeline(
     """
     # ── Resolve system prompt ─────────────────────────────────────────
     if system_prompt is None:
-        from src.prompts import SYSTEM_PROMPT as _DEFAULT_SYSTEM_PROMPT
-        system_prompt = _DEFAULT_SYSTEM_PROMPT
+        from src.prompts import get_system_prompt
+        system_prompt = get_system_prompt()
 
     # ── Resolve enabled tools ─────────────────────────────────────────
     tools_enabled = enabled_tools or set()
@@ -159,7 +159,7 @@ def run_pipeline(
 # ── Entry point ───────────────────────────────────────────────────────────
 
 if __name__ == "__main__":
-    from src.prompts import NAMED_PROMPTS, SYSTEM_PROMPT
+    from src.prompts import NAMED_PROMPTS, get_system_prompt
 
     config.load_env()
 
@@ -167,5 +167,5 @@ if __name__ == "__main__":
         "ex_combined", NAMED_PROMPTS.get("ex_file", "Analyze a sentence.")
     )
 
-    result = run_pipeline(user_prompt, system_prompt=SYSTEM_PROMPT)
+    result = run_pipeline(user_prompt, system_prompt=get_system_prompt())
     print(result)

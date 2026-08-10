@@ -36,7 +36,7 @@ import html as _html
 
 from src.config import config
 from src.pipeline import run_pipeline
-from src.prompts import SYSTEM_PROMPT, NAMED_PROMPTS, build_analysis_prompt
+from src.prompts import get_system_prompt, NAMED_PROMPTS, build_analysis_prompt
 from src.tools import TOOL_UI_LABELS
 from src.visualizer import render_rdf_graph
 
@@ -153,7 +153,7 @@ def run_analysis(
         start = time.monotonic()
         result = run_pipeline(
             user_prompt=user_prompt,
-            system_prompt=SYSTEM_PROMPT,
+            system_prompt=get_system_prompt(),
             max_iterations=30,
             enabled_tools=enabled,
         )

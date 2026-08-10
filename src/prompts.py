@@ -49,8 +49,26 @@ SYSTEM_PROMPT = (
     "12. Link the speaker to the claim via ibis:asserts or prov:wasAttributedTo. "
     "Example: ex:Dr_Chen ibis:asserts ex:Claim_ML_Detect_Bias . "
     "ex:Claim_ML_Detect_Bias a ibis:Position, aif:I-node ; "
-    "rdfs:label 'Machine learning models can detect bias' ."
+    "rdfs:label 'Machine learning models can detect bias' . "
+    "Temporal & Prefix Consistency: "
+    "13. Compute relative dates ('last Tuesday', 'yesterday') dynamically "
+    "relative to the CURRENT date — NEVER use hardcoded placeholder dates. "
+    "14. Decompose complex claims into sub-triples when queryability matters: "
+    "ex:ML_Models ex:detects ex:Bias . ex:Bias ex:foundIn ex:Political_Speeches . "
+    "Link sub-triples to the ibis:Position node via aif:claimText. "
+    "15. EVERY rdf:type value MUST use a CURIE prefix (prov:Activity, "
+    "ibis:Position, schema:Person, xsd:dateTime). NEVER emit bare types "
+    "like 'Activity' or 'Position' without their namespace prefix."
 )
+
+from datetime import date as _today
+
+
+def get_system_prompt() -> str:
+    """Return the system prompt with the current date injected for temporal
+    normalization (rule 13)."""
+    return f"Today is {_today.today().isoformat()}. " + SYSTEM_PROMPT
+
 
 # ═══════════════════════════════════════════════════════════════════════════════
 # Named prompt templates

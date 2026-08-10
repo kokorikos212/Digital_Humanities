@@ -17,7 +17,7 @@ from typing import Optional
 
 from src.config import config
 from src.pipeline import run_pipeline
-from src.prompts import NAMED_PROMPTS, SYSTEM_PROMPT, build_analysis_prompt
+from src.prompts import NAMED_PROMPTS, build_analysis_prompt, get_system_prompt
 
 
 def load_named_prompt(name: str) -> str | None:
@@ -144,7 +144,7 @@ def main(argv: Optional[list[str]] = None) -> None:
         else:
             system_prompt = args.system_prompt
     else:
-        system_prompt = SYSTEM_PROMPT
+        system_prompt = get_system_prompt()
 
     # ── Header ───────────────────────────────────────────────────────
     print("═" * 62)
