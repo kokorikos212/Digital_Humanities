@@ -9,6 +9,7 @@ triples plus a Turtle-serialized RDF graph saved to disk.
 from __future__ import annotations
 
 import json
+import re
 import time
 from typing import Any, Dict, List, Literal, Optional
 
@@ -91,6 +92,9 @@ class TripleGenerator:
         Returns a dict with ``triples`` (list), ``serialized`` (RDF string),
         and ``saved_at`` (file path).
         """
+        # Reset entity registry per run to avoid cross-pipeline contamination
+        self._entity_registry.clear()
+
         merged_prefixes = {**self.DEFAULT_PREFIXES, **(prefixes or {})}
         triples = self._build_triples(entities, relations, merged_prefixes)
 
@@ -114,6 +118,50 @@ class TripleGenerator:
 
     # ── Internals ─────────────────────────────────────────────────────
 
+    _entity_registry: Dict[str, str] = {}  # normalized label → canonical URI
+
+    @staticmethod
+    def _normalize_label(label: str) -> str:
+        """Normalize a label to a canonical form for deduplication."""
+        norm = label.strip()
+        # Split camelCase / PascalCase
+        norm = re.sub(r"([a-z])([A-Z])", r"\1_\2", norm)
+        # Lowercase and replace non-alphanumeric with underscore
+        norm = norm.lower()
+        norm = re.sub(r"[^a-z0-9]+", "_", norm)
+        norm = norm.strip("_")
+        return norm
+
+    @classmethod
+    def _canonical_id(cls, raw_id: str, label: str | None = None) -> str:
+        """Return a canonical entity ID, deduplicating via the registry.
+
+        If *raw_id* looks like a CURIE (contains ':'), use it as-is.
+        Otherwise normalize *label* (or *raw_id*) and look up / register
+        in the entity registry so that variants like 'Stanford University',
+        'StanfordUniversity', and 'stanford_university' resolve to the
+        same ``ex:Stanford_University`` URI.
+        """
+        # Prefixed CURIE — use as-is
+        if ":" in raw_id and not raw_id.startswith("http"):
+            return raw_id
+        # Full URI — use as-is
+        if raw_id.startswith("http://") or raw_id.startswith("https://"):
+            return raw_id
+
+        # Plain string — normalize and register
+        norm = cls._normalize_label(label or raw_id)
+        if norm in cls._entity_registry:
+            return cls._entity_registry[norm]
+
+        # Mint a clean ex: URI
+        canonical = "ex:" + "".join(
+            c for c in norm.replace("_", " ").title().replace(" ", "_")
+            if c.isalnum() or c == "_"
+        )
+        cls._entity_registry[norm] = canonical
+        return canonical
+
     def _build_triples(
         self,
         entities: List[Dict[str, Any]],
@@ -128,8 +176,11 @@ class TripleGenerator:
         triples: List[Dict[str, str]] = []
 
         for ent in entities:
-            entity_id = ent.get("id", ent.get("label", "unknown"))
+            raw_id = ent.get("id", ent.get("label", "unknown"))
+            raw_label = ent.get("label", raw_id)
+            entity_id = self._canonical_id(raw_id, raw_label)
             rdf_type = ent.get("rdf_type", ent.get("entity_type", "ex:Concept"))
+
             triples.append({
                 "subject": entity_id,
                 "predicate": "rdf:type",
@@ -138,11 +189,10 @@ class TripleGenerator:
                 "object_type": "uri" if ":" in rdf_type else "entity_id",
             })
 
-            label = ent.get("label", entity_id)
             triples.append({
                 "subject": entity_id,
                 "predicate": "rdfs:label",
-                "object": label,
+                "object": raw_label,
                 "subject_type": "entity_id",
                 "object_type": "literal",
             })
@@ -165,10 +215,18 @@ class TripleGenerator:
                     or (rel.get(key) if isinstance(rel, dict) else None)
                     or default
                 )
+
+            subj = _get("subject")
+            obj = _get("object") if _get("object") != "??" else _get("obj")
+
+            # Normalize subject/object against entity registry
+            canonical_subj = self._canonical_id(subj) if subj != "??" else subj
+            canonical_obj = self._canonical_id(obj) if obj != "??" else obj
+
             triples.append({
-                "subject": _get("subject"),
+                "subject": canonical_subj,
                 "predicate": _get("predicate"),
-                "object": _get("object") if _get("object") != "??" else _get("obj"),
+                "object": canonical_obj,
                 "subject_type": _get("subject_type", "entity_id"),
                 "object_type": _get("object_type", "entity_id"),
                 "datatype": _get("datatype", None),
