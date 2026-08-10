@@ -184,43 +184,11 @@ def _format_graph_html(ttl_data: str) -> str:
             "No graph data available.</div>"
         )
     try:
-        raw_html = render_rdf_graph(ttl_data, height="calc(100vh - 40px)")
-        escaped = _html.escape(raw_html)
+        raw_html = render_rdf_graph(ttl_data, height="650px")
         return (
-            '<style>iframe.fs{position:fixed!important;top:0!important;left:0!important;'
-            'width:100vw!important;height:100vh!important;z-index:9999!important;'
-            'border-radius:0!important;background:#fff!important}</style>'
-            '<div style="position:relative;display:inline-block;width:100%">'
-            '<button onclick="'
-            "var f=this.parentNode.querySelector('iframe');"
-            "var x=this.nextElementSibling;"
-            'f.classList.toggle(\'fs\');'
-            "this.style.display=f.classList.contains('fs')?'none':'';"
-            "x.style.display=f.classList.contains('fs')?'block':'none';"
-            'document.body.style.overflow=f.classList.contains(\'fs\')?\'hidden\':\'\';'
-            'setTimeout(function(){f.contentWindow.postMessage(\"talos-fit\",\"*\")},300)'
-            '" style="position:absolute;top:8px;right:8px;z-index:10;padding:6px 12px;'
-            'background:#4a6cf7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">'
-            '⛶ Full Screen</button>'
-            '<button onclick="'
-            "var w=this.parentNode;var f=w.querySelector('iframe');var b=this.previousElementSibling;"
-            "f.classList.remove('fs');b.style.display='';this.style.display='none';"
-            'document.body.style.overflow=\'\';'
-            'setTimeout(function(){f.contentWindow.postMessage(\"talos-fit\",\"*\")},200)'
-            '" style="display:none;position:fixed;top:12px;right:12px;z-index:10001;'
-            'width:36px;height:36px;background:#e74c3c;color:#fff;border:none;border-radius:50%;'
-            'font-size:18px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)" title="Exit">✕</button>'
-            f'<iframe srcdoc="{escaped}" width="100%" height="650px" '
-            f'style="border:none;border-radius:8px"></iframe>'
-            '</div>'
-            '<script>'
-            'document.addEventListener("keydown",function(e){if(e.key==="Escape"){'
-            'var fs=document.querySelector("iframe.fs");if(fs){'
-            'var w=fs.parentNode;w.querySelector("button:first-child").style.display="";'
-            'w.querySelector("button:nth-child(2)").style.display="none";'
-            'fs.classList.remove("fs");document.body.style.overflow="";'
-            'setTimeout(function(){fs.contentWindow.postMessage("talos-fit","*")},200)}}})'
-            '</script>'
+            f'<iframe id="graph-frame" srcdoc="{_html.escape(raw_html)}" '
+            f'width="100%" height="650px" '
+            f'style="border:none;border-radius:8px;"></iframe>'
         )
     except Exception as exc:
         return (
@@ -445,6 +413,60 @@ def create_ui() -> gr.Blocks:
                 )
 
             with gr.TabItem("🕸️ Semantic Graph"):
+                gr.HTML("""<style>
+#graph-wrapper{position:relative}
+#graph-frame{width:100%;height:650px;border:none;border-radius:8px}
+#graph-frame.fs{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border-radius:0;background:#fff}
+#fs-btn{position:absolute;top:8px;right:8px;z-index:10;padding:6px 12px;background:#4a6cf7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px}
+#fs-btn:hover{background:#3651d5}
+#fs-x{display:none;position:fixed;top:12px;right:12px;z-index:10001;width:36px;height:36px;background:#e74c3c;color:#fff;border:none;border-radius:50%;font-size:18px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#fs-x:hover{background:#c0392b}
+</style>
+<div id="graph-wrapper">
+<button id="fs-btn" onclick="
+var f=document.getElementById('graph-frame');
+var b=document.getElementById('fs-btn');
+var x=document.getElementById('fs-x');
+if(f.classList.contains('fs')){
+f.classList.remove('fs');
+b.style.display='';b.textContent='⛶ Full Screen';
+x.style.display='none';
+document.body.style.overflow='';
+}else{
+f.classList.add('fs');
+b.textContent='⛶ Full Screen';b.style.display='none';
+x.style.display='block';
+document.body.style.overflow='hidden';
+}
+setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},300);
+">⛶ Full Screen</button>
+<button id="fs-x" onclick="
+var f=document.getElementById('graph-frame');
+var b=document.getElementById('fs-btn');
+var x=document.getElementById('fs-x');
+f.classList.remove('fs');
+b.style.display='';b.textContent='⛶ Full Screen';
+x.style.display='none';
+document.body.style.overflow='';
+setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
+" title="Exit">✕</button>
+</div>
+<script>
+document.addEventListener('keydown',function(e){
+if(e.key==='Escape'){
+var f=document.getElementById('graph-frame');
+if(f&&f.classList.contains('fs')){
+var b=document.getElementById('fs-btn');
+var x=document.getElementById('fs-x');
+f.classList.remove('fs');
+b.style.display='';b.textContent='⛶ Full Screen';
+x.style.display='none';
+document.body.style.overflow='';
+setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
+}
+}
+});
+</script>""")
                 graph_output = gr.HTML(
                     label="Interactive Network",
                     value="<p style='color:#888;padding:2em;text-align:center'>"
