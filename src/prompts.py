@@ -26,7 +26,15 @@ SYSTEM_PROMPT = (
     "If requested to analyze and save, you must chain these tools: execute "
     "the analysis first, then pass the raw data to the write tool immediately. "
     "When saving files, always use the 'write_file' tool with the 'filename' "
-    "and 'content' parameters exactly as defined in the schema."
+    "and 'content' parameters exactly as defined in the schema. "
+    "RDF Generation Rules: "
+    "3. When generating triples, use CURIE prefixes (ex:, rdf:, rdfs:, prov:) "
+    "for subjects and predicates — never bare strings. "
+    "4. Assign rdf:type and rdfs:label to every entity. "
+    "5. Tag literal objects with explicit datatypes (xsd:string, xsd:dateTime, "
+    "xsd:float) via the 'datatype' field. "
+    "6. Use 'subject_type' and 'object_type' to mark each term as 'uri', "
+    "'entity_id', 'blank_node', or 'literal'."
 )
 
 # ═══════════════════════════════════════════════════════════════════════════════

@@ -116,35 +116,52 @@ class TripleGenerator:
         relations: List[Dict[str, Any]],
         prefixes: Dict[str, str],
     ) -> List[Dict[str, str]]:
-        """Build a flat list of triple dicts from entities + relations."""
+        """Build a flat list of triple dicts from entities + relations.
+
+        Propagates ``subject_type``, ``object_type``, and ``datatype`` from
+        relation dicts so the serializer can produce correct RDF terms.
+        """
         triples: List[Dict[str, str]] = []
 
         for ent in entities:
             entity_id = ent.get("id", ent.get("label", "unknown"))
             rdf_type = ent.get("rdf_type", ent.get("entity_type", "ex:Concept"))
-            triples.append(
-                {"subject": entity_id, "predicate": "rdf:type", "object": rdf_type}
-            )
+            triples.append({
+                "subject": entity_id,
+                "predicate": "rdf:type",
+                "object": rdf_type,
+                "subject_type": "entity_id",
+                "object_type": "uri" if ":" in rdf_type else "entity_id",
+            })
 
             label = ent.get("label", entity_id)
-            triples.append(
-                {"subject": entity_id, "predicate": "rdfs:label", "object": label}
-            )
+            triples.append({
+                "subject": entity_id,
+                "predicate": "rdfs:label",
+                "object": label,
+                "subject_type": "entity_id",
+                "object_type": "literal",
+            })
 
             props = ent.get("properties", {})
             for prop, val in props.items():
-                triples.append(
-                    {"subject": entity_id, "predicate": prop, "object": str(val)}
-                )
+                triples.append({
+                    "subject": entity_id,
+                    "predicate": prop,
+                    "object": str(val),
+                    "subject_type": "entity_id",
+                    "object_type": "literal",
+                })
 
         for rel in relations:
-            triples.append(
-                {
-                    "subject": rel.get("subject", "??"),
-                    "predicate": rel.get("predicate", "??"),
-                    "object": rel.get("object", rel.get("obj", "??")),
-                }
-            )
+            triples.append({
+                "subject": rel.get("subject", "??"),
+                "predicate": rel.get("predicate", "??"),
+                "object": rel.get("object", rel.get("obj", "??")),
+                "subject_type": rel.get("subject_type", "entity_id"),
+                "object_type": rel.get("object_type", "entity_id"),
+                "datatype": rel.get("datatype"),
+            })
 
         return triples
 
@@ -179,9 +196,13 @@ class TripleGenerator:
         }
 
         for t in triples:
-            s = self._to_rdflib_term(t["subject"], ns_map)
-            p = self._to_rdflib_term(t["predicate"], ns_map)
-            o = self._to_rdflib_term(t["object"], ns_map)
+            s = self._to_rdflib_term(t["subject"], ns_map, position="subject")
+            p = self._to_rdflib_term(t["predicate"], ns_map, position="predicate")
+            o = self._to_rdflib_term(
+                t["object"], ns_map,
+                position="object",
+                datatype=t.get("datatype"),
+            )
             if s is not None and p is not None and o is not None:
                 g.add((s, p, o))
 
@@ -189,20 +210,42 @@ class TripleGenerator:
         return g.serialize(format=format) or ""
 
     @staticmethod
-    def _to_rdflib_term(token: str, ns_map: Dict[str, Any]):
-        """Convert a string token to an rdflib term (URIRef or Literal)."""
+    def _to_rdflib_term(
+        token: str,
+        ns_map: Dict[str, Any],
+        position: str = "object",
+        datatype: Optional[str] = None,
+    ):
+        """Convert a string token to an rdflib term, position-aware.
+
+        - ``subject`` / ``predicate``: always resolve to URIRef (never Literal).
+        - ``object``: may be URIRef or typed Literal.
+        """
         import rdflib
 
+        # Full URI — always a resource
         if token.startswith("http://") or token.startswith("https://"):
             return rdflib.URIRef(token)
 
-        if ":" in token and not token.startswith("http"):
+        # Prefixed name like ex:Person or rdf:type
+        if ":" in token:
             prefix, _, local = token.partition(":")
             if prefix in ns_map:
                 return ns_map[prefix][local]
-            return rdflib.Literal(token)
+            # Unknown prefix — treat as URI for subject/predicate, Literal for object
+            if position in ("subject", "predicate"):
+                return rdflib.URIRef(token)
+            return rdflib.Literal(token, datatype=datatype) if datatype else rdflib.Literal(token)
 
-        return rdflib.Literal(token)
+        # Plain token — subjects/predicates become URIRefs under default namespace
+        if position in ("subject", "predicate"):
+            ex_ns = ns_map.get("ex")
+            if ex_ns is not None:
+                return ex_ns[token]
+            return rdflib.URIRef(token)
+
+        # Object — typed literal or plain literal
+        return rdflib.Literal(token, datatype=datatype) if datatype else rdflib.Literal(token)
 
     @staticmethod
     def _serialize_fallback(
