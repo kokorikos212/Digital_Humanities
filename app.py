@@ -55,9 +55,6 @@ from src.queries import PRESET_SPARQL_QUERIES, CASE_QUERIES, execute_sparql, get
 from src.precomputed import load_precomputed_asset, PRECOMPUTED_MAP
 from src.ingestion import save_uploaded_files
 
-# Demo user/project (replace with auth later)
-_DEMO_UID, _DEMO_PID = "demo", "default"
-
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
 # ═══════════════════════════════════════════════════════════════════════════
@@ -318,16 +315,64 @@ footer { display: none !important; }
 
 
 def create_ui() -> gr.Blocks:
-    """Build the Gradio interface."""
+    """Build the Gradio interface with auth → dashboard → workspace routing."""
+
+    from src.auth import register_user, authenticate_user, list_user_projects, create_project
+    from src.config import resolve_project_dir
 
     with gr.Blocks(
         theme=gr.themes.Soft(),
         head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">""",
-        title="Ontological Discourse Analysis",
+        title="Talos — Ontological Deliberation Platform",
         css=UI_CSS,
     ) as app:
 
-        # ── Chat widget (collapsed bar, expands on click) ───────────
+        # Session state
+        user_state = gr.State(value=None)
+        project_state = gr.State(value=None)
+
+        # ═══════════════════════════════════════════════════════════════
+        # STAGE 1: AUTHENTICATION
+        # ═══════════════════════════════════════════════════════════════
+
+        with gr.Column(visible=True, elem_id="auth-view") as auth_container:
+            gr.Markdown("# 🏛️ Talos Platform — Portal")
+            with gr.Tabs():
+                with gr.Tab("Login"):
+                    login_user = gr.Textbox(label="Username")
+                    login_pass = gr.Textbox(label="Password", type="password")
+                    login_btn = gr.Button("Login", variant="primary")
+                    login_msg = gr.Markdown("")
+
+                with gr.Tab("Register"):
+                    reg_user = gr.Textbox(label="Username")
+                    reg_pass = gr.Textbox(label="Password", type="password")
+                    reg_btn = gr.Button("Create Account", variant="primary")
+                    reg_msg = gr.Markdown("")
+
+        # ═══════════════════════════════════════════════════════════════
+        # STAGE 2: PROJECT DASHBOARD
+        # ═══════════════════════════════════════════════════════════════
+
+        with gr.Column(visible=False, elem_id="dashboard-view") as project_container:
+            user_header = gr.Markdown("# 📁 Select or Create a Project")
+            with gr.Row():
+                with gr.Column():
+                    project_dropdown = gr.Dropdown(label="Your Projects", choices=[])
+                    open_project_btn = gr.Button("Open Selected Project", variant="primary")
+                with gr.Column():
+                    new_proj_name = gr.Textbox(label="New Project Name", placeholder="e.g. student_council_2026")
+                    create_proj_btn = gr.Button("Create New Project")
+            dash_msg = gr.Markdown("")
+
+        # ═══════════════════════════════════════════════════════════════
+        # STAGE 3: MAIN WORKSPACE (existing content)
+        # ═══════════════════════════════════════════════════════════════
+
+        with gr.Column(visible=False, elem_id="workspace-view") as workspace_container:
+            active_proj_header = gr.Markdown("## 🔬 Active Workspace")
+
+            # ── Chat widget (collapsed bar, expands on click) ───────────
         gr.HTML("""<style>
 #chat-widget{position:fixed;bottom:0;right:20px;z-index:9998;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
 #chat-bar{cursor:pointer;background:#4a6cf7;color:#fff;padding:10px 18px;border-radius:12px 12px 0 0;font-size:14px;font-weight:600;user-select:none;display:flex;align-items:center;gap:8px;width:220px;justify-content:space-between}
@@ -607,17 +652,19 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             ],
         )
 
-        def _handle_upload(files):
+        def _handle_upload(files, uid, pid):
             if not files:
                 return "No files selected."
-            result = save_uploaded_files(files, _DEMO_UID, _DEMO_PID)
+            if not uid or not pid:
+                return "⚠️ Please open a project first."
+            result = save_uploaded_files(files, uid, pid)
             if result["total_files"]:
                 return f"✅ Uploaded {result['total_files']} file(s): {', '.join(result['saved_files'])}"
             return "⚠️ No supported files found."
 
         file_upload.upload(
             fn=_handle_upload,
-            inputs=[file_upload],
+            inputs=[file_upload, user_state, project_state],
             outputs=[upload_status],
         )
 
@@ -686,6 +733,78 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 obsidian_output,
                 status,
             ],
+        )
+
+        # ═══════════════════════════════════════════════════════════════
+        # ROUTING LOGIC
+        # ═══════════════════════════════════════════════════════════════
+
+        def _handle_login(u, p):
+            success, msg = authenticate_user(u, p)
+            if success:
+                projects = list_user_projects(u)
+                return (
+                    gr.update(visible=False),
+                    gr.update(visible=True),
+                    f"# 📁 Welcome back, **{u}**!",
+                    gr.update(choices=projects, value=projects[0] if projects else None),
+                    u,
+                    f"✅ {msg}",
+                )
+            return (
+                gr.update(visible=True), gr.update(visible=False),
+                "", gr.update(), None,
+                f"❌ {msg}",
+            )
+
+        login_btn.click(
+            _handle_login,
+            inputs=[login_user, login_pass],
+            outputs=[auth_container, project_container, user_header,
+                     project_dropdown, user_state, login_msg],
+        )
+
+        def _handle_register(u, p):
+            success, msg = register_user(u, p)
+            return f"{'✅' if success else '❌'} {msg}"
+
+        reg_btn.click(
+            _handle_register,
+            inputs=[reg_user, reg_pass],
+            outputs=[reg_msg],
+        )
+
+        def _handle_create_project(u, name):
+            success, result = create_project(u, name)
+            if success:
+                projects = list_user_projects(u)
+                return (
+                    f"✅ Created project **{result}**",
+                    gr.update(choices=projects, value=result),
+                )
+            return f"❌ {result}", gr.update()
+
+        create_proj_btn.click(
+            _handle_create_project,
+            inputs=[user_state, new_proj_name],
+            outputs=[dash_msg, project_dropdown],
+        )
+
+        def _handle_open_project(u, proj):
+            if not u or not proj:
+                return gr.update(visible=True), gr.update(visible=False), "", None
+            return (
+                gr.update(visible=False),
+                gr.update(visible=True),
+                f"## 🔬 Active Project: **{proj}** (User: `{u}`)",
+                proj,
+            )
+
+        open_project_btn.click(
+            _handle_open_project,
+            inputs=[user_state, project_dropdown],
+            outputs=[project_container, workspace_container,
+                     active_proj_header, project_state],
         )
 
     return app
