@@ -75,27 +75,7 @@ def get_system_prompt() -> str:
 # ═══════════════════════════════════════════════════════════════════════════════
 
 NAMED_PROMPTS: Dict[str, str] = {
-    "ex_prompt": "You are a helpful assistant that can analyze text and write markdown reports.",
-    "ex_analysis": (
-        "Analyze the following text and create a report on the phrase: "
-        "'The quick brown fox jumps over the lazy dog.'"
-    ),
-    "ex_visualization": (
-        "Analyze the following text and create a report on the phrase: "
-        "'The quick brown fox jumps over the lazy dog', create a visualization "
-        "of the analysis."
-    ),
-    "ex_file": (
-        "Analyze the following text and create a report on the phrase: "
-        "'The quick brown fox jumps over the lazy dog', write the report to "
-        "a markdown file named 'report.md'."
-    ),
-    "ex_combined": (
-        "Analyze the following text and create a report on the phrase: "
-        "'The quick brown fox jumps over the lazy dog', create a visualization "
-        "of the analysis, and write the report to a markdown file named "
-        "'report.md'."
-    ),
+    # ── Baseline: simple Dr. Chen ontology (kept for quick smoke tests) ──
     "ex_ontology_basic": (
         "Perform a full ontological analysis on this text: "
         "'Dr. Chen presented the research findings at Stanford University "
@@ -104,52 +84,133 @@ NAMED_PROMPTS: Dict[str, str] = {
         "Use get_tags, then generate_triples, then build_obsidian_note, then "
         "generate_semantic_graph."
     ),
-    "ex_conversation_ontology": (
-        "Analyze this conversation excerpt as an ontology:\n\n"
-        "**Alice:** Good morning, Professor. Could you review my thesis draft?\n\n"
-        "**Professor:** Of course, Alice. I'll have comments by Friday.\n\n"
-        "**Alice:** Thank you so much! I was worried about the methodology section.\n\n"
-        "**Professor:** The statistical approach looks sound. Just expand the "
-        "literature review.\n\n"
-        "Use the full tool chain: get_tags on each utterance, "
-        "analyze_conversation for the dialogue structure, generate_triples "
-        "for the entities and relations, build_obsidian_note for the knowledge "
-        "graph, and generate_semantic_graph for visualization."
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Category 1 — Multi-Turn Rebuttal & Conflict Topology
+    # ═══════════════════════════════════════════════════════════════════════
+
+    "bench_1_1_rebuttal": (
+        "Perform a full ontological analysis on this debate, extracting "
+        "ibis:Issue, ibis:Position, and ibis:rebuts / aif:conflicts edges:\n\n"
+        "Moderator: Should the university allocate the surplus budget to lab "
+        "equipment or student housing subsidies?\n\n"
+        "Representative Alex: We must prioritize lab equipment. Modernizing "
+        "our computing labs directly impacts academic output and research "
+        "rankings.\n\n"
+        "Representative Maria: I disagree strongly. Computing labs are "
+        "functional, but 40% of our student body faces severe housing "
+        "insecurity. Housing subsidies must come first."
     ),
-    "ex_maya": (
-        "Analyze the following text and create a report on the dialogue: "
-        "'Maya: Hi there! How are you doing today? \n"
-        "Patrick: I'm doing well, thanks for asking! How about you? \n"
-        "Maya: I'm great, just enjoying the weather. \n"
-        "Patrick: That's good to hear. Do you have any plans for the weekend? \n"
-        "Maya: Not yet, but I'm thinking of going hiking. What about you? \n"
-        "Patrick: I might go to the beach if the weather stays nice. \n"
-        "Maya: That sounds fun! Maybe we can go together. \n"
-        "Patrick: I'd love that! Let's plan for it.'"
+
+    "bench_1_2_escalation": (
+        "Perform a full ontological analysis on this multi-party debate, "
+        "extracting cross-claim conflict edges and resolution proposals:\n\n"
+        "Chairman: The proposed amendment suggests mandatory attendance for "
+        "all departmental assemblies.\n\n"
+        "Faction A: Mandatory attendance ensures full democratic "
+        "representation and eliminates illegitimate minority votes.\n\n"
+        "Faction B: That argument is flawed. Forcing attendance creates "
+        "artificial participation without genuine engagement and penalizes "
+        "working students.\n\n"
+        "Faction C: Faction B is right about working students, but we can "
+        "resolve this by introducing asynchronous digital voting instead."
     ),
-    "ex_maya_visualization": (
-        "Analyze the following text and create a report on the dialogue: "
-        "'Maya: Hi there! How are you doing today? \n"
-        "Patrick: I'm doing well, thanks for asking! How about you? \n"
-        "Maya: I'm great, just enjoying the weather. \n"
-        "Patrick: That's good to hear. Do you have any plans for the weekend? \n"
-        "Maya: Not yet, but I'm thinking of going hiking. What about you? \n"
-        "Patrick: I might go to the beach if the weather stays nice. \n"
-        "Maya: That sounds fun! Maybe we can go together. \n"
-        "Patrick: I'd love that! Let's plan for it.', "
-        "create a visualization of the analysis."
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Category 2 — Conversational Noise vs. Actionable Claims
+    # ═══════════════════════════════════════════════════════════════════════
+
+    "bench_2_1_noise": (
+        "Analyze this committee dialogue and extract ONLY actionable "
+        "ibis:Position nodes — do NOT create entity nodes for polite turns "
+        "or emotional statements:\n\n"
+        "Alice: Good afternoon, everyone. Thanks for making time on a "
+        "Friday.\n\n"
+        "Bob: Happy to be here, though I'm exhausted from midterms!\n\n"
+        "Alice: I feel you. Anyway, I move that we publish assembly voting "
+        "records publicly on the department portal.\n\n"
+        "Bob: Sounds good to me. I was worried students wouldn't care, but "
+        "transparency is vital for institutional trust.\n\n"
+        "Alice: Great, let's submit the motion before 5 PM."
     ),
-    "ex_maya_file": (
-        "Analyze the following text and create a report on the dialogue: "
-        "'Maya: Hi there! How are you doing today? \n"
-        "Patrick: I'm doing well, thanks for asking! How about you? \n"
-        "Maya: I'm great, just enjoying the weather. \n"
-        "Patrick: That's good to hear. Do you have any plans for the weekend? \n"
-        "Maya: Not yet, but I'm thinking of going hiking. What about you? \n"
-        "Patrick: I might go to the beach if the weather stays nice. \n"
-        "Maya: That sounds fun! Maybe we can go together. \n"
-        "Patrick: I'd love that! Let's plan for it.', "
-        "write the report to a markdown file named 'report.md'."
+
+    "bench_2_2_mixed": (
+        "Analyze this procedural dialogue. Extract policy claims but do NOT "
+        "reify procedural noise (lateness, small talk) into ontology nodes:\n\n"
+        "Elena: Sorry I'm late, the bus was delayed. Did I miss the vote on "
+        "the library hours?\n\n"
+        "Dimitris: No worries, Elena. We just started. Faction X proposed "
+        "extending the library to 24/7 during exam periods.\n\n"
+        "Elena: Oh, fantastic! I was really stressed about finding quiet "
+        "study space after midnight."
+    ),
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Category 3 — Complex Coreference & Role Attribute Resolution
+    # ═══════════════════════════════════════════════════════════════════════
+
+    "bench_3_1_multi_title": (
+        "Analyze this report. Merge all mentions of the same individual "
+        "into a SINGLE canonical node with role properties. Do NOT create "
+        "duplicate Person nodes:\n\n"
+        "Dean Varga announced the new research grant during Monday's faculty "
+        "senate meeting. The head of the computer science department "
+        "emphasized that the funding will support three doctoral fellowships. "
+        "Varga noted that applications open next month."
+    ),
+
+    "bench_3_2_pronoun": (
+        "Analyze this text. Resolve pronominal coreference (she → Sarah "
+        "Jenkins) into ONE canonical person node. Extract the claim as an "
+        "ibis:Position:\n\n"
+        "President Sarah Jenkins addressed the student assembly on Tuesday "
+        "regarding tuition freezes. The student council leader argued that "
+        "rising living costs make fee increases unacceptable. She urged the "
+        "board to vote against the proposal."
+    ),
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Category 4 — Dynamic Temporal & Event Reification
+    # ═══════════════════════════════════════════════════════════════════════
+
+    "bench_4_1_relative_dates": (
+        "Analyze this text. Compute ALL relative dates dynamically relative "
+        "to today (do NOT use placeholder dates). Use xsd:dateTime typed "
+        "literals:\n\n"
+        "Professor Papadopoulos submitted the revised curriculum proposal "
+        "last Wednesday. The departmental board scheduled the formal vote "
+        "for next Friday, while student feedback will remain open until "
+        "two days before the vote."
+    ),
+
+    "bench_4_2_nested_temporal": (
+        "Analyze this text. Reify each temporal event as a prov:Activity "
+        "with prov:startedAtTime. Compute all relative dates dynamically:\n\n"
+        "Three days ago, Faction A published its election manifesto. The "
+        "student union hosted a public debate yesterday evening, and the "
+        "final election will take place this coming Thursday at 9:00 AM."
+    ),
+
+    # ═══════════════════════════════════════════════════════════════════════
+    # Category 5 — Complex Claim Decomposition & Nested Modality
+    # ═══════════════════════════════════════════════════════════════════════
+
+    "bench_5_1_modal": (
+        "Analyze this policy claim. Preserve modal operators ('could', "
+        "'reduce by 50%') in the ibis:Position label. Optionally decompose "
+        "sub-triples via aif:claimText:\n\n"
+        "Faction B argued that implementing an automated vote-counting "
+        "system could reduce election audit times by 50% while mitigating "
+        "human counting errors during late-night assemblies."
+    ),
+
+    "bench_5_2_nested_conditional": (
+        "Analyze this statement. Preserve nested conditionals ('if...might "
+        "...provided that') in the ibis:Position text. Reify the speaker, "
+        "the claim, and any apodosis/protasis sub-components:\n\n"
+        "Dr. Aris claimed that if the student union adopts digital voting "
+        "delegates, assembly turnout might increase among off-campus "
+        "students, provided that cryptographic anonymity is guaranteed."
     ),
 }
 
