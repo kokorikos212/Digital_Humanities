@@ -58,9 +58,13 @@ class TripleGenerator:
         "rdfs": "http://www.w3.org/2000/01/rdf-schema#",
         "owl": "http://www.w3.org/2002/07/owl#",
         "ex": "http://example.org/ontology/",
+        "ibis": "http://purl.org/ibis#",
+        "aif": "http://www.arg.tech/aif#",
+        "skos": "http://www.w3.org/2004/02/skos/core#",
+        "prov": "http://www.w3.org/ns/prov#",
+        "xsd": "http://www.w3.org/2001/XMLSchema#",
         "convokit": "http://convokit.cornell.edu/ontology/",
         "nif": "http://persistence.uni-leipzig.org/nlp2rdf/ontologies/nif-core#",
-        "prov": "http://www.w3.org/ns/prov#",
     }
 
     def __init__(self):
