@@ -38,7 +38,8 @@ from src.config import config
 from src.pipeline import run_pipeline
 from src.prompts import get_system_prompt, NAMED_PROMPTS, build_analysis_prompt
 from src.tools import TOOL_UI_LABELS
-from src.visualizer import render_rdf_graph
+from src.visualizer import render_rdf_graph, execute_sparql_query
+from src.queries import PRESET_SPARQL_QUERIES
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
@@ -348,6 +349,25 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var f=docum
                     elem_classes="output-box",
                 )
 
+            with gr.TabItem("🔍 SPARQL Queries"):
+                with gr.Row():
+                    preset_dropdown = gr.Dropdown(
+                        label="Preset Query",
+                        choices=list(PRESET_SPARQL_QUERIES.keys()),
+                        value=list(PRESET_SPARQL_QUERIES.keys())[0],
+                        scale=2,
+                    )
+                    run_query_btn = gr.Button("▶️ Execute Query", variant="primary", scale=1)
+                sparql_editor = gr.Code(
+                    label="SPARQL Query",
+                    value=PRESET_SPARQL_QUERIES[list(PRESET_SPARQL_QUERIES.keys())[0]],
+                    lines=12,
+                )
+                query_results = gr.Dataframe(
+                    label="Query Results",
+                    interactive=False,
+                )
+
         # ── Event Handlers ──────────────────────────────────────────
 
         example_selector.change(
@@ -374,6 +394,30 @@ document.addEventListener('keydown',function(e){if(e.key==='Escape'){var f=docum
         ).then(
             fn=lambda: "✅ Analysis complete.",
             outputs=[status],
+        )
+
+        # ── SPARQL handlers ──────────────────────────────────────────
+
+        def _update_query(preset_name: str) -> str:
+            return PRESET_SPARQL_QUERIES.get(preset_name, "")
+
+        def _run_query(ttl_data: str, query_str: str):
+            import pandas as pd
+            df = execute_sparql_query(ttl_data, query_str)
+            if df is None or df.empty:
+                return pd.DataFrame({"Result": ["No matches found or query failed."]})
+            return df
+
+        preset_dropdown.change(
+            fn=_update_query,
+            inputs=[preset_dropdown],
+            outputs=[sparql_editor],
+        )
+
+        run_query_btn.click(
+            fn=_run_query,
+            inputs=[rdf_output, sparql_editor],
+            outputs=[query_results],
         )
 
         clear_btn.click(

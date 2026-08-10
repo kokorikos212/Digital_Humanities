@@ -223,3 +223,44 @@ def _node_color(uri_str: str, roots: set, terminals: set) -> str:
     if uri_str in terminals:
         return "#FFA07A"
     return "#DFF2FF"
+
+
+# ═══════════════════════════════════════════════════════════════════════════
+# SPARQL Execution Helper
+# ═══════════════════════════════════════════════════════════════════════════
+
+
+def execute_sparql_query(ttl_code: str, query_str: str):
+    """Parse Turtle RDF string and execute a SPARQL query.
+
+    Parameters
+    ----------
+    ttl_code:
+        RDF data as a Turtle string.
+    query_str:
+        A SPARQL SELECT query string.
+
+    Returns
+    -------
+    A ``pandas.DataFrame`` with one column per result variable, or an
+    empty DataFrame on failure.
+    """
+    import pandas as pd
+    import rdflib
+
+    if not ttl_code or not query_str:
+        return pd.DataFrame()
+
+    g = rdflib.Graph()
+    try:
+        g.parse(data=ttl_code, format="turtle")
+        results = g.query(query_str)
+
+        cols = [str(var) for var in results.vars]
+        data = []
+        for row in results:
+            data.append([str(val) if val is not None else "" for val in row])
+
+        return pd.DataFrame(data, columns=cols)
+    except Exception as e:
+        return pd.DataFrame([{"Error": f"SPARQL Query Execution Failed: {str(e)}"}])
