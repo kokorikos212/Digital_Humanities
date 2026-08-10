@@ -58,7 +58,22 @@ SYSTEM_PROMPT = (
     "Link sub-triples to the ibis:Position node via aif:claimText. "
     "15. EVERY rdf:type value MUST use a CURIE prefix (prov:Activity, "
     "ibis:Position, schema:Person, xsd:dateTime). NEVER emit bare types "
-    "like 'Activity' or 'Position' without their namespace prefix."
+    "like 'Activity' or 'Position' without their namespace prefix. "
+    "Dialogue & Debate Topology: "
+    "16. ALWAYS extract the overarching question/friction as an ibis:Issue node. "
+    "Link every ibis:Position to its root issue via ibis:respondsTo. "
+    "17. When a speaker EXPLICITLY counters another claim ('I disagree', "
+    "'that is flawed', 'those numbers are fantasy'), emit: "
+    "ex:CounterClaim ibis:rebuts ex:TargetClaim AND "
+    "ex:CounterClaim aif:conflicts ex:TargetClaim . "
+    "When a speaker supports another, emit aif:supports or ibis:endorses. "
+    "18. DO NOT reify polite greetings, gratitude, emotional statements, "
+    "or administrative scheduling as ibis:Position nodes. Reserve IBIS "
+    "nodes strictly for actionable claims, policy proposals, evaluative "
+    "judgments, or empirical assertions. "
+    "19. Attach domain entities (legislation, policies, artifacts) to "
+    "claims via schema:about or aif:claimText. NEVER leave central "
+    "domain entities as floating nodes disconnected from the claim graph."
 )
 
 from datetime import date as _today
