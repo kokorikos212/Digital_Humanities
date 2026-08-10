@@ -1,0 +1,64 @@
+@prefix aif: <http://www.arg.dundee.ac.uk/aif#> .
+@prefix ex: <http://example.org/> .
+@prefix ibis: <http://purl.org/ibis#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema1: <http://schema.org/> .
+
+ex:Alex a schema1:Person ;
+    rdfs:label "Representative Alex" ;
+    ibis:asserts ex:Claim_Modernization_AcademicImpact,
+        ex:Position_Alex_LabPriority .
+
+ex:Claim_Housing_Insecurity a ibis:Position ;
+    rdfs:label "Students face severe housing insecurity" ;
+    schema1:about ex:Issue_Budget_Allocation .
+
+ex:Claim_Modernization_AcademicImpact a ibis:Position ;
+    rdfs:label "Lab modernization boosts academic output" ;
+    schema1:about ex:Issue_Budget_Allocation ;
+    schema1:mentions ex:ComputingLabs .
+
+ex:Maria a schema1:Person ;
+    rdfs:label "Representative Maria" ;
+    ibis:asserts ex:Claim_Housing_Insecurity,
+        ex:Position_Maria_HousingPriority .
+
+ex:Position_Maria_HousingPriority a ibis:Position ;
+    rdfs:label ex:Prioritize_Housing_Subsidies_Funding,
+        "Prioritize housing subsidies funding" ;
+    ibis:rebuts ex:Position_Alex_LabPriority ;
+    schema1:about ex:Issue_Budget_Allocation ;
+    schema1:mentions ex:HousingSubsidies ;
+    aif:claimText ex:Housing_Subsidies_Must_Come_First_Computing_Labs_Are_Functional_But_40_Of_Our_Student_Body_Faces_Severe_Housing_Insecurity ;
+    aif:conflicts ex:Position_Alex_LabPriority .
+
+ex:University a schema1:Organization ;
+    rdfs:label "The university" ;
+    schema1:about ex:Issue_Budget_Allocation ;
+    schema1:funds ex:HousingSubsidies,
+        ex:LabEquipment .
+
+ex:ComputingLabs a schema1:Thing ;
+    rdfs:label "Modern computing labs" .
+
+ex:HousingSubsidies a schema1:Thing ;
+    rdfs:label "Student housing subsidies" ;
+    schema1:about ex:Issue_Budget_Allocation .
+
+ex:LabEquipment a schema1:Thing ;
+    rdfs:label "Laboratory equipment" ;
+    schema1:about ex:Issue_Budget_Allocation .
+
+ex:Position_Alex_LabPriority a ibis:Position ;
+    rdfs:label ex:Prioritize_Lab_Equipment_Funding,
+        "Prioritize lab equipment funding" ;
+    schema1:about ex:Issue_Budget_Allocation ;
+    schema1:mentions ex:ComputingLabs,
+        ex:LabEquipment ;
+    aif:claimText ex:We_Must_Prioritize_Lab_Equipment_Modernizing_Our_Computing_Labs_Directly_Impacts_Academic_Output_And_Research_Rankings .
+
+ex:Issue_Budget_Allocation a ibis:Issue ;
+    rdfs:label "Surplus budget allocation decision" ;
+    schema1:about ex:Alex,
+        ex:Maria,
+        ex:University .

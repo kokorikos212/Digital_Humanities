@@ -187,6 +187,9 @@ def _format_graph_html(ttl_data: str) -> str:
         raw_html = render_rdf_graph(ttl_data, height="calc(100vh - 40px)")
         escaped = _html.escape(raw_html)
         return (
+            '<style>iframe.fs{position:fixed!important;top:0!important;left:0!important;'
+            'width:100vw!important;height:100vh!important;z-index:9999!important;'
+            'border-radius:0!important;background:#fff!important}</style>'
             '<div style="position:relative;display:inline-block;width:100%">'
             '<button onclick="'
             "var f=this.parentNode.querySelector('iframe');"
@@ -194,14 +197,16 @@ def _format_graph_html(ttl_data: str) -> str:
             'f.classList.toggle(\'fs\');'
             "this.style.display=f.classList.contains('fs')?'none':'';"
             "x.style.display=f.classList.contains('fs')?'block':'none';"
-            'document.body.style.overflow=f.classList.contains(\'fs\')?\'hidden\':\'\''
+            'document.body.style.overflow=f.classList.contains(\'fs\')?\'hidden\':\'\';'
+            'setTimeout(function(){f.contentWindow.postMessage(\"talos-fit\",\"*\")},300)'
             '" style="position:absolute;top:8px;right:8px;z-index:10;padding:6px 12px;'
             'background:#4a6cf7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px">'
             '⛶ Full Screen</button>'
             '<button onclick="'
             "var w=this.parentNode;var f=w.querySelector('iframe');var b=this.previousElementSibling;"
             "f.classList.remove('fs');b.style.display='';this.style.display='none';"
-            'document.body.style.overflow=\'\''
+            'document.body.style.overflow=\'\';'
+            'setTimeout(function(){f.contentWindow.postMessage(\"talos-fit\",\"*\")},200)'
             '" style="display:none;position:fixed;top:12px;right:12px;z-index:10001;'
             'width:36px;height:36px;background:#e74c3c;color:#fff;border:none;border-radius:50%;'
             'font-size:18px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)" title="Exit">✕</button>'
@@ -213,7 +218,8 @@ def _format_graph_html(ttl_data: str) -> str:
             'var fs=document.querySelector("iframe.fs");if(fs){'
             'var w=fs.parentNode;w.querySelector("button:first-child").style.display="";'
             'w.querySelector("button:nth-child(2)").style.display="none";'
-            'fs.classList.remove("fs");document.body.style.overflow=""}}})'
+            'fs.classList.remove("fs");document.body.style.overflow="";'
+            'setTimeout(function(){fs.contentWindow.postMessage("talos-fit","*")},200)}}})'
             '</script>'
         )
     except Exception as exc:

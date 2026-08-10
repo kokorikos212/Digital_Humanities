@@ -1,0 +1,224 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 650px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            
+<div style="padding:10px;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);border:1px solid #ddd;border-radius:8px;margin-bottom:10px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <input type="text" id="nodeSearch" placeholder="Search node (use * as wildcard)..."
+      style="padding:6px 12px;border:1px solid #ccc;border-radius:4px;font-size:14px;min-width:200px;flex:1;max-width:300px;">
+    <button onclick="searchNode()"
+      style="padding:6px 12px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Search</button>
+    <button onclick="resetAll()"
+      style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Reset</button>
+    <button id="freezeBtn" onclick="toggleFreeze()"
+      style="padding:6px 12px;background:#F5B027;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Freeze (OFF)</button>
+    <button onclick="deleteSelectedNode()"
+      style="padding:6px 12px;background:#F54927;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Delete node</button>
+  </div>
+</div>
+<style>
+  button:hover{opacity:0.8;transform:translateY(-1px);}
+  #nodeSearch:focus{outline:none;border-color:#4CAF50;box-shadow:0 0 5px rgba(76,175,80,0.3);}
+  body,html{margin:0;padding:0;height:100%;overflow:hidden;}
+  #mynetwork{height:calc(100vh - 120px)!important;width:100%!important;}
+</style>
+<script>
+  var isPhysicsEnabled=true;
+  var isDragMode=false;
+  function searchNode(){
+    var pattern=document.getElementById('nodeSearch').value;
+    if(!pattern){alert("Please enter a search term");return;}
+    var matches=[];
+    try{var regex=new RegExp(pattern.replace(/\*/g,'.*'),'i');}
+    catch(e){alert("Invalid expression: "+e.message);return;}
+    network.body.data.nodes.forEach(function(node){
+      if(regex.test(node.label)||regex.test(node.title)){
+        matches.push(node.id);
+        network.body.data.nodes.update({id:node.id,color:{background:'yellow'},font:{bold:true}});
+      }
+    });
+    if(matches.length>0){network.selectNodes(matches);network.fit({nodes:matches,animation:true});alert(matches.length+" node(s) found");}
+    else{alert("No matching nodes found.");}
+  }
+  function resetAll(){window.location.reload();}
+  function deleteSelectedNode(){
+    var selectedNodes=network.getSelectedNodes();
+    if(selectedNodes.length===0){alert("Please select a node to delete");return;}
+    if(selectedNodes.length>1){alert("Please select only one node to delete");return;}
+    if(confirm("Delete this node and all its connections?")){
+      network.body.data.edges.remove(network.getConnectedEdges(selectedNodes[0]));
+      network.body.data.nodes.remove(selectedNodes[0]);
+      network.redraw();
+    }
+  }
+  function toggleFreeze(){
+    var btn=document.getElementById('freezeBtn');
+    isPhysicsEnabled=!isPhysicsEnabled;
+    if(isPhysicsEnabled){
+      network.setOptions({physics:{enabled:true,stabilization:{iterations:100}}});
+      btn.innerHTML='Freeze (OFF)';btn.style.background='#F5B027';isDragMode=false;
+      setTimeout(function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});},200);
+    }else{
+      network.setOptions({physics:{enabled:false},edges:{smooth:{enabled:true,type:'straightCross',forceDirection:'none'}}});
+      btn.innerHTML='Freeze (ON)';btn.style.background='#F44336';isDragMode=true;
+      network.on('dragEnd',function(p){if(isDragMode&&p.nodes.length>0)network.redraw();});
+      network.on('dragging',function(p){if(isDragMode&&p.nodes.length>0)network.redraw();});
+    }
+  }
+  document.getElementById('nodeSearch').addEventListener('keypress',function(e){if(e.key==='Enter')searchNode();});
+  network.once('stabilizationIterationsDone',function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});});
+  window.addEventListener('resize',function(){if(network){network.redraw();network.fit();}});
+</script>
+
+<div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/University", "label": "The university", "shape": "ellipse", "title": "http://example.org/University"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "The university_label_The university", "label": "The university", "shape": "box", "title": "The university"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/HousingSubsidies", "label": "Student housing subsidies", "shape": "ellipse", "title": "http://example.org/HousingSubsidies"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Issue_Budget_Allocation", "label": "Surplus budget allocation decision", "shape": "ellipse", "title": "http://example.org/Issue_Budget_Allocation"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Claim_Housing_Insecurity", "label": "Students face s...sing insecurity", "shape": "ellipse", "title": "http://example.org/Claim_Housing_Insecurity"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ComputingLabs", "label": "Modern computing labs", "shape": "ellipse", "title": "http://example.org/ComputingLabs"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Modern computing labs_label_Modern computing labs", "label": "Modern computing labs", "shape": "box", "title": "Modern computing labs"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/LabEquipment", "label": "Laboratory equipment", "shape": "ellipse", "title": "http://example.org/LabEquipment"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Thing", "label": "Thing", "shape": "ellipse", "title": "http://schema.org/Thing"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Organization", "label": "Organization", "shape": "ellipse", "title": "http://schema.org/Organization"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_Maria_HousingPriority", "label": "http://example....bsidies_Funding", "shape": "ellipse", "title": "http://example.org/Position_Maria_HousingPriority"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://purl.org/ibis#Position", "label": "Position", "shape": "ellipse", "title": "http://purl.org/ibis#Position"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_Alex_LabPriority", "label": "http://example....uipment_Funding", "shape": "ellipse", "title": "http://example.org/Position_Alex_LabPriority"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "http://example....uipment_Funding_label_Prioritize lab equipment funding", "label": "Prioritize lab equipment funding", "shape": "box", "title": "Prioritize lab equipment funding"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/Housing_Subsidies_Must_Come_First_Computing_Labs_Are_Functional_But_40_Of_Our_Student_Body_Faces_Severe_Housing_Insecurity", "label": "Housing_Subsidi...sing_Insecurity", "shape": "ellipse", "title": "http://example.org/Housing_Subsidies_Must_Come_First_Computing_Labs_Are_Functional_But_40_Of_Our_Student_Body_Faces_Severe_Housing_Insecurity"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Claim_Modernization_AcademicImpact", "label": "Lab modernizati...academic output", "shape": "ellipse", "title": "http://example.org/Claim_Modernization_AcademicImpact"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Maria", "label": "Representative Maria", "shape": "ellipse", "title": "http://example.org/Maria"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "http://example....bsidies_Funding_label_Prioritize housing subsidies funding", "label": "Prioritize hous...bsidies funding", "shape": "box", "title": "Prioritize housing subsidies funding"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://purl.org/ibis#Issue", "label": "Issue", "shape": "ellipse", "title": "http://purl.org/ibis#Issue"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/Prioritize_Lab_Equipment_Funding", "label": "Prioritize_Lab_Equipment_Funding", "shape": "ellipse", "title": "http://example.org/Prioritize_Lab_Equipment_Funding"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Laboratory equipment_label_Laboratory equipment", "label": "Laboratory equipment", "shape": "box", "title": "Laboratory equipment"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/Prioritize_Housing_Subsidies_Funding", "label": "Prioritize_Hous...bsidies_Funding", "shape": "ellipse", "title": "http://example.org/Prioritize_Housing_Subsidies_Funding"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Surplus budget allocation decision_label_Surplus budget allocation decision", "label": "Surplus budget allocation decision", "shape": "box", "title": "Surplus budget allocation decision"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Representative Maria_label_Representative Maria", "label": "Representative Maria", "shape": "box", "title": "Representative Maria"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/We_Must_Prioritize_Lab_Equipment_Modernizing_Our_Computing_Labs_Directly_Impacts_Academic_Output_And_Research_Rankings", "label": "We_Must_Priorit...search_Rankings", "shape": "ellipse", "title": "http://example.org/We_Must_Prioritize_Lab_Equipment_Modernizing_Our_Computing_Labs_Directly_Impacts_Academic_Output_And_Research_Rankings"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Alex", "label": "Representative Alex", "shape": "ellipse", "title": "http://example.org/Alex"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Person", "label": "Person", "shape": "ellipse", "title": "http://schema.org/Person"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Student housing subsidies_label_Student housing subsidies", "label": "Student housing subsidies", "shape": "box", "title": "Student housing subsidies"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Students face s...sing insecurity_label_Students face severe housing insecurity", "label": "Students face s...sing insecurity", "shape": "box", "title": "Students face severe housing insecurity"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Lab modernizati...academic output_label_Lab modernization boosts academic output", "label": "Lab modernizati...academic output", "shape": "box", "title": "Lab modernization boosts academic output"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Representative Alex_label_Representative Alex", "label": "Representative Alex", "shape": "box", "title": "Representative Alex"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#96CEB4", "from": "http://example.org/University", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "The university_label_The university"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/HousingSubsidies", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/University", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Claim_Housing_Insecurity", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/ComputingLabs", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Modern computing labs_label_Modern computing labs"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/LabEquipment", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Thing"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/University", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Organization"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_Maria_HousingPriority", "label": "mentions", "title": "http://schema.org/mentions", "to": "http://example.org/HousingSubsidies"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/ComputingLabs", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Thing"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Position_Maria_HousingPriority", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Position_Alex_LabPriority", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Position_Alex_LabPriority", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "http://example....uipment_Funding_label_Prioritize lab equipment funding"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_Maria_HousingPriority", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/Housing_Subsidies_Must_Come_First_Computing_Labs_Are_Functional_But_40_Of_Our_Student_Body_Faces_Severe_Housing_Insecurity"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Claim_Modernization_AcademicImpact", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Issue_Budget_Allocation", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Maria"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Position_Maria_HousingPriority", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "http://example....bsidies_Funding_label_Prioritize housing subsidies funding"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Issue_Budget_Allocation", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Issue"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Position_Alex_LabPriority", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "http://example.org/Prioritize_Lab_Equipment_Funding"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/LabEquipment", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Laboratory equipment_label_Laboratory equipment"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Position_Maria_HousingPriority", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "http://example.org/Prioritize_Housing_Subsidies_Funding"}, {"arrows": "to", "color": "#4ECDC4", "from": "http://example.org/Maria", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/Claim_Housing_Insecurity"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/University", "label": "funds", "title": "http://schema.org/funds", "to": "http://example.org/HousingSubsidies"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/LabEquipment", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Issue_Budget_Allocation", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Surplus budget allocation decision_label_Surplus budget allocation decision"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Maria", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Representative Maria_label_Representative Maria"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Issue_Budget_Allocation", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/University"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_Alex_LabPriority", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/We_Must_Prioritize_Lab_Equipment_Modernizing_Our_Computing_Labs_Directly_Impacts_Academic_Output_And_Research_Rankings"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Position_Maria_HousingPriority", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#4ECDC4", "from": "http://example.org/Maria", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/Position_Maria_HousingPriority"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Alex", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/HousingSubsidies", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Student housing subsidies_label_Student housing subsidies"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_Alex_LabPriority", "label": "mentions", "title": "http://schema.org/mentions", "to": "http://example.org/ComputingLabs"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Maria", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_Alex_LabPriority", "label": "mentions", "title": "http://schema.org/mentions", "to": "http://example.org/LabEquipment"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Position_Alex_LabPriority", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#F7DC6F", "from": "http://example.org/Position_Maria_HousingPriority", "label": "conflicts", "title": "http://www.arg.dundee.ac.uk/aif#conflicts", "to": "http://example.org/Position_Alex_LabPriority"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/HousingSubsidies", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Thing"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Claim_Housing_Insecurity", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Claim_Modernization_AcademicImpact", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_Budget_Allocation"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Claim_Housing_Insecurity", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Students face s...sing insecurity_label_Students face severe housing insecurity"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Issue_Budget_Allocation", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Alex"}, {"arrows": "to", "color": "#4ECDC4", "from": "http://example.org/Alex", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/Claim_Modernization_AcademicImpact"}, {"arrows": "to", "color": "#4ECDC4", "from": "http://example.org/Alex", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/Position_Alex_LabPriority"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/University", "label": "funds", "title": "http://schema.org/funds", "to": "http://example.org/LabEquipment"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Claim_Modernization_AcademicImpact", "label": "mentions", "title": "http://schema.org/mentions", "to": "http://example.org/ComputingLabs"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Claim_Modernization_AcademicImpact", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Lab modernizati...academic output_label_Lab modernization boosts academic output"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Alex", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Representative Alex_label_Representative Alex"}, {"arrows": "to", "color": "#45B7D1", "from": "http://example.org/Position_Maria_HousingPriority", "label": "rebuts", "title": "http://purl.org/ibis#rebuts", "to": "http://example.org/Position_Alex_LabPriority"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

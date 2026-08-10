@@ -1,0 +1,78 @@
+@prefix aif: <http://www.arg.dundee.ac.uk/aif#> .
+@prefix ex: <http://example.org/ontology#> .
+@prefix ibis: <http://purl.org/ibis#> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema1: <http://schema.org/> .
+
+ex:Amendment_Proposal a schema1:Thing ;
+    rdfs:label "Proposed amendment" ;
+    schema1:about ex:Issue_Mandatory_Attendance .
+
+ex:Claim_Artificial_Participation a ibis:Position ;
+    rdfs:label "Attendance creates artificial participation" ;
+    ibis:asserts ex:Faction_B ;
+    ibis:rebuts ex:Claim_Democratic_Representation ;
+    aif:claimText ex:Forcing_Attendance_Creates_Artificial_Participation_Without_Genuine_Engagement ;
+    aif:conflicts ex:Claim_Democratic_Representation .
+
+ex:Claim_Asynchronous_Digital_Voting a ibis:Position ;
+    rdfs:label "Adopt asynchronous digital voting" ;
+    ibis:asserts ex:Faction_C ;
+    ibis:endorses ex:Claim_Penalizes_Working_Students ;
+    ibis:reframes ex:Issue_Mandatory_Attendance ;
+    ibis:respondsTo ex:Issue_Mandatory_Attendance ;
+    aif:claimText ex:We_Can_Resolve_This_By_Introducing_Asynchronous_Digital_Voting_Instead ;
+    aif:supports ex:Claim_Penalizes_Working_Students .
+
+ex:Claim_Eliminate_Minority_Votes a ibis:Position ;
+    rdfs:label "Attendance eliminates minority votes" ;
+    ibis:asserts ex:Faction_A ;
+    aif:claimText ex:Mandatory_Attendance_Eliminates_Illegitimate_Minority_Votes .
+
+ex:PresentationEvent_1 a prov:Activity ;
+    rdfs:label "Debate on attendance" ;
+    schema1:about ex:Issue_Mandatory_Attendance ;
+    prov:wasAssociatedWith ex:Chairman,
+        ex:Faction_A,
+        ex:Faction_B,
+        ex:Faction_C .
+
+ex:Working_Students a schema1:Person ;
+    rdfs:label "Working students" ;
+    schema1:mentions ex:Claim_Penalizes_Working_Students .
+
+ex:Chairman a schema1:Person ;
+    rdfs:label "Chairman" ;
+    schema1:jobTitle ex:Chairman .
+
+ex:Faction_C a schema1:Organization ;
+    rdfs:label "Faction C" .
+
+ex:Claim_Democratic_Representation a ibis:Position ;
+    rdfs:label "Attendance ensures democratic representation" ;
+    ibis:asserts ex:Faction_A ;
+    aif:claimText ex:Mandatory_Attendance_Ensures_Full_Democratic_Representation .
+
+ex:Faction_A a schema1:Organization ;
+    rdfs:label "Faction A" .
+
+ex:Faction_B a schema1:Organization ;
+    rdfs:label "Faction B" .
+
+ex:Claim_Penalizes_Working_Students a ibis:Position ;
+    rdfs:label "Attendance penalizes working students" ;
+    ibis:asserts ex:Faction_B ;
+    aif:claimText ex:Forcing_Attendance_Penalizes_Working_Students .
+
+ex:Issue_Mandatory_Attendance a ibis:Issue ;
+    rdfs:label ex:Mandatory_Attendance_Amendment,
+        "Mandatory attendance amendment" ;
+    schema1:about ex:Amendment_Proposal,
+        ex:Claim_Artificial_Participation,
+        ex:Claim_Asynchronous_Digital_Voting,
+        ex:Claim_Democratic_Representation,
+        ex:Claim_Eliminate_Minority_Votes,
+        ex:Claim_Penalizes_Working_Students,
+        ex:PresentationEvent_1,
+        ex:Working_Students .

@@ -1,0 +1,224 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 650px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            
+<div style="padding:10px;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);border:1px solid #ddd;border-radius:8px;margin-bottom:10px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <input type="text" id="nodeSearch" placeholder="Search node (use * as wildcard)..."
+      style="padding:6px 12px;border:1px solid #ccc;border-radius:4px;font-size:14px;min-width:200px;flex:1;max-width:300px;">
+    <button onclick="searchNode()"
+      style="padding:6px 12px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Search</button>
+    <button onclick="resetAll()"
+      style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Reset</button>
+    <button id="freezeBtn" onclick="toggleFreeze()"
+      style="padding:6px 12px;background:#F5B027;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Freeze (OFF)</button>
+    <button onclick="deleteSelectedNode()"
+      style="padding:6px 12px;background:#F54927;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Delete node</button>
+  </div>
+</div>
+<style>
+  button:hover{opacity:0.8;transform:translateY(-1px);}
+  #nodeSearch:focus{outline:none;border-color:#4CAF50;box-shadow:0 0 5px rgba(76,175,80,0.3);}
+  body,html{margin:0;padding:0;height:100%;overflow:hidden;}
+  #mynetwork{height:calc(100vh - 120px)!important;width:100%!important;}
+</style>
+<script>
+  var isPhysicsEnabled=true;
+  var isDragMode=false;
+  function searchNode(){
+    var pattern=document.getElementById('nodeSearch').value;
+    if(!pattern){alert("Please enter a search term");return;}
+    var matches=[];
+    try{var regex=new RegExp(pattern.replace(/\*/g,'.*'),'i');}
+    catch(e){alert("Invalid expression: "+e.message);return;}
+    network.body.data.nodes.forEach(function(node){
+      if(regex.test(node.label)||regex.test(node.title)){
+        matches.push(node.id);
+        network.body.data.nodes.update({id:node.id,color:{background:'yellow'},font:{bold:true}});
+      }
+    });
+    if(matches.length>0){network.selectNodes(matches);network.fit({nodes:matches,animation:true});alert(matches.length+" node(s) found");}
+    else{alert("No matching nodes found.");}
+  }
+  function resetAll(){window.location.reload();}
+  function deleteSelectedNode(){
+    var selectedNodes=network.getSelectedNodes();
+    if(selectedNodes.length===0){alert("Please select a node to delete");return;}
+    if(selectedNodes.length>1){alert("Please select only one node to delete");return;}
+    if(confirm("Delete this node and all its connections?")){
+      network.body.data.edges.remove(network.getConnectedEdges(selectedNodes[0]));
+      network.body.data.nodes.remove(selectedNodes[0]);
+      network.redraw();
+    }
+  }
+  function toggleFreeze(){
+    var btn=document.getElementById('freezeBtn');
+    isPhysicsEnabled=!isPhysicsEnabled;
+    if(isPhysicsEnabled){
+      network.setOptions({physics:{enabled:true,stabilization:{iterations:100}}});
+      btn.innerHTML='Freeze (OFF)';btn.style.background='#F5B027';isDragMode=false;
+      setTimeout(function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});},200);
+    }else{
+      network.setOptions({physics:{enabled:false},edges:{smooth:{enabled:true,type:'straightCross',forceDirection:'none'}}});
+      btn.innerHTML='Freeze (ON)';btn.style.background='#F44336';isDragMode=true;
+      network.on('dragEnd',function(p){if(isDragMode&&p.nodes.length>0)network.redraw();});
+      network.on('dragging',function(p){if(isDragMode&&p.nodes.length>0)network.redraw();});
+    }
+  }
+  document.getElementById('nodeSearch').addEventListener('keypress',function(e){if(e.key==='Enter')searchNode();});
+  network.once('stabilizationIterationsDone',function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});});
+  window.addEventListener('resize',function(){if(network){network.redraw();network.fit();}});
+</script>
+
+<div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Amendment_Proposal", "label": "Proposed amendment", "shape": "ellipse", "title": "http://example.org/ontology#Amendment_Proposal"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Proposed amendment_label_Proposed amendment", "label": "Proposed amendment", "shape": "box", "title": "Proposed amendment"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "Adopt asynchronous digital voting", "shape": "ellipse", "title": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "http://example....dance_Amendment", "shape": "ellipse", "title": "http://example.org/ontology#Issue_Mandatory_Attendance"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Faction_A", "label": "Faction A", "shape": "ellipse", "title": "http://example.org/ontology#Faction_A"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Organization", "label": "Organization", "shape": "ellipse", "title": "http://schema.org/Organization"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Claim_Democratic_Representation", "label": "Attendance ensu... representation", "shape": "ellipse", "title": "http://example.org/ontology#Claim_Democratic_Representation"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://purl.org/ibis#Position", "label": "Position", "shape": "ellipse", "title": "http://purl.org/ibis#Position"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Attendance ensu... representation_label_Attendance ensures democratic representation", "label": "Attendance ensu... representation", "shape": "box", "title": "Attendance ensures democratic representation"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Faction_B", "label": "Faction B", "shape": "ellipse", "title": "http://example.org/ontology#Faction_B"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Faction B_label_Faction B", "label": "Faction B", "shape": "box", "title": "Faction B"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#PresentationEvent_1", "label": "Debate on attendance", "shape": "ellipse", "title": "http://example.org/ontology#PresentationEvent_1"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Chairman", "label": "Chairman", "shape": "ellipse", "title": "http://example.org/ontology#Chairman"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Chairman_label_Chairman", "label": "Chairman", "shape": "box", "title": "Chairman"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Claim_Artificial_Participation", "label": "Attendance crea...l participation", "shape": "ellipse", "title": "http://example.org/ontology#Claim_Artificial_Participation"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/ontology#Forcing_Attendance_Creates_Artificial_Participation_Without_Genuine_Engagement", "label": "Forcing_Attenda...uine_Engagement", "shape": "ellipse", "title": "http://example.org/ontology#Forcing_Attendance_Creates_Artificial_Participation_Without_Genuine_Engagement"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Faction_C", "label": "Faction C", "shape": "ellipse", "title": "http://example.org/ontology#Faction_C"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://www.w3.org/ns/prov#Activity", "label": "Activity", "shape": "ellipse", "title": "http://www.w3.org/ns/prov#Activity"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Claim_Penalizes_Working_Students", "label": "Attendance pena...orking students", "shape": "ellipse", "title": "http://example.org/ontology#Claim_Penalizes_Working_Students"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/ontology#Forcing_Attendance_Penalizes_Working_Students", "label": "Forcing_Attenda...orking_Students", "shape": "ellipse", "title": "http://example.org/ontology#Forcing_Attendance_Penalizes_Working_Students"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/ontology#Mandatory_Attendance_Amendment", "label": "Mandatory_Attendance_Amendment", "shape": "ellipse", "title": "http://example.org/ontology#Mandatory_Attendance_Amendment"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Faction C_label_Faction C", "label": "Faction C", "shape": "box", "title": "Faction C"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Working_Students", "label": "Working students", "shape": "ellipse", "title": "http://example.org/ontology#Working_Students"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Person", "label": "Person", "shape": "ellipse", "title": "http://schema.org/Person"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/ontology#Claim_Eliminate_Minority_Votes", "label": "Attendance elim... minority votes", "shape": "ellipse", "title": "http://example.org/ontology#Claim_Eliminate_Minority_Votes"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Attendance elim... minority votes_label_Attendance eliminates minority votes", "label": "Attendance elim... minority votes", "shape": "box", "title": "Attendance eliminates minority votes"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Thing", "label": "Thing", "shape": "ellipse", "title": "http://schema.org/Thing"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/ontology#Mandatory_Attendance_Ensures_Full_Democratic_Representation", "label": "Mandatory_Atten..._Representation", "shape": "ellipse", "title": "http://example.org/ontology#Mandatory_Attendance_Ensures_Full_Democratic_Representation"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Working students_label_Working students", "label": "Working students", "shape": "box", "title": "Working students"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "http://example....dance_Amendment_label_Mandatory attendance amendment", "label": "Mandatory attendance amendment", "shape": "box", "title": "Mandatory attendance amendment"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/ontology#We_Can_Resolve_This_By_Introducing_Asynchronous_Digital_Voting_Instead", "label": "We_Can_Resolve_..._Voting_Instead", "shape": "ellipse", "title": "http://example.org/ontology#We_Can_Resolve_This_By_Introducing_Asynchronous_Digital_Voting_Instead"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Debate on attendance_label_Debate on attendance", "label": "Debate on attendance", "shape": "box", "title": "Debate on attendance"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Adopt asynchronous digital voting_label_Adopt asynchronous digital voting", "label": "Adopt asynchronous digital voting", "shape": "box", "title": "Adopt asynchronous digital voting"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Attendance crea...l participation_label_Attendance creates artificial participation", "label": "Attendance crea...l participation", "shape": "box", "title": "Attendance creates artificial participation"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://example.org/ontology#Mandatory_Attendance_Eliminates_Illegitimate_Minority_Votes", "label": "Mandatory_Atten..._Minority_Votes", "shape": "ellipse", "title": "http://example.org/ontology#Mandatory_Attendance_Eliminates_Illegitimate_Minority_Votes"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://purl.org/ibis#Issue", "label": "Issue", "shape": "ellipse", "title": "http://purl.org/ibis#Issue"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Faction A_label_Faction A", "label": "Faction A", "shape": "box", "title": "Faction A"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Attendance pena...orking students_label_Attendance penalizes working students", "label": "Attendance pena...orking students", "shape": "box", "title": "Attendance penalizes working students"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Amendment_Proposal", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Proposed amendment_label_Proposed amendment"}, {"arrows": "to", "color": "#82E0AA", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "reframes", "title": "http://purl.org/ibis#reframes", "to": "http://example.org/ontology#Issue_Mandatory_Attendance"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Faction_A", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Organization"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Claim_Democratic_Representation", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Claim_Democratic_Representation", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Attendance ensu... representation_label_Attendance ensures democratic representation"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Faction_B", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Faction B_label_Faction B"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#PresentationEvent_1"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Chairman", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Chairman_label_Chairman"}, {"arrows": "to", "color": "#F1948A", "from": "http://example.org/ontology#Claim_Artificial_Participation", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/ontology#Forcing_Attendance_Creates_Artificial_Participation_Without_Genuine_Engagement"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Faction_C", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Organization"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#PresentationEvent_1", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://www.w3.org/ns/prov#Activity"}, {"arrows": "to", "color": "#F1948A", "from": "http://example.org/ontology#Claim_Penalizes_Working_Students", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/ontology#Forcing_Attendance_Penalizes_Working_Students"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "http://example.org/ontology#Mandatory_Attendance_Amendment"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/ontology#Claim_Democratic_Representation", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/ontology#Faction_A"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Amendment_Proposal"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#PresentationEvent_1", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Issue_Mandatory_Attendance"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Faction_C", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Faction C_label_Faction C"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Claim_Artificial_Participation"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Working_Students"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/ontology#Claim_Penalizes_Working_Students", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/ontology#Faction_B"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Chairman", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Amendment_Proposal", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Issue_Mandatory_Attendance"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/ontology#PresentationEvent_1", "label": "wasAssociatedWith", "title": "http://www.w3.org/ns/prov#wasAssociatedWith", "to": "http://example.org/ontology#Chairman"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Claim_Penalizes_Working_Students", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/ontology#Faction_C"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Claim_Penalizes_Working_Students"}, {"arrows": "to", "color": "#F7DC6F", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "endorses", "title": "http://purl.org/ibis#endorses", "to": "http://example.org/ontology#Claim_Penalizes_Working_Students"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Claim_Eliminate_Minority_Votes", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Attendance elim... minority votes_label_Attendance eliminates minority votes"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Amendment_Proposal", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Thing"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/ontology#Claim_Artificial_Participation", "label": "rebuts", "title": "http://purl.org/ibis#rebuts", "to": "http://example.org/ontology#Claim_Democratic_Representation"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/ontology#Claim_Eliminate_Minority_Votes", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/ontology#Faction_A"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/ontology#Claim_Artificial_Participation", "label": "asserts", "title": "http://purl.org/ibis#asserts", "to": "http://example.org/ontology#Faction_B"}, {"arrows": "to", "color": "#4ECDC4", "from": "http://example.org/ontology#Working_Students", "label": "mentions", "title": "http://schema.org/mentions", "to": "http://example.org/ontology#Claim_Penalizes_Working_Students"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Claim_Eliminate_Minority_Votes", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/ontology#Chairman", "label": "jobTitle", "title": "http://schema.org/jobTitle", "to": "http://example.org/ontology#Chairman"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Faction_B", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Organization"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/ontology#PresentationEvent_1", "label": "wasAssociatedWith", "title": "http://www.w3.org/ns/prov#wasAssociatedWith", "to": "http://example.org/ontology#Faction_B"}, {"arrows": "to", "color": "#F1948A", "from": "http://example.org/ontology#Claim_Democratic_Representation", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/ontology#Mandatory_Attendance_Ensures_Full_Democratic_Representation"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Working_Students", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Working students_label_Working students"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "http://example....dance_Amendment_label_Mandatory attendance amendment"}, {"arrows": "to", "color": "#45B7D1", "from": "http://example.org/ontology#Claim_Artificial_Participation", "label": "conflicts", "title": "http://www.arg.dundee.ac.uk/aif#conflicts", "to": "http://example.org/ontology#Claim_Democratic_Representation"}, {"arrows": "to", "color": "#F1948A", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/ontology#We_Can_Resolve_This_By_Introducing_Asynchronous_Digital_Voting_Instead"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "supports", "title": "http://www.arg.dundee.ac.uk/aif#supports", "to": "http://example.org/ontology#Claim_Penalizes_Working_Students"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/ontology#PresentationEvent_1", "label": "wasAssociatedWith", "title": "http://www.w3.org/ns/prov#wasAssociatedWith", "to": "http://example.org/ontology#Faction_A"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#PresentationEvent_1", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Debate on attendance_label_Debate on attendance"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Adopt asynchronous digital voting_label_Adopt asynchronous digital voting"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Claim_Artificial_Participation", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Attendance crea...l participation_label_Attendance creates artificial participation"}, {"arrows": "to", "color": "#85C1E9", "from": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting", "label": "respondsTo", "title": "http://purl.org/ibis#respondsTo", "to": "http://example.org/ontology#Issue_Mandatory_Attendance"}, {"arrows": "to", "color": "#F1948A", "from": "http://example.org/ontology#Claim_Eliminate_Minority_Votes", "label": "claimText", "title": "http://www.arg.dundee.ac.uk/aif#claimText", "to": "http://example.org/ontology#Mandatory_Attendance_Eliminates_Illegitimate_Minority_Votes"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Claim_Asynchronous_Digital_Voting"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Issue"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Claim_Artificial_Participation", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis#Position"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Claim_Democratic_Representation"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/ontology#Working_Students", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Faction_A", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Faction A_label_Faction A"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/ontology#Issue_Mandatory_Attendance", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/ontology#Claim_Eliminate_Minority_Votes"}, {"arrows": "to", "color": "#85CDFF", "from": "http://example.org/ontology#Claim_Penalizes_Working_Students", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Attendance pena...orking students_label_Attendance penalizes working students"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/ontology#PresentationEvent_1", "label": "wasAssociatedWith", "title": "http://www.w3.org/ns/prov#wasAssociatedWith", "to": "http://example.org/ontology#Faction_C"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>

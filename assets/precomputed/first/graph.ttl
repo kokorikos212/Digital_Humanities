@@ -1,0 +1,44 @@
+@prefix aif: <http://www.arg.tech/aif#> .
+@prefix ex: <http://example.org/ontology/> .
+@prefix ibis: <http://purl.org/ibis#> .
+@prefix ns1: <schema:> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+
+ex:Claim_Housing_Insecurity a ibis:Position ;
+    rdfs:label "Student housing insecurity severe" ;
+    aif:supports ex:Position_Housing_Subsidies .
+
+ex:Claim_Labs_Academic_Impact a ibis:Position ;
+    rdfs:label "Lab modernization boosts academic output" ;
+    aif:supports ex:Position_Lab_Equipment .
+
+ex:Rep_Alex a "schema:Person" ;
+    rdfs:label "Representative Alex" ;
+    ibis:asserts ex:Claim_Labs_Academic_Impact,
+        ex:Position_Lab_Equipment ;
+    ns1:memberOf ex:University .
+
+ex:Rep_Maria a "schema:Person" ;
+    rdfs:label "Representative Maria" ;
+    ibis:asserts ex:Claim_Housing_Insecurity,
+        ex:Position_Housing_Subsidies ;
+    ns1:memberOf ex:University .
+
+ex:Issue_Budget_Allocation a ibis:Issue ;
+    rdfs:label "Surplus budget allocation" ;
+    ns1:about ex:Rep_Alex,
+        ex:Rep_Maria,
+        ex:University .
+
+ex:Position_Housing_Subsidies a ibis:Position ;
+    rdfs:label "Prioritize housing subsidies" ;
+    ibis:rebuts ex:Position_Lab_Equipment ;
+    ibis:respondsTo ex:Issue_Budget_Allocation ;
+    aif:conflicts ex:Position_Lab_Equipment .
+
+ex:University a "schema:Organization" ;
+    rdfs:label "University" .
+
+ex:Position_Lab_Equipment a ibis:Position ;
+    rdfs:label "Prioritize lab equipment" ;
+    ibis:respondsTo ex:Issue_Budget_Allocation .

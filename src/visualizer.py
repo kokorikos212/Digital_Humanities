@@ -97,6 +97,7 @@ _CONTROL_PANEL = """
   document.getElementById('nodeSearch').addEventListener('keypress',function(e){if(e.key==='Enter')searchNode();});
   network.once('stabilizationIterationsDone',function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});});
   window.addEventListener('resize',function(){if(network){network.redraw();network.fit();}});
+  window.addEventListener('message',function(e){if(e.data==='talos-fit'){setTimeout(function(){if(network){network.fit({animation:{duration:500}})}},100);}});
 </script>
 """
 
