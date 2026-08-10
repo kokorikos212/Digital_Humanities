@@ -802,6 +802,12 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             outputs=[terminal_output, cwd_state],
         )
 
+        terminal_input.submit(
+            fn=_handle_terminal,
+            inputs=[user_state, project_state, terminal_input, cwd_state],
+            outputs=[terminal_output, cwd_state],
+        )
+
         refresh_files_btn.click(
             fn=_handle_list_files,
             inputs=[user_state, project_state, cwd_state],
