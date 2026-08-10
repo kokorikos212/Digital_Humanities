@@ -34,17 +34,15 @@ def load_precomputed_asset(example_title: str) -> Optional[Dict[str, Any]]:
     Parameters
     ----------
     example_title:
-        A key from ``PRECOMPUTED_MAP``.
+        A key from ``PRECOMPUTED_MAP``, or a direct folder name under
+        ``assets/precomputed/``.
 
     Returns
     -------
     A dict with keys ``ttl``, ``html``, ``md``, ``json``, or ``None``
     if the folder or files are missing.
     """
-    folder_name = PRECOMPUTED_MAP.get(example_title)
-    if not folder_name:
-        return None
-
+    folder_name = PRECOMPUTED_MAP.get(example_title, example_title)
     folder = _BASE / folder_name
     if not folder.exists():
         return None

@@ -202,6 +202,37 @@ def load_example(name: str) -> str:
     return EXAMPLES.get(name, "")
 
 
+def _list_precomputed() -> list:
+    """Scan assets/precomputed/ for existing folders."""
+    from pathlib import Path
+    base = Path(__file__).parent / "assets" / "precomputed"
+    if not base.exists():
+        print("[DEBUG] assets/precomputed/ does not exist")
+        return []
+    dirs = sorted([d.name for d in base.iterdir() if d.is_dir()])
+    print(f"[DEBUG] _list_precomputed: found {len(dirs)} folders: {dirs}")
+    return dirs
+
+
+def _load_saved(folder_name: str):
+    """Load a saved precomputed asset by folder name."""
+    print(f"[DEBUG] _load_saved: folder={folder_name}")
+    if not folder_name:
+        print("[DEBUG] _load_saved: empty folder name, returning empty")
+        return "", "", "", ""
+    asset = load_precomputed_asset(folder_name)
+    if asset:
+        print(f"[DEBUG] _load_saved: loaded keys={list(asset.keys())}")
+        return (
+            json.dumps(asset["json"], indent=2),
+            asset["ttl"],
+            _format_graph_html(asset["ttl"]),
+            asset["md"],
+        )
+    print(f"[DEBUG] _load_saved: no asset found for '{folder_name}'")
+    return "", "", "", ""
+
+
 def _save_precomputed(name: str, ttl: str, md: str, json_str: str) -> str:
     """Save current outputs to assets/precomputed/<name>/."""
     import os
@@ -347,6 +378,13 @@ def create_ui() -> gr.Blocks:
             run_btn = gr.Button("🔍 Analyze", variant="primary", size="lg")
             clear_btn = gr.Button("🗑️ Clear", size="lg")
         with gr.Row():
+            saved_dropdown = gr.Dropdown(
+                label="📂 Load Saved Graph",
+                choices=_list_precomputed(),
+                value=None,
+                scale=2,
+            )
+        with gr.Row():
             save_name = gr.Textbox(
                 label="Save Name",
                 placeholder="e.g. case1_budget_debate",
@@ -469,6 +507,12 @@ document.body.style.overflow='';
                 text_input, json_output, rdf_output, graph_output, obsidian_output,
                 preset_dropdown, sparql_editor,
             ],
+        )
+
+        saved_dropdown.change(
+            fn=_load_saved,
+            inputs=[saved_dropdown],
+            outputs=[json_output, rdf_output, graph_output, obsidian_output],
         )
 
         run_btn.click(
