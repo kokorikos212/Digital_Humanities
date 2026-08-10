@@ -28,6 +28,18 @@ os.environ["GRADIO_SERVER_PORT"] = "7860"
 
 import gradio as gr
 
+# Monkey-patch: Gradio 4.44.1 gr.File crashes _json_schema_to_python_type on bool
+import gradio_client.utils as _gcu
+_orig_json_schema = _gcu._json_schema_to_python_type
+def _safe_json_schema(schema, defs=None):
+    if isinstance(schema, bool):
+        return "Any"
+    try:
+        return _orig_json_schema(schema, defs)
+    except TypeError:
+        return "Any"
+_gcu._json_schema_to_python_type = _safe_json_schema
+
 # Ensure the project root is on sys.path
 PROJECT_ROOT = Path(__file__).resolve().parent
 sys.path.insert(0, str(PROJECT_ROOT))
