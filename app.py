@@ -41,6 +41,10 @@ from src.tools import TOOL_UI_LABELS
 from src.visualizer import render_rdf_graph
 from src.queries import PRESET_SPARQL_QUERIES, CASE_QUERIES, execute_sparql, get_queries_for_case
 from src.precomputed import load_precomputed_asset, PRECOMPUTED_MAP
+from src.ingestion import save_uploaded_files
+
+# Demo user/project (replace with auth later)
+_DEMO_UID, _DEMO_PID = "demo", "default"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
@@ -462,6 +466,14 @@ function sendMsg(){
                 scale=2,
             )
             save_btn = gr.Button("💾 Save as Precomputed", variant="secondary", size="sm", scale=1)
+        with gr.Row():
+            file_upload = gr.File(
+                label="📁 Upload Project Files",
+                file_count="multiple",
+                file_types=[".txt", ".md", ".ttl", ".json", ".pdf", ".csv"],
+                scale=2,
+            )
+            upload_status = gr.Textbox(label="Upload Status", interactive=False, scale=1)
 
         # ── Status ──────────────────────────────────────────────────
         status = gr.Markdown("")
@@ -581,6 +593,20 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 text_input, json_output, rdf_output, graph_output, obsidian_output,
                 preset_dropdown, sparql_editor,
             ],
+        )
+
+        def _handle_upload(files):
+            if not files:
+                return "No files selected."
+            result = save_uploaded_files(files, _DEMO_UID, _DEMO_PID)
+            if result["total_files"]:
+                return f"✅ Uploaded {result['total_files']} file(s): {', '.join(result['saved_files'])}"
+            return "⚠️ No supported files found."
+
+        file_upload.upload(
+            fn=_handle_upload,
+            inputs=[file_upload],
+            outputs=[upload_status],
         )
 
         saved_dropdown.change(
