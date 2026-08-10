@@ -1,0 +1,40 @@
+@prefix ibis:  <http://purl.org/ibis#> .
+@prefix aif:   <http://www.arg.tech/aif#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix schema:<http://schema.org/> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:    <http://example.org/ontology/> .
+
+ex:Issue_Budget a ibis:Issue ;
+    rdfs:label "Budget allocation: lab equipment vs student housing" .
+
+ex:LabEquipment a schema:Thing ;
+    rdfs:label "Lab Equipment" .
+ex:HousingSubsidies a schema:Thing ;
+    rdfs:label "Housing Subsidies" .
+
+ex:Issue_Budget schema:about ex:LabEquipment, ex:HousingSubsidies .
+
+ex:Rep_Alex a schema:Person ;
+    rdfs:label "Representative Alex" ;
+    ibis:asserts ex:Position_Alex .
+
+ex:Position_Alex a ibis:Position ;
+    rdfs:label "Prioritize lab equipment" ;
+    ibis:respondsTo ex:Issue_Budget ;
+    prov:wasAttributedTo ex:Rep_Alex ;
+    schema:about ex:LabEquipment ;
+    aif:claimText "We must prioritize lab equipment. Modernizing our computing labs directly impacts academic output and research rankings." .
+
+ex:Rep_Maria a schema:Person ;
+    rdfs:label "Representative Maria" ;
+    ibis:asserts ex:Position_Maria .
+
+ex:Position_Maria a ibis:Position ;
+    rdfs:label "Housing subsidies must come first" ;
+    ibis:respondsTo ex:Issue_Budget ;
+    ibis:rebuts ex:Position_Alex ;
+    prov:wasAttributedTo ex:Rep_Maria ;
+    schema:about ex:HousingSubsidies ;
+    aif:claimText "Computing labs are functional, but 40% of our student body faces severe housing insecurity. Housing subsidies must come first." .

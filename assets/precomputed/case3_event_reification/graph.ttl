@@ -1,0 +1,29 @@
+@prefix ibis:  <http://purl.org/ibis#> .
+@prefix aif:   <http://www.arg.tech/aif#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix schema:<http://schema.org/> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix xsd:   <http://www.w3.org/2001/XMLSchema#> .
+@prefix ex:    <http://example.org/ontology/> .
+
+ex:Dr_Chen a schema:Person ;
+    rdfs:label "Dr. Chen" ;
+    schema:jobTitle "Professor" ;
+    ibis:asserts ex:Claim_ML_Bias .
+
+ex:Claim_ML_Bias a ibis:Position, aif:I-node ;
+    rdfs:label "ML models can detect bias" ;
+    aif:claimText "Machine learning models can detect bias in political speeches." ;
+    prov:wasAttributedTo ex:Dr_Chen .
+
+ex:PresentationEvent a prov:Activity ;
+    rdfs:label "Research presentation at Stanford" ;
+    prov:wasAssociatedWith ex:Dr_Chen ;
+    prov:atLocation ex:StanfordUniversity ;
+    prov:startedAtTime "2026-08-03"^^xsd:date ;
+    prov:used ex:ResearchFindings .
+
+ex:StanfordUniversity a schema:CollegeOrUniversity ;
+    rdfs:label "Stanford University" .
+ex:ResearchFindings a schema:CreativeWork ;
+    rdfs:label "Research Findings" .

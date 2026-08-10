@@ -10,6 +10,12 @@ from typing import Dict
 
 # ── Case-query registry ─────────────────────────────────────────────────────
 
+_CASE_ALIASES: Dict[str, str] = {
+    "bench_1_1_rebuttal": "Case 1: University Budget Debate",
+    "bench_5_2_nested_conditional": "Case 2: Modal & Conditional Claims (Dr. Aris)",
+    "ex_ontology_basic": "Case 3: Reified Events (Dr. Chen Presentation)",
+}
+
 CASE_QUERIES: Dict[str, Dict[str, str]] = {
     "Case 1: University Budget Debate": {
         "Use Case 1: Conflict Density Indexing": """
@@ -157,5 +163,6 @@ def execute_sparql(ttl_code: str, query_str: str) -> pd.DataFrame:
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
 def get_queries_for_case(case_title: str) -> Dict[str, str]:
-    """Return the query map for a specific case, or all queries if not found."""
-    return CASE_QUERIES.get(case_title, PRESET_SPARQL_QUERIES)
+    """Return the query map for a specific case, resolving aliases."""
+    real = _CASE_ALIASES.get(case_title, case_title)
+    return CASE_QUERIES.get(real, PRESET_SPARQL_QUERIES)

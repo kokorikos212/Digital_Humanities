@@ -1,0 +1,26 @@
+@prefix ibis:  <http://purl.org/ibis#> .
+@prefix aif:   <http://www.arg.tech/aif#> .
+@prefix prov:  <http://www.w3.org/ns/prov#> .
+@prefix schema:<http://schema.org/> .
+@prefix rdfs:  <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix ex:    <http://example.org/ontology/> .
+
+ex:Issue_Voting a ibis:Issue ;
+    rdfs:label "Automated vote-counting system adoption" .
+
+ex:Dr_Aris a schema:Person ;
+    rdfs:label "Dr. Aris" ;
+    schema:jobTitle "Professor" ;
+    ibis:asserts ex:Claim_DigitalVoting .
+
+ex:Claim_DigitalVoting a ibis:Position, aif:I-node ;
+    rdfs:label "Digital voting increases off-campus turnout" ;
+    ibis:respondsTo ex:Issue_Voting ;
+    prov:wasAttributedTo ex:Dr_Aris ;
+    aif:claimText "If the student union adopts digital voting delegates, assembly turnout might increase among off-campus students, provided that cryptographic anonymity is guaranteed." ;
+    schema:about ex:DigitalDelegates, ex:Anonymity .
+
+ex:DigitalDelegates a schema:Thing ;
+    rdfs:label "Digital Voting Delegates" .
+ex:Anonymity a schema:Thing ;
+    rdfs:label "Cryptographic Anonymity" .

@@ -14,7 +14,14 @@ from typing import Any, Dict, Optional
 
 _BASE = Path(__file__).resolve().parent.parent / "assets" / "precomputed"
 
+_ALIASES: Dict[str, str] = {
+    "bench_1_1_rebuttal": "case1_budget_debate",
+    "bench_5_2_nested_conditional": "case2_modal_claims",
+    "ex_ontology_basic": "case3_event_reification",
+}
+
 PRECOMPUTED_MAP: Dict[str, str] = {
+    **_ALIASES,
     "Case 1: University Budget Debate": "case1_budget_debate",
     "Case 2: Modal & Conditional Claims (Dr. Aris)": "case2_modal_claims",
     "Case 3: Reified Events (Dr. Chen Presentation)": "case3_event_reification",

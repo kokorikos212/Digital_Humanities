@@ -202,6 +202,28 @@ def load_example(name: str) -> str:
     return EXAMPLES.get(name, "")
 
 
+def _save_precomputed(name: str, ttl: str, md: str, json_str: str) -> str:
+    """Save current outputs to assets/precomputed/<name>/."""
+    import os
+    from pathlib import Path
+
+    if not name.strip():
+        return "⚠️ Please enter a save name."
+    safe = name.strip().replace(" ", "_").lower()
+    folder = Path(__file__).parent / "assets" / "precomputed" / safe
+    folder.mkdir(parents=True, exist_ok=True)
+    try:
+        (folder / "graph.ttl").write_text(ttl, encoding="utf-8")
+        html = render_rdf_graph(ttl, height="650px")
+        (folder / "graph.html").write_text(html, encoding="utf-8")
+        (folder / "note.md").write_text(md if md else "# No note generated.", encoding="utf-8")
+        summary = json.loads(json_str) if json_str.strip() else {"note": "No summary."}
+        (folder / "summary.json").write_text(json.dumps(summary, indent=2), encoding="utf-8")
+        return f"✅ Saved to assets/precomputed/{safe}/"
+    except Exception as exc:
+        return f"❌ Save failed: {exc}"
+
+
 def _on_example_change(name: str):
     """Handle dropdown change: load prompt text + pre-computed assets + case-aware SPARQL queries."""
     text = EXAMPLES.get(name, "")
@@ -320,6 +342,13 @@ def create_ui() -> gr.Blocks:
         with gr.Row():
             run_btn = gr.Button("🔍 Analyze", variant="primary", size="lg")
             clear_btn = gr.Button("🗑️ Clear", size="lg")
+        with gr.Row():
+            save_name = gr.Textbox(
+                label="Save Name",
+                placeholder="e.g. case1_budget_debate",
+                scale=2,
+            )
+            save_btn = gr.Button("💾 Save as Precomputed", variant="secondary", size="sm", scale=1)
 
         # ── Status ──────────────────────────────────────────────────
         status = gr.Markdown("")
@@ -480,6 +509,12 @@ document.body.style.overflow='';
             fn=_run_query,
             inputs=[rdf_output, sparql_editor],
             outputs=[query_results],
+        )
+
+        save_btn.click(
+            fn=_save_precomputed,
+            inputs=[save_name, rdf_output, obsidian_output, json_output],
+            outputs=[status],
         )
 
         clear_btn.click(
