@@ -53,9 +53,8 @@ class TestGradioApp:
         """load_example should return the correct text for a known key."""
         from app import load_example
 
-        text = load_example("Single Sentence (Dr. Chen)")
-        assert "Dr. Chen" in text
-        assert "Stanford" in text
+        text = load_example("bench_1_1_rebuttal")
+        assert "lab equipment" in text
 
     def test_load_example_unknown_returns_empty(self):
         """load_example should return '' for unknown keys."""

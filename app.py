@@ -44,34 +44,9 @@ from src.visualizer import render_rdf_graph
 # Constants
 # ═══════════════════════════════════════════════════════════════════════════
 
-EXAMPLES = {
-    "Single Sentence (Dr. Chen)": (
-        "Dr. Chen presented the research findings at Stanford University "
-        "last Tuesday. The professor argued that machine learning models "
-        "can detect bias in political speeches."
-    ),
-    "Conversation (Student & Professor)": (
-        "**Alice:** Good morning, Professor. Could you review my thesis draft?\n\n"
-        "**Professor:** Of course, Alice. I'll have comments by Friday.\n\n"
-        "**Alice:** Thank you so much! I was worried about the methodology section.\n\n"
-        "**Professor:** The statistical approach looks sound. Just expand the "
-        "literature review."
-    ),
-    "Political Debate Excerpt": (
-        "**Moderator:** Senator, what is your position on the climate bill?\n\n"
-        "**Senator Harris:** The legislation is crucial. It creates green jobs "
-        "while reducing emissions by 40% over the next decade.\n\n"
-        "**Moderator:** Congressman Lee, your response?\n\n"
-        "**Congressman Lee:** With respect, those numbers are fantasy. The "
-        "Congressional Budget Office analysis shows it would cost taxpayers "
-        "over $2 trillion with negligible environmental benefit."
-    ),
-    "The quick brown fox": (
-        "The quick brown fox jumps over the lazy dog."
-    ),
-}
+EXAMPLES = NAMED_PROMPTS
 
-DEFAULT_EXAMPLE = "Single Sentence (Dr. Chen)"
+DEFAULT_EXAMPLE = "bench_1_1_rebuttal"
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Pipeline runner
