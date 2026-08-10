@@ -392,6 +392,40 @@ def create_ui() -> gr.Blocks:
             )
             save_btn = gr.Button("💾 Save as Precomputed", variant="secondary", size="sm", scale=1)
 
+        # ── Copy-button injector ─────────────────────────────────────
+        gr.HTML("""<script>
+(function(){
+  function addCopyButtons(){
+    document.querySelectorAll('.output-box').forEach(function(box){
+      if(box.querySelector('.copy-btn')) return;
+      var btn=document.createElement('button');
+      btn.className='copy-btn';
+      btn.textContent='📋 Copy';
+      btn.style.cssText='position:absolute;top:4px;right:4px;z-index:10;padding:3px 8px;background:#4a6cf7;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:11px';
+      btn.onclick=function(){
+        var code=box.querySelector('textarea,pre,code');
+        var text=code?code.textContent||code.value:'';
+        navigator.clipboard.writeText(text).then(function(){
+          btn.textContent='✅ Copied!';
+          setTimeout(function(){btn.textContent='📋 Copy';},1500);
+        }).catch(function(){
+          var ta=document.createElement('textarea');
+          ta.value=text;ta.style.position='fixed';ta.style.opacity='0';
+          document.body.appendChild(ta);ta.select();
+          document.execCommand('copy');document.body.removeChild(ta);
+          btn.textContent='✅ Copied!';
+          setTimeout(function(){btn.textContent='📋 Copy';},1500);
+        });
+      };
+      if(box.style.position===''||box.style.position==='static') box.style.position='relative';
+      box.appendChild(btn);
+    });
+  }
+  addCopyButtons();
+  setInterval(addCopyButtons,2000);
+})();
+</script>""")
+
         # ── Status ──────────────────────────────────────────────────
         status = gr.Markdown("")
 
