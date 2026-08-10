@@ -184,8 +184,8 @@ def _format_graph_html(ttl_data: str) -> str:
     try:
         raw_html = render_rdf_graph(ttl_data, height="650px")
         return (
-            f'<iframe srcdoc="{_html.escape(raw_html)}" '
-            f'width="100%" height="670px" '
+            f'<iframe id="graph-frame" srcdoc="{_html.escape(raw_html)}" '
+            f'width="100%" height="650px" '
             f'style="border:none;border-radius:8px;"></iframe>'
         )
     except Exception as exc:
@@ -312,6 +312,26 @@ def create_ui() -> gr.Blocks:
                 )
 
             with gr.TabItem("🕸️ Semantic Graph"):
+                gr.HTML("""<style>
+#graph-wrapper { position:relative; min-height:400px; }
+#graph-frame { width:100%; height:650px; border:none; border-radius:8px; }
+#graph-frame.fullscreen { position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; border-radius:0; }
+#fs-btn { position:absolute; top:8px; right:8px; z-index:10; padding:6px 12px; background:#4a6cf7; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; }
+#fs-btn:hover { background:#3651d5; }
+</style>
+<div id="graph-wrapper">
+  <button id="fs-btn" onclick="
+    var f=document.getElementById('graph-frame');
+    var b=document.getElementById('fs-btn');
+    if(f.classList.contains('fullscreen')){
+      f.classList.remove('fullscreen');
+      b.textContent='⛶ Full Screen';
+    }else{
+      f.classList.add('fullscreen');
+      b.textContent='⛶ Exit Full Screen';
+    }
+    ">⛶ Full Screen</button>
+</div>""")
                 graph_output = gr.HTML(
                     label="Interactive Network",
                     value="<p style='color:#888;padding:2em;text-align:center'>"
