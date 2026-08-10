@@ -40,6 +40,7 @@ from src.prompts import get_system_prompt, NAMED_PROMPTS, build_analysis_prompt
 from src.tools import TOOL_UI_LABELS
 from src.visualizer import render_rdf_graph, execute_sparql_query
 from src.queries import PRESET_SPARQL_QUERIES
+from src.precomputed import load_precomputed_asset, PRECOMPUTED_MAP
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
@@ -199,6 +200,21 @@ def _format_graph_html(ttl_data: str) -> str:
 def load_example(name: str) -> str:
     """Load a pre-defined example by name."""
     return EXAMPLES.get(name, "")
+
+
+def _on_example_change(name: str):
+    """Handle dropdown change: load prompt text + pre-computed assets if available."""
+    text = EXAMPLES.get(name, "")
+    asset = load_precomputed_asset(name)
+    if asset:
+        return (
+            text,
+            json.dumps(asset["json"], indent=2),
+            asset["ttl"],
+            _format_graph_html(asset["ttl"]),
+            asset["md"],
+        )
+    return (text, "", "", "", "")
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -401,9 +417,9 @@ document.body.style.overflow='';
         # ── Event Handlers ──────────────────────────────────────────
 
         example_selector.change(
-            fn=load_example,
+            fn=_on_example_change,
             inputs=[example_selector],
-            outputs=[text_input],
+            outputs=[text_input, json_output, rdf_output, graph_output, obsidian_output],
         )
 
         run_btn.click(
