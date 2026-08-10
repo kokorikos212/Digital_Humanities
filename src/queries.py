@@ -1,15 +1,18 @@
 """
-Centralized SPARQL query registry for benchmark evaluation cases.
+Case-aware SPARQL query registry mapped to pre-computed benchmark cases.
 
-Each query targets a specific ontological extraction dimension:
-  - Case 1.x: Rebuttal topology & entity binding
-  - Case 2.x: Claim attribution & decomposition
-  - Case 3.x: Event-centric activity resolution
-  - Metric 4.x: Node divergence & hub-node weighting
+Each case exposes one or more use-case-specific queries.
 """
 
-PRESET_SPARQL_QUERIES = {
-    "Case 1.1: Budget Debate — Conflict & Rebuttal Topology": """
+import rdflib
+import pandas as pd
+from typing import Dict
+
+# ── Case-query registry ─────────────────────────────────────────────────────
+
+CASE_QUERIES: Dict[str, Dict[str, str]] = {
+    "Case 1: University Budget Debate": {
+        "Use Case 1: Conflict Density Indexing": """
 PREFIX ibis:   <http://purl.org/ibis#>
 PREFIX aif:    <http://www.arg.tech/aif#>
 PREFIX prov:   <http://www.w3.org/ns/prov#>
@@ -35,8 +38,7 @@ WHERE {
 }
 ORDER BY ?issueLabel ?speakerLabel
 """,
-
-    "Case 1.2: Audit Auto-Bound Entities to Root Issue": """
+        "Use Case 2: Policy Need vs. Priority Audit (Auto-Bound Entities)": """
 PREFIX ibis:   <http://purl.org/ibis#>
 PREFIX schema: <http://schema.org/>
 PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
@@ -52,8 +54,10 @@ WHERE {
           a ?entityType .
 }
 """,
+    },
 
-    "Case 2.1: Reified Claims & Speaker Attribution": """
+    "Case 2: Modal & Conditional Claims (Dr. Aris)": {
+        "Use Case 1: Reified Claims & Speaker Attribution": """
 PREFIX ibis:   <http://purl.org/ibis#>
 PREFIX aif:    <http://www.arg.tech/aif#>
 PREFIX prov:   <http://www.w3.org/ns/prov#>
@@ -73,8 +77,7 @@ WHERE {
          aif:claimText ?fullClaimText .
 }
 """,
-
-    "Case 2.2: Decomposed Protasis/Apodosis Sub-Triples": """
+        "Use Case 2: Protasis/Apodosis Sub-Triple Decomposition": """
 PREFIX ibis:   <http://purl.org/ibis#>
 PREFIX aif:    <http://www.arg.tech/aif#>
 PREFIX schema: <http://schema.org/>
@@ -95,8 +98,10 @@ WHERE {
   }
 }
 """,
+    },
 
-    "Case 3.1: Event-Centric Activity Resolution (prov:Activity)": """
+    "Case 3: Reified Events (Dr. Chen Presentation)": {
+        "Use Case 1: Event-Centric Activity Resolution": """
 PREFIX prov:   <http://www.w3.org/ns/prov#>
 PREFIX schema: <http://schema.org/>
 PREFIX xsd:    <http://www.w3.org/2001/XMLSchema#>
@@ -122,44 +127,35 @@ WHERE {
   }
 }
 """,
-
-    "Metric 4.1: Computing Node Divergence (D_nd) Baseline": """
-PREFIX ibis:   <http://purl.org/ibis#>
-PREFIX aif:    <http://www.arg.tech/aif#>
-PREFIX prov:   <http://www.w3.org/ns/prov#>
-PREFIX schema: <http://schema.org/>
-PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
-
-SELECT ?issueLabel ?faction1 ?pos1Label ?pos2Label
-WHERE {
-  ?issue a ibis:Issue ;
-         rdfs:label ?issueLabel .
-
-  ?pos1 ibis:respondsTo ?issue ;
-        prov:wasAttributedTo ?faction1 ;
-        rdfs:label ?pos1Label ;
-        ibis:rebuts ?pos2 .
-
-  ?pos2 ibis:respondsTo ?issue ;
-        rdfs:label ?pos2Label .
+    },
 }
-""",
 
-    "Metric 4.2: Hub-Node Weighting (W_hub) Extraction via SKOS": """
-PREFIX skos:   <http://www.w3.org/2004/02/skos/core#>
-PREFIX schema: <http://schema.org/>
-PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+# Flattened for backward-compatible dropdown access
+PRESET_SPARQL_QUERIES: Dict[str, str] = {}
+for _case_queries in CASE_QUERIES.values():
+    PRESET_SPARQL_QUERIES.update(_case_queries)
 
-SELECT ?concept ?conceptLabel (COUNT(?connectedNode) AS ?degreeCentrality)
-WHERE {
-  ?concept a skos:Concept ;
-           rdfs:label ?conceptLabel .
 
-  { ?concept ?p ?connectedNode . }
-  UNION
-  { ?connectedNode ?p2 ?concept . }
-}
-GROUP BY ?concept ?conceptLabel
-ORDER BY DESC(?degreeCentrality)
-""",
-}
+# ── SPARQL executor ─────────────────────────────────────────────────────────
+
+def execute_sparql(ttl_code: str, query_str: str) -> pd.DataFrame:
+    """Execute a SPARQL query against a Turtle string and return a DataFrame."""
+    if not ttl_code or not query_str:
+        return pd.DataFrame()
+
+    g = rdflib.Graph()
+    try:
+        g.parse(data=ttl_code, format="turtle")
+        results = g.query(query_str)
+        cols = [str(var) for var in results.vars]
+        data = [[str(val) if val is not None else "" for val in row] for row in results]
+        return pd.DataFrame(data, columns=cols)
+    except Exception as e:
+        return pd.DataFrame([{"Error": f"SPARQL Execution Failed: {str(e)}"}])
+
+
+# ── Helpers ─────────────────────────────────────────────────────────────────
+
+def get_queries_for_case(case_title: str) -> Dict[str, str]:
+    """Return the query map for a specific case, or all queries if not found."""
+    return CASE_QUERIES.get(case_title, PRESET_SPARQL_QUERIES)

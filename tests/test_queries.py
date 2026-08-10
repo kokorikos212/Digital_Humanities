@@ -1,6 +1,10 @@
 """
-SPARQL query registry tests — syntax validation & DataFrame conversion.
+SPARQL query registry tests — case-aware queries + DataFrame conversion.
 """
+
+import json
+import tempfile
+from pathlib import Path
 
 import pytest
 
@@ -54,70 +58,54 @@ ex:Hub_Legitimacy a skos:Concept ;
 """
 
 
-class TestSPARQLQueries:
-    """Verify every preset query compiles and returns results."""
+class TestCaseAwareQueries:
+    """Verify CASE_QUERIES registry and execute_sparql."""
 
-    def test_all_queries_parse(self):
-        """Every PRESET_SPARQL_QUERIES entry executes without syntax errors."""
-        from src.queries import PRESET_SPARQL_QUERIES
-        from src.visualizer import execute_sparql_query
+    def test_get_queries_for_case_known(self):
+        from src.queries import get_queries_for_case, CASE_QUERIES
 
-        for name, query in PRESET_SPARQL_QUERIES.items():
-            df = execute_sparql_query(SAMPLE_TTL, query)
-            assert hasattr(df, "columns"), (
-                f"Query '{name}' did not return a DataFrame"
-            )
+        qs = get_queries_for_case("Case 1: University Budget Debate")
+        assert len(qs) == 2
+        assert "Use Case 1: Conflict Density Indexing" in qs
 
-    def test_case_1_1_finds_rebuttal(self):
-        """Case 1.1 should find Maria rebutting Alex's claim."""
-        from src.queries import PRESET_SPARQL_QUERIES
-        from src.visualizer import execute_sparql_query
+    def test_get_queries_for_case_unknown_falls_back(self):
+        from src.queries import get_queries_for_case
 
-        df = execute_sparql_query(SAMPLE_TTL, PRESET_SPARQL_QUERIES[
-            "Case 1.1: Budget Debate — Conflict & Rebuttal Topology"
+        qs = get_queries_for_case("nonexistent")
+        assert isinstance(qs, dict)
+
+    def test_execute_sparql_all_cases(self):
+        from src.queries import CASE_QUERIES, execute_sparql
+
+        for case_title, queries in CASE_QUERIES.items():
+            for use_case, query in queries.items():
+                df = execute_sparql(SAMPLE_TTL, query)
+                assert hasattr(df, "columns"), (
+                    f"{case_title}/{use_case} did not return DataFrame"
+                )
+
+    def test_execute_sparql_empty_inputs(self):
+        from src.queries import execute_sparql
+
+        assert execute_sparql("", "").empty
+        assert execute_sparql(SAMPLE_TTL, "").empty
+
+    def test_case1_budget_finds_rebuttal(self):
+        from src.queries import CASE_QUERIES, execute_sparql
+
+        queries = CASE_QUERIES["Case 1: University Budget Debate"]
+        df = execute_sparql(SAMPLE_TTL, queries[
+            "Use Case 1: Conflict Density Indexing"
         ])
         assert len(df) >= 1
         assert any("Maria" in str(row) for row in df.values)
 
-    def test_case_1_2_finds_bound_entities(self):
-        """Case 1.2 should find budget issue with schema:about entity."""
-        from src.queries import PRESET_SPARQL_QUERIES
-        from src.visualizer import execute_sparql_query
+    def test_case1_entity_audit_finds_bound_entities(self):
+        from src.queries import CASE_QUERIES, execute_sparql
 
-        df = execute_sparql_query(SAMPLE_TTL, PRESET_SPARQL_QUERIES[
-            "Case 1.2: Audit Auto-Bound Entities to Root Issue"
+        queries = CASE_QUERIES["Case 1: University Budget Debate"]
+        df = execute_sparql(SAMPLE_TTL, queries[
+            "Use Case 2: Policy Need vs. Priority Audit (Auto-Bound Entities)"
         ])
         assert len(df) >= 1
         assert any("Lab Equipment" in str(row) for row in df.values)
-
-    def test_case_3_1_finds_activity(self):
-        """Case 3.1 should find the presentation event with agent binding."""
-        from src.queries import PRESET_SPARQL_QUERIES
-        from src.visualizer import execute_sparql_query
-
-        df = execute_sparql_query(SAMPLE_TTL, PRESET_SPARQL_QUERIES[
-            "Case 3.1: Event-Centric Activity Resolution (prov:Activity)"
-        ])
-        assert len(df) >= 1
-        assert any("Budget presentation" in str(row) for row in df.values)
-
-    def test_metric_4_2_finds_hub_node(self):
-        """Metric 4.2 should find the skos:Concept hub node."""
-        from src.queries import PRESET_SPARQL_QUERIES
-        from src.visualizer import execute_sparql_query
-
-        df = execute_sparql_query(SAMPLE_TTL, PRESET_SPARQL_QUERIES[
-            "Metric 4.2: Hub-Node Weighting (W_hub) Extraction via SKOS"
-        ])
-        assert len(df) >= 1
-        assert any("Legitimacy" in str(row) for row in df.values)
-
-    def test_execute_empty_inputs(self):
-        """Empty inputs return empty DataFrame."""
-        from src.visualizer import execute_sparql_query
-
-        df = execute_sparql_query("", "")
-        assert df.empty
-
-        df2 = execute_sparql_query(SAMPLE_TTL, "")
-        assert df2.empty

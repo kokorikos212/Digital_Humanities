@@ -38,8 +38,8 @@ from src.config import config
 from src.pipeline import run_pipeline
 from src.prompts import get_system_prompt, NAMED_PROMPTS, build_analysis_prompt
 from src.tools import TOOL_UI_LABELS
-from src.visualizer import render_rdf_graph, execute_sparql_query
-from src.queries import PRESET_SPARQL_QUERIES
+from src.visualizer import render_rdf_graph
+from src.queries import PRESET_SPARQL_QUERIES, CASE_QUERIES, execute_sparql, get_queries_for_case
 from src.precomputed import load_precomputed_asset, PRECOMPUTED_MAP
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -203,9 +203,16 @@ def load_example(name: str) -> str:
 
 
 def _on_example_change(name: str):
-    """Handle dropdown change: load prompt text + pre-computed assets if available."""
+    """Handle dropdown change: load prompt text + pre-computed assets + case-aware SPARQL queries."""
     text = EXAMPLES.get(name, "")
     asset = load_precomputed_asset(name)
+
+    # Case-aware SPARQL queries
+    case_queries = get_queries_for_case(name)
+    sparql_choices = list(case_queries.keys())
+    sparql_default = sparql_choices[0] if sparql_choices else ""
+    sparql_code = case_queries.get(sparql_default, "")
+
     if asset:
         return (
             text,
@@ -213,8 +220,14 @@ def _on_example_change(name: str):
             asset["ttl"],
             _format_graph_html(asset["ttl"]),
             asset["md"],
+            gr.update(choices=sparql_choices, value=sparql_default),
+            sparql_code,
         )
-    return (text, "", "", "", "")
+    return (
+        text, "", "", "", "",
+        gr.update(choices=sparql_choices, value=sparql_default),
+        sparql_code,
+    )
 
 
 # ═══════════════════════════════════════════════════════════════════════════
@@ -419,7 +432,10 @@ document.body.style.overflow='';
         example_selector.change(
             fn=_on_example_change,
             inputs=[example_selector],
-            outputs=[text_input, json_output, rdf_output, graph_output, obsidian_output],
+            outputs=[
+                text_input, json_output, rdf_output, graph_output, obsidian_output,
+                preset_dropdown, sparql_editor,
+            ],
         )
 
         run_btn.click(
@@ -449,7 +465,7 @@ document.body.style.overflow='';
 
         def _run_query(ttl_data: str, query_str: str):
             import pandas as pd
-            df = execute_sparql_query(ttl_data, query_str)
+            df = execute_sparql(ttl_data, query_str)
             if df is None or df.empty:
                 return pd.DataFrame({"Result": ["No matches found or query failed."]})
             return df
