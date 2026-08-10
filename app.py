@@ -322,10 +322,7 @@ def create_ui() -> gr.Blocks:
 
     with gr.Blocks(
         theme=gr.themes.Soft(),
-        head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/xterm@5.3.0/css/xterm.css" />
-<script src="https://cdn.jsdelivr.net/npm/xterm@5.3.0/lib/xterm.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/xterm-addon-fit@0.8.0/lib/xterm-addon-fit.js"></script>""",
+        head="""<meta name="viewport" content="width=device-width, initial-scale=1.0">""",
         title="Talos — Ontological Deliberation Platform",
         css=UI_CSS,
     ) as app:
@@ -669,31 +666,17 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                             dl_btn = gr.Button("📥 Prepare Download", variant="secondary")
                             dl_output = gr.File(label="Download", visible=True)
 
-                    # Right: xterm.js PTY Terminal
+                    # Right: Text Terminal (single-shot bash with stateful cwd)
                     with gr.Column(scale=1):
-                        gr.Markdown("### 💻 Terminal")
-                        gr.HTML("""
-                        <div id="terminal-container" style="height:420px;width:100%;border-radius:8px;overflow:hidden;background:#1e1e1e" onclick="document.querySelector('.xterm-helper-textarea').focus()"></div>
-                        <script>
-                        (function(){
-                          if(window._ptyCleanup)window._ptyCleanup();
-                          var term=new Terminal({cursorBlink:true,fontSize:13,fontFamily:'monospace',theme:{background:'#1e1e1e',foreground:'#d4d4d4'}});
-                          var fit=new FitAddon.FitAddon();term.loadAddon(fit);
-                          term.open(document.getElementById('terminal-container'));fit.fit();
-                          var proto=location.protocol==='https:'?'wss':'ws';
-                          var wsUrl=proto+'://'+location.host+'/ws/terminal/demo/default';
-                          var ws=new WebSocket(wsUrl);
-                          ws.binaryType='arraybuffer';
-                          term.onData(function(d){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({text:d}));});
-                          ws.onmessage=function(ev){term.write(typeof ev.data==='string'?ev.data:new Uint8Array(ev.data));};
-                          ws.onclose=function(){term.write('\\r\\n\\x1b[31m*** Disconnected ***\\x1b[0m\\r\\n');};
-                          ws.onopen=function(){term.focus();fit.fit();};
-                          window.addEventListener('resize',function(){fit.fit();try{ws.send('\\x1b[8;'+term.rows+';'+term.cols+'t')}catch(e){}});
-                          term.onResize(function(){try{ws.send('\\x1b[8;'+term.rows+';'+term.cols+'t')}catch(e){}});
-                          window._ptyCleanup=function(){ws.close();term.dispose();};
-                          setTimeout(function(){term.focus();},500);
-                        })();
-                        </script>""")
+                        gr.Markdown("### 💻 Bash Terminal")
+                        terminal_output = gr.Code(label="Output", lines=10, interactive=False)
+                        with gr.Row():
+                            terminal_input = gr.Textbox(
+                                label="Command", placeholder="e.g. ls -la, pwd, cat readme.md",
+                                scale=3,
+                            )
+                            run_cmd_btn = gr.Button("▶️ Run", variant="primary", scale=1)
+                        gr.Markdown("*Tip: use `cd` to navigate, all commands scoped to project*")
                         cwd_state = gr.State(value="")
 
         # ── Event Handlers ──────────────────────────────────────────
@@ -782,10 +765,29 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             outputs=[sparql_editor],
         )
 
-        # ── File Manager handlers ────────────────────────────────────
+        # ── Terminal & File Manager handlers ─────────────────────────
 
+        from src.tools.terminal import execute_project_bash
         from src.tools.file_manager import (
             list_project_directory, delete_project_item, prepare_download,
+        )
+
+        def _handle_terminal(uid, pid, cmd, cwd):
+            if not cmd.strip():
+                return "", cwd, ""
+            out, new_cwd = execute_project_bash(uid, pid, cmd, cwd)
+            return f"$ {cmd}\n{out}\n", new_cwd, ""
+
+        run_cmd_btn.click(
+            fn=_handle_terminal,
+            inputs=[user_state, project_state, terminal_input, cwd_state],
+            outputs=[terminal_output, cwd_state, terminal_input],
+        )
+
+        terminal_input.submit(
+            fn=_handle_terminal,
+            inputs=[user_state, project_state, terminal_input, cwd_state],
+            outputs=[terminal_output, cwd_state, terminal_input],
         )
 
         def _handle_list_files(uid, pid, cwd):
@@ -943,12 +945,6 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
 
 demo = create_ui()
 demo.queue()
-
-# Mount PTY WebSocket route on Gradio's internal FastAPI app
-from src.tools.terminal_pty import terminal_websocket_endpoint
-demo.app.add_api_websocket_route(
-    "/ws/terminal/{user_id}/{project_id}", terminal_websocket_endpoint
-)
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Entry point (local dev)
