@@ -342,20 +342,31 @@ def create_ui() -> gr.Blocks:
         bar.style.display='flex';
       ">✕</button>
     </div>
-    <div id="chat-messages">
-      <p style="color:#888;text-align:center;margin-top:40%">Ask me about the ontology graph...</p>
-    </div>
+    <div id="chat-messages"><div style="color:#888;text-align:center;margin-top:160px;font-size:13px">Ask me about the ontology graph...</div></div>
     <div id="chat-input-row">
-      <input id="chat-input" type="text" placeholder="Type a message..." onkeypress="
-        if(event.key==='Enter'){this.value='';}
-      ">
-      <button id="chat-send" onclick="
-        var inp=document.getElementById('chat-input');
-        if(inp.value.trim()){inp.value='';}
-      ">➤</button>
+      <input id="chat-input" type="text" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMsg()">
+      <button id="chat-send" onclick="sendMsg()">➤</button>
     </div>
   </div>
-</div>""")
+</div>
+<script>
+var chatPlaceholder=document.querySelector('#chat-messages div');
+function sendMsg(){
+  var inp=document.getElementById('chat-input');
+  var msg=inp.value.trim();
+  if(!msg)return;
+  if(chatPlaceholder)chatPlaceholder.style.display='none';
+  var bubble=document.createElement('div');
+  bubble.style.cssText='background:#4a6cf7;color:#fff;padding:8px 12px;border-radius:14px 14px 4px 14px;margin-bottom:8px;max-width:80%;align-self:flex-end;font-size:13px;word-wrap:break-word';
+  bubble.textContent=msg;
+  var wrap=document.createElement('div');
+  wrap.style.cssText='display:flex;justify-content:flex-end';
+  wrap.appendChild(bubble);
+  document.getElementById('chat-messages').appendChild(wrap);
+  document.getElementById('chat-messages').scrollTop=document.getElementById('chat-messages').scrollHeight;
+  inp.value='';
+}
+</script>""")
 
         # ── Header ──────────────────────────────────────────────────
         gr.Markdown(
