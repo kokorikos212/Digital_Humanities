@@ -311,6 +311,52 @@ def create_ui() -> gr.Blocks:
         css=UI_CSS,
     ) as app:
 
+        # ── Chat widget (collapsed bar, expands on click) ───────────
+        gr.HTML("""<style>
+#chat-widget{position:fixed;bottom:0;right:20px;z-index:9998;font-family:-apple-system,BlinkMacSystemFont,sans-serif}
+#chat-bar{cursor:pointer;background:#4a6cf7;color:#fff;padding:10px 18px;border-radius:12px 12px 0 0;font-size:14px;font-weight:600;user-select:none;display:flex;align-items:center;gap:8px;width:220px;justify-content:space-between}
+#chat-bar:hover{background:#3651d5}
+#chat-body{display:none;width:340px;height:420px;background:#fff;border:1px solid #e0e0e0;border-bottom:none;border-radius:12px 12px 0 0;box-shadow:0 -2px 16px rgba(0,0,0,.1);flex-direction:column}
+#chat-body.open{display:flex}
+#chat-header{background:#4a6cf7;color:#fff;padding:10px 14px;border-radius:12px 12px 0 0;display:flex;justify-content:space-between;align-items:center;font-weight:600;font-size:14px}
+#chat-close{background:none;border:none;color:#fff;font-size:18px;cursor:pointer;padding:0 4px}
+#chat-messages{flex:1;overflow-y:auto;padding:12px;color:#333;font-size:13px}
+#chat-input-row{display:flex;border-top:1px solid #e0e0e0;padding:8px}
+#chat-input{flex:1;border:1px solid #ddd;border-radius:20px;padding:8px 14px;font-size:13px;outline:none}
+#chat-send{margin-left:8px;background:#4a6cf7;color:#fff;border:none;border-radius:50%;width:36px;height:36px;cursor:pointer;font-size:16px}
+</style>
+<div id="chat-widget">
+  <div id="chat-bar" onclick="
+    var b=document.getElementById('chat-body');
+    var bar=document.getElementById('chat-bar');
+    b.classList.add('open');
+    bar.style.display='none';
+  ">💬 Chat <span style="font-size:11px;opacity:.7">▲</span></div>
+  <div id="chat-body">
+    <div id="chat-header">
+      <span>💬 Ontology Assistant</span>
+      <button id="chat-close" onclick="
+        var b=document.getElementById('chat-body');
+        var bar=document.getElementById('chat-bar');
+        b.classList.remove('open');
+        bar.style.display='flex';
+      ">✕</button>
+    </div>
+    <div id="chat-messages">
+      <p style="color:#888;text-align:center;margin-top:40%">Ask me about the ontology graph...</p>
+    </div>
+    <div id="chat-input-row">
+      <input id="chat-input" type="text" placeholder="Type a message..." onkeypress="
+        if(event.key==='Enter'){this.value='';}
+      ">
+      <button id="chat-send" onclick="
+        var inp=document.getElementById('chat-input');
+        if(inp.value.trim()){inp.value='';}
+      ">➤</button>
+    </div>
+  </div>
+</div>""")
+
         # ── Header ──────────────────────────────────────────────────
         gr.Markdown(
             """
