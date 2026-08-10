@@ -342,8 +342,11 @@ def create_ui() -> gr.Blocks:
         bar.style.display='flex';
       ">✕</button>
     </div>
-    <div id="chat-messages"><div style="color:#888;text-align:center;margin-top:160px;font-size:13px">Ask me about the ontology graph...</div></div>
+    <div id="chat-messages"><div style="color:#888;text-align:center;margin-top:140px;font-size:13px">Ask me about the ontology graph...</div></div>
+    <div id="chat-uploads" style="padding:4px 12px;font-size:11px;color:#888;min-height:20px"></div>
     <div id="chat-input-row">
+      <input id="chat-file" type="file" style="display:none" onchange="addFile(this)">
+      <button onclick="document.getElementById('chat-file').click()" style="background:none;border:none;font-size:18px;cursor:pointer;padding:4px" title="Upload file">📎</button>
       <input id="chat-input" type="text" placeholder="Type a message..." onkeypress="if(event.key==='Enter')sendMsg()">
       <button id="chat-send" onclick="sendMsg()">➤</button>
     </div>
@@ -351,6 +354,17 @@ def create_ui() -> gr.Blocks:
 </div>
 <script>
 var chatPlaceholder=document.querySelector('#chat-messages div');
+var chatFiles=[];
+function addFile(input){
+  var file=input.files[0];
+  if(!file)return;
+  chatFiles.push(file);
+  var tag=document.createElement('span');
+  tag.style.cssText='display:inline-block;background:#e8f0fe;color:#4a6cf7;padding:2px 8px;border-radius:10px;margin:2px;font-size:11px';
+  tag.textContent='📄 '+file.name;
+  document.getElementById('chat-uploads').appendChild(tag);
+  input.value='';
+}
 function sendMsg(){
   var inp=document.getElementById('chat-input');
   var msg=inp.value.trim();

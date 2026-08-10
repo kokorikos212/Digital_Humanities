@@ -109,5 +109,22 @@ class Config:
             d.mkdir(parents=True, exist_ok=True)
 
 
+# ── Multi-tenant project path helpers ─────────────────────────────────────
+
+
+def resolve_project_dir(user_id: str, project_id: str) -> Path:
+    """Return the absolute path to a user project root, creating dirs if missing."""
+    base = config.project_root / "data" / "users" / user_id / "projects" / project_id
+    (base / "documents").mkdir(parents=True, exist_ok=True)
+    (base / "notes").mkdir(parents=True, exist_ok=True)
+    (base / "graphs").mkdir(parents=True, exist_ok=True)
+    return base
+
+
+def resolve_documents_dir(user_id: str, project_id: str) -> Path:
+    """Return the documents subdirectory for a user project."""
+    return resolve_project_dir(user_id, project_id) / "documents"
+
+
 # Singleton instance — call ``config.load_env()`` once at startup.
 config = Config()
