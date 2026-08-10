@@ -673,21 +673,25 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                     with gr.Column(scale=1):
                         gr.Markdown("### 💻 Terminal")
                         gr.HTML("""
-                        <div id="terminal-container" style="height:420px;width:100%;border-radius:8px;overflow:hidden;background:#1e1e1e"></div>
+                        <div id="terminal-container" style="height:420px;width:100%;border-radius:8px;overflow:hidden;background:#1e1e1e" onclick="document.querySelector('.xterm-helper-textarea').focus()"></div>
                         <script>
                         (function(){
-                          if(window._ptyInit)return;window._ptyInit=true;
+                          if(window._ptyCleanup)window._ptyCleanup();
                           var term=new Terminal({cursorBlink:true,fontSize:13,fontFamily:'monospace',theme:{background:'#1e1e1e',foreground:'#d4d4d4'}});
                           var fit=new FitAddon.FitAddon();term.loadAddon(fit);
                           term.open(document.getElementById('terminal-container'));fit.fit();
                           var proto=location.protocol==='https:'?'wss':'ws';
-                          var ws=new WebSocket(proto+'://'+location.host+'/ws/terminal/demo/default');
+                          var wsUrl=proto+'://'+location.host+'/ws/terminal/demo/default';
+                          var ws=new WebSocket(wsUrl);
                           ws.binaryType='arraybuffer';
                           term.onData(function(d){if(ws.readyState===WebSocket.OPEN)ws.send(JSON.stringify({text:d}));});
                           ws.onmessage=function(ev){term.write(typeof ev.data==='string'?ev.data:new Uint8Array(ev.data));};
                           ws.onclose=function(){term.write('\\r\\n\\x1b[31m*** Disconnected ***\\x1b[0m\\r\\n');};
+                          ws.onopen=function(){term.focus();fit.fit();};
                           window.addEventListener('resize',function(){fit.fit();try{ws.send('\\x1b[8;'+term.rows+';'+term.cols+'t')}catch(e){}});
                           term.onResize(function(){try{ws.send('\\x1b[8;'+term.rows+';'+term.cols+'t')}catch(e){}});
+                          window._ptyCleanup=function(){ws.close();term.dispose();};
+                          setTimeout(function(){term.focus();},500);
                         })();
                         </script>""")
                         cwd_state = gr.State(value="")
