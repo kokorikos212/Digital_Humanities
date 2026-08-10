@@ -20,7 +20,6 @@ import sys
 import time
 import traceback
 from pathlib import Path
-from typing import Dict, List, Optional, Set
 
 import os
 os.environ["GRADIO_SERVER_NAME"] = "0.0.0.0"
@@ -48,11 +47,11 @@ import html as _html
 
 from src.config import config
 from src.pipeline import run_pipeline
-from src.prompts import get_system_prompt, NAMED_PROMPTS, build_analysis_prompt
+from src.prompts import get_system_prompt, NAMED_PROMPTS
 from src.tools import TOOL_UI_LABELS
 from src.visualizer import render_rdf_graph
-from src.queries import PRESET_SPARQL_QUERIES, CASE_QUERIES, execute_sparql, get_queries_for_case
-from src.precomputed import load_precomputed_asset, PRECOMPUTED_MAP
+from src.queries import PRESET_SPARQL_QUERIES, execute_sparql, get_queries_for_case
+from src.precomputed import load_precomputed_asset
 from src.ingestion import save_uploaded_files
 
 # ═══════════════════════════════════════════════════════════════════════════
