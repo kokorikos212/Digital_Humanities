@@ -462,6 +462,11 @@ function sendMsg(){
                     lines=8,
                     value=EXAMPLES[DEFAULT_EXAMPLE],
                 )
+                upload_text_btn = gr.UploadButton(
+                    "📂 Upload from Computer",
+                    file_types=[".txt", ".md"],
+                    size="sm",
+                )
             with gr.Column(scale=2):
                 example_selector = gr.Dropdown(
                     label="📋 Load Example",
@@ -669,6 +674,21 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                         cwd_state = gr.State(value="")
 
         # ── Event Handlers ──────────────────────────────────────────
+
+        def _load_file_to_text(file):
+            if file is None:
+                return ""
+            try:
+                content = Path(file.name).read_text(encoding="utf-8", errors="replace")
+                return content
+            except Exception as exc:
+                return f"⚠️ Could not read file: {exc}"
+
+        upload_text_btn.upload(
+            fn=_load_file_to_text,
+            inputs=[upload_text_btn],
+            outputs=[text_input],
+        )
 
         example_selector.change(
             fn=_on_example_change,
