@@ -97,6 +97,7 @@ class TripleGenerator:
 
         merged_prefixes = {**self.DEFAULT_PREFIXES, **(prefixes or {})}
         triples = self._build_triples(entities, relations, merged_prefixes)
+        triples = self._bind_isolated_nodes(triples)
 
         timestamp = int(time.time())
         ext = self._extension_for(format)
@@ -231,6 +232,50 @@ class TripleGenerator:
                 "object_type": _get("object_type", "entity_id"),
                 "datatype": _get("datatype", None),
             })
+
+        return triples
+
+    @staticmethod
+    def _bind_isolated_nodes(triples: List[Dict[str, str]]) -> List[Dict[str, str]]:
+        """Auto-bind any node with degree=0 to the nearest ibis:Issue or prov:Activity.
+
+        Scans all subjects and objects.  Any entity that appears only once
+        (isolated rdf:type or rdfs:label declaration) gets a ``schema:about``
+        edge to the first ibis:Issue or prov:Activity found in the graph.
+        """
+        # Gather all nodes and their occurrences
+        subjects: Dict[str, int] = {}
+        objects: Dict[str, int] = {}
+        issues: list = []
+        activities: list = []
+
+        for t in triples:
+            s, o = t["subject"], t["object"]
+            subjects[s] = subjects.get(s, 0) + 1
+            objects[o] = objects.get(o, 0) + 1
+            # Track root issue / activity nodes
+            if t["predicate"] == "rdf:type":
+                if o in ("ibis:Issue", "prov:Activity"):
+                    (issues if "Issue" in o else activities).append(s)
+
+        # Candidates for binding: any ibis:Issue or prov:Activity
+        anchors = issues or activities or []
+
+        # Find nodes appearing only as subject (an rdf:type declaration) and
+        # never as object — these are likely isolated domain entities
+        for t in triples:
+            subj = t["subject"]
+            if subj not in objects and t["predicate"] == "rdf:type" and anchors:
+                # Skip already-bound entities (subj appears as object in other triples)
+                obj_count = sum(1 for rt in triples if rt["object"] == subj)
+                if obj_count == 0:
+                    triples.append({
+                        "subject": anchors[0],
+                        "predicate": "schema:about",
+                        "object": subj,
+                        "subject_type": "uri",
+                        "object_type": "uri",
+                    })
 
         return triples
 
