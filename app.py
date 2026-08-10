@@ -641,6 +641,33 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                     interactive=False,
                 )
 
+            with gr.TabItem("💻 Terminal & Files"):
+                with gr.Row():
+                    # Left: File Explorer
+                    with gr.Column(scale=1):
+                        gr.Markdown("### 📁 File Explorer")
+                        file_tree_df = gr.Dataframe(
+                            headers=["Name", "Type", "Size", "Relative Path"],
+                            interactive=False,
+                        )
+                        refresh_files_btn = gr.Button("🔄 Refresh")
+                        with gr.Accordion("Delete Item", open=False):
+                            delete_path = gr.Textbox(label="Relative Path to Delete")
+                            delete_btn = gr.Button("🗑️ Delete", variant="stop")
+                            delete_status = gr.Markdown("")
+
+                    # Right: Terminal
+                    with gr.Column(scale=1):
+                        gr.Markdown("### 💻 Bash Terminal")
+                        terminal_output = gr.Code(label="Output", lines=10, interactive=False)
+                        with gr.Row():
+                            terminal_input = gr.Textbox(
+                                label="Command", placeholder="e.g. ls -la, pwd, cat readme.md",
+                                scale=3,
+                            )
+                            run_cmd_btn = gr.Button("▶️ Run", variant="primary", scale=1)
+                        cwd_state = gr.State(value="")
+
         # ── Event Handlers ──────────────────────────────────────────
 
         example_selector.change(
@@ -710,6 +737,43 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             fn=_update_query,
             inputs=[preset_dropdown],
             outputs=[sparql_editor],
+        )
+
+        # ── Terminal & File Manager handlers ─────────────────────────
+
+        from src.tools.terminal import execute_project_bash
+        from src.tools.file_manager import list_project_directory, delete_project_item
+
+        def _handle_terminal(uid, pid, cmd, cwd):
+            if not cmd.strip():
+                return "", cwd
+            out, new_cwd = execute_project_bash(uid, pid, cmd, cwd)
+            return f"$ {cmd}\n{out}\n", new_cwd
+
+        def _handle_list_files(uid, pid, cwd):
+            return list_project_directory(uid, pid, cwd)
+
+        def _handle_delete(uid, pid, rel):
+            if not rel.strip():
+                return "⚠️ Enter a relative path to delete."
+            return delete_project_item(uid, pid, rel)
+
+        run_cmd_btn.click(
+            fn=_handle_terminal,
+            inputs=[user_state, project_state, terminal_input, cwd_state],
+            outputs=[terminal_output, cwd_state],
+        )
+
+        refresh_files_btn.click(
+            fn=_handle_list_files,
+            inputs=[user_state, project_state, cwd_state],
+            outputs=[file_tree_df],
+        )
+
+        delete_btn.click(
+            fn=_handle_delete,
+            inputs=[user_state, project_state, delete_path],
+            outputs=[delete_status],
         )
 
         run_query_btn.click(
