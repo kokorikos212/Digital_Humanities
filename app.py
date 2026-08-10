@@ -313,25 +313,26 @@ def create_ui() -> gr.Blocks:
 
             with gr.TabItem("🕸️ Semantic Graph"):
                 gr.HTML("""<style>
-#graph-wrapper { position:relative; min-height:400px; }
-#graph-frame { width:100%; height:650px; border:none; border-radius:8px; }
-#graph-frame.fullscreen { position:fixed; top:0; left:0; width:100vw; height:100vh; z-index:9999; border-radius:0; }
-#fs-btn { position:absolute; top:8px; right:8px; z-index:10; padding:6px 12px; background:#4a6cf7; color:#fff; border:none; border-radius:6px; cursor:pointer; font-size:13px; }
-#fs-btn:hover { background:#3651d5; }
+#graph-wrapper{position:relative;min-height:400px}
+#graph-frame{width:100%;height:650px;border:none;border-radius:8px;transition:all 0.2s}
+#graph-frame.fs{position:fixed;top:0;left:0;width:100vw;height:100vh;z-index:9999;border-radius:0;background:#fff}
+#fs-btn{position:absolute;top:8px;right:8px;z-index:10;padding:6px 12px;background:#4a6cf7;color:#fff;border:none;border-radius:6px;cursor:pointer;font-size:13px}
+#fs-btn:hover{background:#3651d5}
+#fs-x{display:none;position:fixed;top:12px;right:12px;z-index:10001;width:36px;height:36px;background:#e74c3c;color:#fff;border:none;border-radius:50%;font-size:18px;cursor:pointer;box-shadow:0 2px 6px rgba(0,0,0,.3)}
+#fs-x:hover{background:#c0392b}
 </style>
 <div id="graph-wrapper">
-  <button id="fs-btn" onclick="
-    var f=document.getElementById('graph-frame');
-    var b=document.getElementById('fs-btn');
-    if(f.classList.contains('fullscreen')){
-      f.classList.remove('fullscreen');
-      b.textContent='⛶ Full Screen';
-    }else{
-      f.classList.add('fullscreen');
-      b.textContent='⛶ Exit Full Screen';
-    }
-    ">⛶ Full Screen</button>
-</div>""")
+  <button id="fs-btn" onclick="toggleFS()">⛶ Full Screen</button>
+  <button id="fs-x" onclick="toggleFS()" title="Exit full screen">✕</button>
+</div>
+<script>
+function toggleFS(){
+  var f=document.getElementById('graph-frame'),b=document.getElementById('fs-btn'),x=document.getElementById('fs-x');
+  if(f.classList.contains('fs')){f.classList.remove('fs');b.style.display='';x.style.display='none';document.body.style.overflow=''}
+  else{f.classList.add('fs');b.style.display='none';x.style.display='block';document.body.style.overflow='hidden'}
+}
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){var f=document.getElementById('graph-frame');if(f.classList.contains('fs'))toggleFS()}});
+</script>""")
                 graph_output = gr.HTML(
                     label="Interactive Network",
                     value="<p style='color:#888;padding:2em;text-align:center'>"
