@@ -392,23 +392,6 @@ def create_ui() -> gr.Blocks:
             )
             save_btn = gr.Button("💾 Save as Precomputed", variant="secondary", size="sm", scale=1)
 
-        # ── Clipboard fallback for native Gradio copy button ─────────
-        gr.HTML("""<script>
-(function(){
-  var origWrite=navigator.clipboard.writeText;
-  navigator.clipboard.writeText=function(text){
-    return origWrite.call(navigator.clipboard,text).catch(function(){
-      var ta=document.createElement('textarea');
-      ta.value=text;ta.style.cssText='position:fixed;top:0;left:0;opacity:0;pointer-events:none';
-      document.body.appendChild(ta);ta.select();
-      try{document.execCommand('copy')}catch(e){}
-      document.body.removeChild(ta);
-      return Promise.resolve();
-    });
-  };
-})();
-</script>""")
-
         # ── Status ──────────────────────────────────────────────────
         status = gr.Markdown("")
 
