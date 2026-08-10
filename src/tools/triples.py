@@ -154,13 +154,20 @@ class TripleGenerator:
                 })
 
         for rel in relations:
+            # Safe extraction: Pydantic model attribute OR dict key
+            def _get(key: str, default: Any = "??") -> Any:
+                return (
+                    getattr(rel, key, None)
+                    or (rel.get(key) if isinstance(rel, dict) else None)
+                    or default
+                )
             triples.append({
-                "subject": rel.get("subject", "??"),
-                "predicate": rel.get("predicate", "??"),
-                "object": rel.get("object", rel.get("obj", "??")),
-                "subject_type": rel.get("subject_type", "entity_id"),
-                "object_type": rel.get("object_type", "entity_id"),
-                "datatype": rel.get("datatype"),
+                "subject": _get("subject"),
+                "predicate": _get("predicate"),
+                "object": _get("object") if _get("object") != "??" else _get("obj"),
+                "subject_type": _get("subject_type", "entity_id"),
+                "object_type": _get("object_type", "entity_id"),
+                "datatype": _get("datatype", None),
             })
 
         return triples
@@ -211,40 +218,59 @@ class TripleGenerator:
 
     @staticmethod
     def _to_rdflib_term(
-        token: str,
+        token: Any,
         ns_map: Dict[str, Any],
         position: str = "object",
         datatype: Optional[str] = None,
     ):
-        """Convert a string token to an rdflib term, position-aware.
+        """Convert a value to an rdflib term, position-aware and type-safe.
 
+        - Pass-through: already an rdflib term → return as-is.
+        - None / empty: return None.
         - ``subject`` / ``predicate``: always resolve to URIRef (never Literal).
         - ``object``: may be URIRef or typed Literal.
         """
         import rdflib
 
-        # Full URI — always a resource
+        # -- pass-through already-resolved rdflib terms --
+        if isinstance(token, (rdflib.URIRef, rdflib.Literal, rdflib.BNode)):
+            return token
+
+        # -- None / empty guard --
+        if token is None:
+            return None
+        if isinstance(token, str) and not token.strip():
+            return None
+
+        # -- type casting for primitives --
+        if isinstance(token, (int, float, bool)):
+            token = str(token)
+
+        if not isinstance(token, str):
+            token = str(token)
+
+        # -- full URI — always a resource --
         if token.startswith("http://") or token.startswith("https://"):
             return rdflib.URIRef(token)
 
-        # Prefixed name like ex:Person or rdf:type
+        # -- prefixed name like ex:Person or rdf:type --
         if ":" in token:
             prefix, _, local = token.partition(":")
             if prefix in ns_map:
                 return ns_map[prefix][local]
-            # Unknown prefix — treat as URI for subject/predicate, Literal for object
+            # Unknown prefix — URI for subj/pred, Literal for obj
             if position in ("subject", "predicate"):
                 return rdflib.URIRef(token)
             return rdflib.Literal(token, datatype=datatype) if datatype else rdflib.Literal(token)
 
-        # Plain token — subjects/predicates become URIRefs under default namespace
+        # -- plain token: subjects/predicates become URIRefs under default ns --
         if position in ("subject", "predicate"):
             ex_ns = ns_map.get("ex")
             if ex_ns is not None:
                 return ex_ns[token]
             return rdflib.URIRef(token)
 
-        # Object — typed literal or plain literal
+        # -- object: typed or plain literal --
         return rdflib.Literal(token, datatype=datatype) if datatype else rdflib.Literal(token)
 
     @staticmethod
