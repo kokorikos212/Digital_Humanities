@@ -28,6 +28,24 @@ PRECOMPUTED_MAP: Dict[str, str] = {
 }
 
 
+def load_project_artifacts(project_dir: Path) -> tuple:
+    """Read project graph.ttl, graph.html, and markdown notes if present.
+
+    Returns (ttl_content, html_content, md_content).
+    """
+    ttl_path = project_dir / "graph.ttl"
+    html_path = project_dir / "graph.html"
+    notes_glob = sorted(project_dir.glob("notes/*.md"))
+
+    ttl = ttl_path.read_text(encoding="utf-8") if ttl_path.exists() else ""
+    html = html_path.read_text(encoding="utf-8") if html_path.exists() else ""
+    md = ""
+    if notes_glob:
+        md = notes_glob[-1].read_text(encoding="utf-8")
+
+    return ttl, html, md
+
+
 def load_precomputed_asset(example_title: str) -> Optional[Dict[str, Any]]:
     """Load pre-computed graph, markdown, JSON, and Turtle artifacts.
 

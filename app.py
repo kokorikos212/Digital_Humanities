@@ -828,15 +828,16 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             if success:
                 projects = list_user_projects(u)
                 return (
-                    gr.update(visible=False),
-                    gr.update(visible=True),
+                    gr.update(visible=False),    # auth
+                    gr.update(visible=True),     # dashboard
+                    gr.update(visible=False),    # workspace stays hidden
                     f"# 📁 Welcome back, **{u}**!",
                     gr.update(choices=projects, value=projects[0] if projects else None),
                     u,
                     f"✅ {msg}",
                 )
             return (
-                gr.update(visible=True), gr.update(visible=False),
+                gr.update(visible=True), gr.update(visible=False), gr.update(visible=False),
                 "", gr.update(), None,
                 f"❌ {msg}",
             )
@@ -844,8 +845,8 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         login_btn.click(
             _handle_login,
             inputs=[login_user, login_pass],
-            outputs=[auth_container, project_container, user_header,
-                     project_dropdown, user_state, login_msg],
+            outputs=[auth_container, project_container, workspace_container,
+                     user_header, project_dropdown, user_state, login_msg],
         )
 
         def _handle_register(u, p):
@@ -876,19 +877,32 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
 
         def _handle_open_project(u, proj):
             if not u or not proj:
-                return gr.update(visible=True), gr.update(visible=False), "", None
+                return (gr.update(visible=True), gr.update(visible=False),
+                        "", None, "", "", "")
+            from src.config import resolve_project_dir
+            from src.precomputed import load_project_artifacts
+            p_dir = resolve_project_dir(u, proj)
+            ttl, html, md = load_project_artifacts(p_dir)
+            graph_html = _format_graph_html(ttl) if ttl else (
+                "<p style='color:#888;padding:2em;text-align:center'>"
+                "No graph generated yet for this project.</p>"
+            )
             return (
-                gr.update(visible=False),
-                gr.update(visible=True),
+                gr.update(visible=False),     # dashboard
+                gr.update(visible=True),      # workspace
                 f"## 🔬 Active Project: **{proj}** (User: `{u}`)",
                 proj,
+                ttl,                          # RDF output
+                graph_html,                   # Graph HTML
+                md if md else "# No notes yet.",
             )
 
         open_project_btn.click(
             _handle_open_project,
             inputs=[user_state, project_dropdown],
             outputs=[project_container, workspace_container,
-                     active_proj_header, project_state],
+                     active_proj_header, project_state,
+                     rdf_output, graph_output, obsidian_output],
         )
 
     return app
