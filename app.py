@@ -982,11 +982,13 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         )
 
         # ── OCR handlers ────────────────────────────────────────────
-        def _handle_ocr(file_obj, lang):
+        def _handle_ocr(file_obj, lang, uid):
             if file_obj is None:
                 return "Please upload an image or PDF scan."
+            from src.auth_keys import resolve_api_key
             from src.tools.transcription import transcribe_document_image
-            return transcribe_document_image(file_obj.name, target_language=lang)
+            bytez_key = resolve_api_key(uid, "BYTEZ_API_KEY")
+            return transcribe_document_image(file_obj.name, target_language=lang, api_key=bytez_key)
 
         def _handle_ocr_save(uid, pid, file_obj, text):
             if not file_obj or not text.strip():
@@ -994,7 +996,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             from src.ingestion import save_transcribed_document
             return save_transcribed_document(uid, pid, file_obj.name, text)
 
-        ocr_run_btn.click(fn=_handle_ocr, inputs=[ocr_file, ocr_lang], outputs=[ocr_output])
+        ocr_run_btn.click(fn=_handle_ocr, inputs=[ocr_file, ocr_lang, user_state], outputs=[ocr_output])
         ocr_push_btn.click(fn=lambda t: t, inputs=[ocr_output], outputs=[text_input])
         ocr_save_btn.click(
             fn=_handle_ocr_save,
