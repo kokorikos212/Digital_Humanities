@@ -13,6 +13,7 @@ from typing import Optional
 def transcribe_document_image(
     image_path: str,
     target_language: str = "Original",
+    user_id: Optional[str] = None,
     api_key: Optional[str] = None,
 ) -> str:
     """Extract text from a document image or PDF scan.
@@ -24,8 +25,10 @@ def transcribe_document_image(
     target_language:
         ``"Original"`` (default), ``"Translate to English"``, or
         ``"Translate to Greek"``.
+    user_id:
+        Active user for key resolution (user-saved → env → config).
     api_key:
-        Bytez API key (defaults to ``BYTEZ_API_KEY`` or ``LLM_API_KEY``).
+        Explicit Bytez API key (overrides resolution).
 
     Returns
     -------
@@ -51,8 +54,16 @@ def transcribe_document_image(
     elif target_language == "Translate to Greek":
         prompt += " Translate the extracted text into Greek."
 
-    # Bytez VLM / OCR API
-    bytez_key = api_key or os.getenv("BYTEZ_API_KEY", "") or os.getenv("LLM_API_KEY", "")
+    # Resolve key: explicit → user-saved → env vars
+    from src.auth_keys import resolve_api_key
+
+    bytez_key = (
+        api_key
+        or (resolve_api_key(user_id, "BYTEZ_API_KEY") if user_id else "")
+        or (resolve_api_key(user_id, "LLM_API_KEY") if user_id else "")
+        or os.getenv("BYTEZ_API_KEY", "")
+        or os.getenv("LLM_API_KEY", "")
+    )
     if bytez_key:
         try:
             import requests

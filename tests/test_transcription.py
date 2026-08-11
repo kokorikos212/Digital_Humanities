@@ -37,6 +37,17 @@ class TestTranscription:
         finally:
             Path(tmp).unlink(missing_ok=True)
 
+    def test_resolves_user_saved_key(self):
+        """User-scoped BYTEZ_API_KEY is resolved via resolve_api_key."""
+        from src.auth_keys import save_user_keys, resolve_api_key
+
+        save_user_keys("ocr_test_user", {"BYTEZ_API_KEY": "sk-test-bytez-123"})
+        result = resolve_api_key("ocr_test_user", "BYTEZ_API_KEY")
+        assert result == "sk-test-bytez-123"
+        from src.auth_keys import get_user_settings_path
+        sf = get_user_settings_path("ocr_test_user")
+        sf.unlink(missing_ok=True)
+
     def test_translate_prompt_included(self):
         from src.tools.transcription import transcribe_document_image
         with tempfile.NamedTemporaryFile(suffix=".png", delete=False) as f:

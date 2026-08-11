@@ -1006,10 +1006,8 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         def _handle_ocr(file_obj, lang, uid):
             if file_obj is None:
                 return "Please upload an image or PDF scan."
-            from src.auth_keys import resolve_api_key
             from src.tools.transcription import transcribe_document_image
-            bytez_key = resolve_api_key(uid, "BYTEZ_API_KEY")
-            return transcribe_document_image(file_obj.name, target_language=lang, api_key=bytez_key)
+            return transcribe_document_image(file_obj.name, target_language=lang, user_id=uid)
 
         def _handle_ocr_save(uid, pid, file_obj, text):
             if not file_obj or not text.strip():
