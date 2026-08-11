@@ -59,7 +59,9 @@ def main(argv: list[str] | None = None) -> None:
     print(f"[*] Transcribing {len(files)} file(s) for user={args.user} project={args.project}...")
     ok, fail = 0, 0
 
-    for f in files:
+    for idx, f in enumerate(files):
+        if idx > 0:  # Rate-limit between files (HF free tier)
+            import time as _t; _t.sleep(1.5)
         print(f"  -> {f.name} ... ", end="", flush=True)
         text = transcribe_document_image(str(f), target_language=args.lang, api_key=bytez_key)
         if text.startswith("Error") or text.startswith("[OCR Notice]"):

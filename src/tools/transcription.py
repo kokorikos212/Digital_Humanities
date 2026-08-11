@@ -73,6 +73,7 @@ def transcribe_document_image(
 
     if token:
         try:
+            import time as _time
             from huggingface_hub import InferenceClient
 
             with open(p, "rb") as f:
@@ -81,18 +82,31 @@ def transcribe_document_image(
             data_uri = f"data:image/{ext};base64,{img_b64}"
 
             client = InferenceClient(api_key=token)
-            completion = client.chat.completions.create(
-                model=_cfg.vl_model,
-                messages=[{
-                    "role": "user",
-                    "content": [
-                        {"type": "text", "text": prompt},
-                        {"type": "image_url", "image_url": {"url": data_uri}},
-                    ],
-                }],
-                max_tokens=2000,
-            )
-            return completion.choices[0].message.content or ""
+
+            # Retry with exponential backoff for HF rate limits (429)
+            max_retries, delay = 3, 2.0
+            for attempt in range(max_retries):
+                try:
+                    completion = client.chat.completions.create(
+                        model=_cfg.vl_model,
+                        messages=[{
+                            "role": "user",
+                            "content": [
+                                {"type": "text", "text": prompt},
+                                {"type": "image_url", "image_url": {"url": data_uri}},
+                            ],
+                        }],
+                        max_tokens=2000,
+                    )
+                    return completion.choices[0].message.content or ""
+                except Exception as exc:
+                    msg = str(exc)
+                    if "429" in msg and attempt < max_retries - 1:
+                        print(f"[Info] HF rate limited (429), retrying in {delay}s...")
+                        _time.sleep(delay)
+                        delay *= 2
+                    else:
+                        raise
         except Exception as exc:
             print(f"[Warning] HF VLM API failed: {exc}")
 
