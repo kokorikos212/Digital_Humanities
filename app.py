@@ -701,7 +701,6 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                             upload_files = gr.File(
                                 label="Select Files or Folder",
                                 file_count="directory",
-                                file_types=[".txt", ".md", ".ttl", ".json", ".pdf", ".csv", ".py"],
                             )
                             upload_subfolder = gr.Textbox(
                                 label="Target Subfolder", placeholder="documents", value="documents"
@@ -720,7 +719,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                     # Right: Text Terminal (single-shot bash with stateful cwd)
                     with gr.Column(scale=1):
                         gr.Markdown("### 💻 Bash Terminal")
-                        terminal_output = gr.Code(label="Output", lines=10, interactive=False)
+                        terminal_output = gr.Code(label="Output", lines=52, interactive=False)
                         with gr.Row():
                             terminal_input = gr.Textbox(
                                 label="Command", placeholder="e.g. ls -la, pwd, cat readme.md",
@@ -908,20 +907,15 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             target.mkdir(parents=True, exist_ok=True)
             saved = []
             for f in files:
-                # f.name is the full path; preserve subfolder structure
                 src = Path(f.name)
                 if not src.exists():
                     continue
-                # Determine relative path: strip common prefix with project root
-                rel = src.relative_to(src.parent.parent) if src.parent != src.parent.parent else Path(src.name)
-                dest = target / rel.name
                 if src.is_dir():
-                    _shutil.copytree(str(src), str(dest), dirs_exist_ok=True)
-                    saved.append(f"{rel.name}/")
+                    _shutil.copytree(str(src), str(target / src.name), dirs_exist_ok=True)
+                    saved.append(f"{src.name}/")
                 else:
-                    dest.parent.mkdir(parents=True, exist_ok=True)
-                    _shutil.copy2(str(src), str(dest))
-                    saved.append(rel.name)
+                    _shutil.copy2(str(src), str(target / src.name))
+                    saved.append(src.name)
             return f"✅ Uploaded {len(saved)} item(s): {', '.join(saved[:10])}{'...' if len(saved) > 10 else ''}"
 
         upload_btn.click(
