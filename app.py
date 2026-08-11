@@ -780,7 +780,7 @@ ls documents/
       }
     }
     if(!inputEl)setTimeout(findInput,500);
-    else inputEl.addEventListener('keydown',onKey,true);
+    else{inputEl.addEventListener('keydown',onKey,true);clearInterval(poll);}
   }
   function onKey(e){
     if(e.key!=='Tab'){lastWord='';matchIdx=0;return;}
@@ -798,7 +798,7 @@ ls documents/
     inputEl.value=before+rest+val.substring(pos);
     inputEl.selectionStart=inputEl.selectionEnd=before.length+rest.length;
   }
-  setTimeout(findInput,300);
+  var poll=setInterval(findInput,500);
 })();
 </script>""")
                         cwd_state = gr.State(value="")
