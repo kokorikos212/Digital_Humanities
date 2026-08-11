@@ -14,6 +14,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import sys
 from pathlib import Path
 
 import pandas as pd
@@ -123,5 +124,13 @@ def main(argv: list[str] | None = None) -> None:
     print(f"    - Report: {report_path}")
 
 
+def _entry():
+    try:
+        main()
+    except Exception as exc:
+        print(f"Execution Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    main()
+    _entry()

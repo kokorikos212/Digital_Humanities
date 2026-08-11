@@ -79,5 +79,14 @@ def main(argv: list[str] | None = None) -> None:
     print(f"\n[+] Done. {ok} transcribed, {fail} skipped/failed.")
 
 
+def _entry():
+    """Wrap main() to mask internal paths on error."""
+    try:
+        main()
+    except Exception as exc:
+        print(f"Execution Error: {exc}", file=sys.stderr)
+        sys.exit(1)
+
+
 if __name__ == "__main__":
-    main()
+    _entry()

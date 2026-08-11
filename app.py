@@ -774,8 +774,8 @@ ls documents/
 <span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='ls -la';t.focus()}">ls -la</span>
 <span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='mkdir ';t.focus()}">mkdir</span>
 <span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='rm ';t.focus()}">rm</span>
-<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python -m src.cli.batch_transcribe --dir ';t.focus()}">transcribe</span>
-<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python -m src.cli.analyze_factions --dir-a ';t.focus()}">analyze</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python batch_transcribe.py --dir ';t.focus()}">transcribe</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python analyze_factions.py --dir-a ';t.focus()}">analyze</span>
 <span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python run_pipeline.py --text ';t.focus()}">pipeline</span>
 </div>""")
                         cwd_state = gr.State(value="")
