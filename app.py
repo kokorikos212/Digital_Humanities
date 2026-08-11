@@ -493,6 +493,31 @@ function sendMsg(){
             )
             upload_status = gr.Textbox(label="Upload Status", interactive=False, scale=1)
 
+        # ── OCR Transcriber ──────────────────────────────────────────
+        with gr.Accordion("📷 Image & Document OCR Transcriber", open=False):
+            gr.Markdown("Extract or translate text from document photos & PDF scans.")
+            with gr.Row():
+                with gr.Column(scale=1):
+                    ocr_file = gr.File(
+                        label="Upload Image or PDF Scan",
+                        file_types=[".png", ".jpg", ".jpeg", ".pdf", ".bmp"],
+                    )
+                    ocr_lang = gr.Dropdown(
+                        label="Target Language",
+                        choices=["Original", "Translate to English", "Translate to Greek"],
+                        value="Original",
+                    )
+                    ocr_run_btn = gr.Button("⚡ Run OCR & Transcription", variant="primary")
+                with gr.Column(scale=1):
+                    ocr_output = gr.Textbox(
+                        label="Extracted Transcript", lines=8, interactive=True,
+                        placeholder="Transcribed text will appear here...",
+                    )
+                    with gr.Row():
+                        ocr_push_btn = gr.Button("📥 Push to Main Input")
+                        ocr_save_btn = gr.Button("💾 Save as Project Document (.md)")
+                    ocr_status = gr.Markdown("")
+
         # ── Status ──────────────────────────────────────────────────
         status = gr.Markdown("")
 
@@ -922,6 +947,27 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
 
         vocab_run.click(fn=_single_vocab, inputs=[vocab_text], outputs=[vocab_metrics, vocab_table])
         comp_run.click(fn=_comp_vocab, inputs=[comp_text_a, comp_text_b], outputs=[comp_metrics, comp_table])
+
+        # ── OCR handlers ────────────────────────────────────────────
+        def _handle_ocr(file_obj, lang):
+            if file_obj is None:
+                return "Please upload an image or PDF scan."
+            from src.tools.transcription import transcribe_document_image
+            return transcribe_document_image(file_obj.name, target_language=lang)
+
+        def _handle_ocr_save(uid, pid, file_obj, text):
+            if not file_obj or not text.strip():
+                return "No transcript to save."
+            from src.ingestion import save_transcribed_document
+            return save_transcribed_document(uid, pid, file_obj.name, text)
+
+        ocr_run_btn.click(fn=_handle_ocr, inputs=[ocr_file, ocr_lang], outputs=[ocr_output])
+        ocr_push_btn.click(fn=lambda t: t, inputs=[ocr_output], outputs=[text_input])
+        ocr_save_btn.click(
+            fn=_handle_ocr_save,
+            inputs=[user_state, project_state, ocr_file, ocr_output],
+            outputs=[ocr_status],
+        )
 
         run_query_btn.click(
             fn=_run_query,

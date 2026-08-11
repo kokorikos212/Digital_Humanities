@@ -54,34 +54,31 @@ class Config:
     def verse_dir(self) -> Path:
         return self.output_dir / "verse"
 
-    # ── LLM provider ────────────────────────────────────────────────────
+    # ── LLM provider (env-var driven) ────────────────────────────────────
 
-    provider: str = "deepseek"  # deepseek | huggingface | groq | ollama
-    model: str = "deepseek-chat"
+    llm_api_key: str = field(
+        default_factory=lambda: os.getenv("DEEPSEEK_KEY") or os.getenv("LLM_API_KEY", "")
+    )
+    llm_base_url: str = field(
+        default_factory=lambda: os.getenv("LLM_BASE_URL", "https://api.deepseek.com")
+    )
+    llm_model: str = field(
+        default_factory=lambda: os.getenv("LLM_MODEL", "deepseek-chat")
+    )
     max_iterations: int = 30
 
-    # ── Provider-specific keys & endpoints ──────────────────────────────
-
-    deepseek_key: str = ""
-    deepseek_base_url: str = "https://api.deepseek.com"
-
-    huggingface_key: str = ""
-    huggingface_base_url: str = "https://api-inference.huggingface.co/models/"
-
-    groq_key: str = ""
-    groq_base_url: str = "https://api.groq.com/openai/v1"
-
-    ollama_base_url: str = "http://localhost:11434/v1"
+    # Legacy compat
+    @property
+    def deepseek_key(self) -> str:
+        return self.llm_api_key
 
     @property
-    def api_key(self) -> str:
-        """Return the active provider's API key."""
-        return getattr(self, f"{self.provider}_key", self.deepseek_key)
+    def deepseek_base_url(self) -> str:
+        return self.llm_base_url
 
     @property
-    def api_base_url(self) -> str:
-        """Return the active provider's base URL."""
-        return getattr(self, f"{self.provider}_base_url", self.deepseek_base_url)
+    def model(self) -> str:
+        return self.llm_model
 
     # ── NLP settings ───────────────────────────────────────────────────
 
@@ -106,21 +103,25 @@ class Config:
 
         if not env_file.exists():
             raise RuntimeError(
-                f"DEEPSEEK_KEY not found.  {env_file} does not exist.  "
+                f"API key not found.  {env_file} does not exist.  "
                 "Copy .env.example to .env and add your key."
             )
 
         with open(env_file) as f:
             for line in f:
                 line = line.strip()
-                if line.startswith("DEEPSEEK_KEY="):
-                    self.deepseek_key = line.split("=", 1)[1].strip()
-                    return
+                if line.startswith("DEEPSEEK_KEY=") or line.startswith("LLM_API_KEY="):
+                    self.llm_api_key = line.split("=", 1)[1].strip()
+                elif line.startswith("LLM_BASE_URL="):
+                    self.llm_base_url = line.split("=", 1)[1].strip()
+                elif line.startswith("LLM_MODEL="):
+                    self.llm_model = line.split("=", 1)[1].strip()
 
-        raise RuntimeError(
-            "DEEPSEEK_KEY not found in .env file.  "
-            "Add `DEEPSEEK_KEY=sk-...` to your .env file."
-        )
+        if not self.llm_api_key:
+            raise RuntimeError(
+                "API key not found in .env file.  "
+                "Add `DEEPSEEK_KEY=sk-...` or `LLM_API_KEY=...` to your .env file."
+            )
 
     def ensure_output_dirs(self) -> None:
         """Create all output subdirectories if they don't exist."""

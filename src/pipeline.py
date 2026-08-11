@@ -66,7 +66,7 @@ def run_pipeline(
     user_prompt: str,
     system_prompt: str | None = None,
     max_iterations: int = 30,
-    model: str = "deepseek-chat",
+    model: str | None = None,
     enabled_tools: Optional[Set[str]] = None,
 ) -> str:
     """Execute the agentic tool-calling loop.
@@ -99,9 +99,13 @@ def run_pipeline(
     tool_defs = filter_tool_definitions(tools_enabled)
     tool_map = _build_tool_map(tools_enabled)
 
+    # ── Resolve model ─────────────────────────────────────────────────
+    if model is None:
+        model = config.llm_model
+
     # ── Create API client ─────────────────────────────────────────────
     client = openai.OpenAI(
-        api_key=config.api_key, base_url=config.api_base_url
+        api_key=config.llm_api_key, base_url=config.llm_base_url
     )
 
     # ── Messages ──────────────────────────────────────────────────────

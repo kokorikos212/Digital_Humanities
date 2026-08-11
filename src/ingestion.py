@@ -80,3 +80,24 @@ def save_uploaded_files(
         "total_files": len(saved_files),
         "project_dir": str(project_dir),
     }
+
+
+def save_transcribed_document(
+    user_id: str, project_id: str, filename: str, content: str
+) -> str:
+    """Persist transcribed OCR text as a ``.md`` file inside the project documents dir.
+
+    Returns a status message.
+    """
+    if not user_id or not project_id or not content.strip():
+        return "Error: Invalid user, project, or empty content."
+
+    proj_dir = resolve_project_dir(user_id, project_id)
+    doc_dir = proj_dir / "documents"
+    doc_dir.mkdir(parents=True, exist_ok=True)
+
+    clean_name = Path(filename).stem + "_transcript.md"
+    target = doc_dir / clean_name
+    target.write_text(content, encoding="utf-8")
+
+    return f"Successfully saved transcript to /documents/{clean_name}"

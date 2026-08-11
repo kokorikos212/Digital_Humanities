@@ -1,7 +1,6 @@
 """
-Image transcription ingestion — converts image files and PDF scans to plain text.
-
-Supports API-based VLM/OCR via Bytez or local text fallback.
+Image transcription ingestion — converts image files and PDF scans to plain text
+with optional Greek/English translation via Bytez VLM API.
 """
 
 from __future__ import annotations
@@ -12,50 +11,61 @@ from typing import Optional
 
 
 def transcribe_document_image(
-    image_path: Path,
+    image_path: str,
+    target_language: str = "Original",
     api_key: Optional[str] = None,
 ) -> str:
     """Extract text from a document image or PDF scan.
-
-    If *image_path* is already ``.txt`` or ``.md``, its content is returned
-    directly.  Otherwise a VLM/OCR API is attempted (BYTEZ_API_KEY env var),
-    falling back to a notice that the file was received.
 
     Parameters
     ----------
     image_path:
         Path to the image/PDF file.
+    target_language:
+        ``"Original"`` (default), ``"Translate to English"``, or
+        ``"Translate to Greek"``.
     api_key:
-        Bytez API key (defaults to ``BYTEZ_API_KEY`` env var).
+        Bytez API key (defaults to ``BYTEZ_API_KEY`` or ``LLM_API_KEY``).
 
     Returns
     -------
     Extracted text, or a placeholder notice.
     """
-    if not image_path.exists():
+    p = Path(image_path)
+    if not p.exists():
         return "Error: File does not exist."
 
-    suffix = image_path.suffix.lower()
+    suffix = p.suffix.lower()
 
     # Plain text / markdown → pass through
     if suffix in (".txt", ".md"):
         try:
-            return image_path.read_text(encoding="utf-8")
+            return p.read_text(encoding="utf-8")
         except Exception as exc:
             return f"Error reading text file: {exc}"
 
+    # Build translation prompt
+    prompt = "Transcribe all text from this document image accurately."
+    if target_language == "Translate to English":
+        prompt += " Translate the extracted text into English."
+    elif target_language == "Translate to Greek":
+        prompt += " Translate the extracted text into Greek."
+
     # Bytez VLM / OCR API
-    bytez_key = api_key or os.getenv("BYTEZ_API_KEY", "")
+    bytez_key = api_key or os.getenv("BYTEZ_API_KEY", "") or os.getenv("LLM_API_KEY", "")
     if bytez_key:
         try:
             import requests
 
-            with open(image_path, "rb") as f:
+            with open(p, "rb") as f:
                 response = requests.post(
                     "https://api.bytez.com/v1/model/run",
                     headers={"Authorization": f"Bearer {bytez_key}"},
                     files={"file": f},
-                    data={"model": "Qwen/Qwen2-VL-7B-Instruct"},
+                    data={
+                        "model": "Qwen/Qwen2-VL-7B-Instruct",
+                        "prompt": prompt,
+                    },
                     timeout=60,
                 )
             if response.status_code == 200:
@@ -69,7 +79,7 @@ def transcribe_document_image(
         try:
             import subprocess
             result = subprocess.run(
-                ["pdftotext", "-layout", str(image_path), "-"],
+                ["pdftotext", "-layout", str(p), "-"],
                 capture_output=True, text=True, timeout=30,
             )
             if result.returncode == 0 and result.stdout.strip():
@@ -78,6 +88,6 @@ def transcribe_document_image(
             pass
 
     return (
-        f"[Notice] Image uploaded ({image_path.name}). "
-        "Configure BYTEZ_API_KEY for automatic VLM transcription."
+        f"[OCR Notice] File '{p.name}' received. "
+        "Configure BYTEZ_API_KEY or LLM_API_KEY to enable live text extraction."
     )
