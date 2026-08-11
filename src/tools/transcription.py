@@ -57,31 +57,57 @@ def transcribe_document_image(
     # Resolve key: explicit → user-saved → env vars
     from src.auth_keys import resolve_api_key
 
+    from src.config import config as _cfg
+
     bytez_key = (
         api_key
         or (resolve_api_key(user_id, "BYTEZ_API_KEY") if user_id else "")
         or (resolve_api_key(user_id, "LLM_API_KEY") if user_id else "")
-        or os.getenv("BYTEZ_API_KEY", "")
-        or os.getenv("LLM_API_KEY", "")
+        or _cfg.bytez_key
+        or _cfg.llm_api_key
     )
     if bytez_key:
         try:
+            import base64
             import requests
 
+            # Read and encode image as base64 data URI
             with open(p, "rb") as f:
-                response = requests.post(
-                    "https://api.bytez.com/v1/model/run",
-                    headers={"Authorization": f"Bearer {bytez_key}"},
-                    files={"file": f},
-                    data={
-                        "model": "Qwen/Qwen2-VL-7B-Instruct",
-                        "prompt": prompt,
-                    },
-                    timeout=60,
-                )
+                img_b64 = base64.b64encode(f.read()).decode("utf-8")
+            ext = suffix.lstrip(".")
+            data_uri = f"data:image/{ext};base64,{img_b64}"
+
+            payload = {
+                "model": _cfg.bytez_vl_model,
+                "messages": [
+                    {
+                        "role": "user",
+                        "content": [
+                            {"type": "text", "text": prompt},
+                            {"type": "image_url", "image_url": {"url": data_uri}},
+                        ],
+                    }
+                ],
+                "max_tokens": 2000,
+            }
+            response = requests.post(
+                _cfg.bytez_api_url,
+                headers={
+                    "Authorization": f"Bearer {bytez_key}",
+                    "Content-Type": "application/json",
+                },
+                json=payload,
+                timeout=60,
+            )
             if response.status_code == 200:
                 data = response.json()
-                return data.get("output", data.get("text", str(data)))
+                return (
+                    data.get("choices", [{}])[0]
+                    .get("message", {})
+                    .get("content", str(data))
+                )
+            else:
+                print(f"[Warning] Bytez API returned {response.status_code}: {response.text[:300]}")
         except Exception as exc:
             print(f"[Warning] Bytez OCR API failed: {exc}")
 

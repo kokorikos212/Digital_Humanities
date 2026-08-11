@@ -65,6 +65,13 @@ class Config:
     llm_model: str = field(
         default_factory=lambda: os.getenv("LLM_MODEL", "deepseek-chat")
     )
+    bytez_key: str = field(default_factory=lambda: os.getenv("BYTEZ_API_KEY", ""))
+    bytez_vl_model: str = field(
+        default_factory=lambda: os.getenv("BYTEZ_VL_MODEL", "Qwen/Qwen2.5-VL-7B-Instruct")
+    )
+    bytez_api_url: str = field(
+        default_factory=lambda: os.getenv("BYTEZ_API_URL", "https://api.bytez.com/v1/chat/completions")
+    )
     max_iterations: int = 30
 
     # Legacy compat
@@ -112,6 +119,8 @@ class Config:
                 line = line.strip()
                 if line.startswith("DEEPSEEK_KEY=") or line.startswith("LLM_API_KEY="):
                     self.llm_api_key = line.split("=", 1)[1].strip()
+                elif line.startswith("BYTEZ_API_KEY="):
+                    self.bytez_key = line.split("=", 1)[1].strip()
                 elif line.startswith("LLM_BASE_URL="):
                     self.llm_base_url = line.split("=", 1)[1].strip()
                 elif line.startswith("LLM_MODEL="):
