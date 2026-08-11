@@ -69,19 +69,16 @@ DEFAULT_EXAMPLE = "bench_1_1_rebuttal"
 
 def run_analysis(
     text: str,
-    enable_linguistics: bool,
-    enable_triples: bool,
-    enable_graph: bool,
-    enable_obsidian: bool,
-    enable_conversation: bool,
-    enable_viz: bool,
+    enable_json: bool = True,
+    enable_rdf: bool = True,
+    enable_graph: bool = False,
+    enable_obsidian: bool = False,
 ) -> tuple[str, str, str, str]:
-    """Execute the pipeline with the user's text and tool selections.
+    """Execute the pipeline. Only tab-checked outputs are generated.
 
     Returns
     -------
     (json_output, rdf_output, graph_html, obsidian_md)
-        Four strings for the four output tabs.
     """
     if not text or not text.strip():
         return (
@@ -91,20 +88,14 @@ def run_analysis(
             "",
         )
 
-    # Build the enabled-tools set from checkbox values
-    enabled: Set[str] = set()
-    if enable_linguistics:
-        enabled.add("get_tags")
-    if enable_triples:
+    # Build enabled-tools set from tab checkboxes (linguistics always on)
+    enabled: set[str] = {"get_tags"}
+    if enable_rdf:
         enabled.add("generate_triples")
     if enable_graph:
         enabled.add("generate_semantic_graph")
     if enable_obsidian:
         enabled.add("build_obsidian_note")
-    if enable_conversation:
-        enabled.add("analyze_conversation")
-    if enable_viz:
-        enabled.add("generate_viz")
 
     # Load config
     try:
@@ -158,32 +149,34 @@ def run_analysis(
 
     # ── Gather output artifacts ───────────────────────────────────────
 
-    # 1. JSON summary — the LLM's final response
-    json_output = result
-    if elapsed:
-        json_output = (
-            f"_Completed in {elapsed:.1f}s with tools: "
-            f"{', '.join(sorted(enabled)) or 'none'}_\n\n{result}"
-        )
+    deactivated = "<p style='color:#888;padding:2em;text-align:center'>Output deactivated by user.</p>"
 
-    # 2. Turtle RDF — find the most recent .ttl file
-    rdf_output = ""
-    rdf_dir = config.rdf_dir
-    if rdf_dir.exists():
-        ttl_files = sorted(rdf_dir.glob("ontology_*.ttl"), reverse=True)
-        if ttl_files:
-            rdf_output = ttl_files[0].read_text(encoding="utf-8")
+    # 1. JSON summary
+    json_output = deactivated if not enable_json else (
+        f"_Completed in {elapsed:.1f}s with tools: "
+        f"{', '.join(sorted(enabled)) or 'none'}_\n\n{result}"
+    ) if elapsed else result
 
-    # 3. Semantic graph HTML — render RDF via Talos visualizer
-    graph_html = _format_graph_html(rdf_output)
+    # 2. Turtle RDF
+    rdf_output = deactivated if not enable_rdf else ""
+    if enable_rdf:
+        rdf_dir = config.rdf_dir
+        if rdf_dir.exists():
+            ttl_files = sorted(rdf_dir.glob("ontology_*.ttl"), reverse=True)
+            if ttl_files:
+                rdf_output = ttl_files[0].read_text(encoding="utf-8")
 
-    # 4. Obsidian notes — most recent .md
-    obsidian_md = ""
-    verse_dir = config.verse_dir
-    if verse_dir.exists():
-        md_files = sorted(verse_dir.glob("*.md"), reverse=True)
-        if md_files and md_files[0].name != "Untitled.md":
-            obsidian_md = md_files[0].read_text(encoding="utf-8")
+    # 3. Semantic graph HTML
+    graph_html = deactivated if not enable_graph else _format_graph_html(rdf_output)
+
+    # 4. Obsidian notes
+    obsidian_md = deactivated if not enable_obsidian else ""
+    if enable_obsidian:
+        verse_dir = config.verse_dir
+        if verse_dir.exists():
+            md_files = sorted(verse_dir.glob("*.md"), reverse=True)
+            if md_files and md_files[0].name != "Untitled.md":
+                obsidian_md = md_files[0].read_text(encoding="utf-8")
 
     return json_output, rdf_output, graph_html, obsidian_md
 
@@ -473,42 +466,6 @@ function sendMsg(){
                     value=DEFAULT_EXAMPLE,
                 )
 
-        # ── Tool Selector ───────────────────────────────────────────
-        gr.Markdown("### 🛠️ Select Tools to Activate")
-        with gr.Row():
-            with gr.Column(scale=1):
-                enable_linguistics = gr.Checkbox(
-                    value=True,
-                    label=TOOL_UI_LABELS["get_tags"],
-                    info="POS tags, NER, dependencies, noun chunks",
-                )
-                enable_triples = gr.Checkbox(
-                    value=True,
-                    label=TOOL_UI_LABELS["generate_triples"],
-                    info="RDF triples (Turtle / JSON-LD)",
-                )
-                enable_conversation = gr.Checkbox(
-                    value=False,
-                    label=TOOL_UI_LABELS["analyze_conversation"],
-                    info="Speakers, reply graphs, pragmatics",
-                )
-            with gr.Column(scale=1):
-                enable_graph = gr.Checkbox(
-                    value=False,
-                    label=TOOL_UI_LABELS["generate_semantic_graph"],
-                    info="Interactive pyvis HTML graph",
-                )
-                enable_obsidian = gr.Checkbox(
-                    value=False,
-                    label=TOOL_UI_LABELS["build_obsidian_note"],
-                    info="Markdown notes with [[wikilinks]]",
-                )
-                enable_viz = gr.Checkbox(
-                    value=False,
-                    label=TOOL_UI_LABELS["generate_viz"],
-                    info="displaCy SVG dependency tree",
-                )
-
         # ── Run Button ──────────────────────────────────────────────
         with gr.Row():
             run_btn = gr.Button("🔍 Analyze", variant="primary", size="lg")
@@ -542,6 +499,7 @@ function sendMsg(){
         # ── Output Tabs ─────────────────────────────────────────────
         with gr.Tabs():
             with gr.TabItem("📊 JSON Summary"):
+                chk_json = gr.Checkbox(value=True, label="☑️ Generate JSON Summary", scale=0)
                 json_output = gr.Code(
                     label="Analysis Result",
                     language="json",
@@ -550,6 +508,7 @@ function sendMsg(){
                 )
 
             with gr.TabItem("🐢 RDF Triples (Turtle)"):
+                chk_rdf = gr.Checkbox(value=True, label="☑️ Generate RDF Triples", scale=0)
                 rdf_output = gr.Code(
                     label="RDF Serialization",
                     lines=20,
@@ -557,6 +516,7 @@ function sendMsg(){
                 )
 
             with gr.TabItem("🕸️ Semantic Graph"):
+                chk_graph = gr.Checkbox(value=False, label="☑️ Generate Semantic Graph", scale=0)
                 gr.HTML("""<style>
 #graph-wrapper{position:relative}
 #graph-frame{width:100%;height:650px;border:none;border-radius:8px}
@@ -619,6 +579,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 )
 
             with gr.TabItem("📝 Obsidian Note"):
+                chk_obsidian = gr.Checkbox(value=False, label="☑️ Generate Obsidian Note", scale=0)
                 obsidian_output = gr.Code(
                     label="Generated Markdown",
                     language="markdown",
@@ -742,15 +703,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             outputs=[status],
         ).then(
             fn=run_analysis,
-            inputs=[
-                text_input,
-                enable_linguistics,
-                enable_triples,
-                enable_graph,
-                enable_obsidian,
-                enable_conversation,
-                enable_viz,
-            ],
+            inputs=[text_input, chk_json, chk_rdf, chk_graph, chk_obsidian],
             outputs=[json_output, rdf_output, graph_output, obsidian_output],
         ).then(
             fn=lambda: "✅ Analysis complete.",

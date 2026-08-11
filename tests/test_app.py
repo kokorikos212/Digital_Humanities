@@ -68,12 +68,10 @@ class TestGradioApp:
 
         json_out, rdf_out, graph_out, obsidian_out = run_analysis(
             text="",
-            enable_linguistics=True,
-            enable_triples=False,
+            enable_json=True,
+            enable_rdf=False,
             enable_graph=False,
             enable_obsidian=False,
-            enable_conversation=False,
-            enable_viz=False,
         )
 
         assert "Please enter" in json_out or "⚠️" in json_out
@@ -84,12 +82,10 @@ class TestGradioApp:
 
         json_out, rdf_out, graph_out, obsidian_out = run_analysis(
             text="   \n  \t  ",
-            enable_linguistics=True,
-            enable_triples=False,
+            enable_json=True,
+            enable_rdf=False,
             enable_graph=False,
             enable_obsidian=False,
-            enable_conversation=False,
-            enable_viz=False,
         )
 
         assert "Please enter" in json_out or "⚠️" in json_out
@@ -105,12 +101,10 @@ class TestGradioApp:
         try:
             json_out, *_ = run_analysis(
                 text="Hello world.",
-                enable_linguistics=False,
-                enable_triples=False,
+                enable_json=True,
+                enable_rdf=False,
                 enable_graph=False,
                 enable_obsidian=False,
-                enable_conversation=False,
-                enable_viz=False,
             )
             # If we get here, the pipeline was called (may fail at API level)
             assert isinstance(json_out, str)
@@ -139,15 +133,11 @@ class TestGradioApp:
         assert "srcdoc" in result
 
     def test_tool_checkbox_mapping(self):
-        """The 6 checkbox booleans should map to the correct tool names."""
-        # Verify the mapping logic inline (mirrors run_analysis)
+        """Tab checkboxes map to correct tools."""
         mapping = {
-            "enable_linguistics": "get_tags",
-            "enable_triples": "generate_triples",
+            "enable_rdf": "generate_triples",
             "enable_graph": "generate_semantic_graph",
             "enable_obsidian": "build_obsidian_note",
-            "enable_conversation": "analyze_conversation",
-            "enable_viz": "generate_viz",
         }
         # All should be distinct tool names
         assert len(set(mapping.values())) == len(mapping), (
@@ -160,12 +150,10 @@ class TestGradioApp:
 
         json_out, rdf_out, graph_out, obsidian_out = run_analysis(
             text="",
-            enable_linguistics=True,
-            enable_triples=False,
+            enable_json=True,
+            enable_rdf=False,
             enable_graph=False,
             enable_obsidian=False,
-            enable_conversation=False,
-            enable_viz=False,
         )
 
         # Graph output should be the placeholder since text was empty
