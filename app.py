@@ -780,11 +780,11 @@ ls documents/
       }
     }
     if(!inputEl)setTimeout(findInput,500);
-    else inputEl.addEventListener('keydown',onKey);
+    else inputEl.addEventListener('keydown',onKey,true);
   }
   function onKey(e){
     if(e.key!=='Tab'){lastWord='';matchIdx=0;return;}
-    e.preventDefault();
+    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
     var val=inputEl.value, pos=inputEl.selectionStart||0;
     var before=val.substring(0,pos);
     var word=before.split(' ').pop()||'';
