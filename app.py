@@ -783,8 +783,8 @@ ls documents/
     else{inputEl.addEventListener('keydown',onKey,true);clearInterval(poll);}
   }
   function onKey(e){
-    if(e.key!=='Tab'){lastWord='';matchIdx=0;return;}
-    e.preventDefault();e.stopPropagation();e.stopImmediatePropagation();
+    if(!(e.key===' '&&e.ctrlKey)){lastWord='';matchIdx=0;return;}
+    e.preventDefault();e.stopPropagation();
     var val=inputEl.value, pos=inputEl.selectionStart||0;
     var before=val.substring(0,pos);
     var word=before.split(' ').pop()||'';
