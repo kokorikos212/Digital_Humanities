@@ -305,8 +305,8 @@ UI_CSS = """
 footer { display: none !important; }
 #title { text-align: center; margin-bottom: 0; }
 #subtitle { text-align: center; color: #888; margin-top: 0; }
-.terminal-box { min-height:120px; max-height:53em; overflow-y:auto !important; }
-.terminal-box textarea, .terminal-box pre { min-height:120px; }
+.terminal-box { min-height:120px; max-height:53em; overflow-y:auto !important; height:auto !important; }
+.terminal-box textarea, .terminal-box pre, .terminal-box code { min-height:120px; max-height:none !important; height:auto !important; }
 """
 
 
@@ -1122,6 +1122,7 @@ ls documents/
 
         @trace("LOGIN")
         def _handle_login(u, p):
+            u, p = (u or "").strip(), (p or "").strip()
             success, msg = authenticate_user(u, p)
             if success:
                 projects = list_user_projects(u)
@@ -1148,6 +1149,7 @@ ls documents/
         )
 
         def _handle_register(u, p):
+            u, p = (u or "").strip(), (p or "").strip()
             success, msg = register_user(u, p)
             return f"{'✅' if success else '❌'} {msg}"
 
