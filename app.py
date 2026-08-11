@@ -495,10 +495,11 @@ function sendMsg(){
 
         # ── API Keys Settings ────────────────────────────────────────
         with gr.Accordion("⚙️ API Keys & Settings", open=False):
-            gr.Markdown("Manage personal API keys (saved in your user sandbox).")
+            gr.Markdown("Manage personal API keys (stored in `.env` and your user sandbox).")
             with gr.Row():
                 user_ds_key = gr.Textbox(label="DeepSeek / LLM API Key", type="password", placeholder="sk-...")
                 user_ocr_key = gr.Textbox(label="Bytez OCR API Key", type="password", placeholder="Bytez key...")
+            saved_keys_info = gr.Markdown("")
             with gr.Row():
                 save_keys_btn = gr.Button("💾 Save Keys", variant="primary")
                 clear_keys_btn = gr.Button("🗑️ Clear Keys")
@@ -960,25 +961,39 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         comp_run.click(fn=_comp_vocab, inputs=[comp_text_a, comp_text_b], outputs=[comp_metrics, comp_table])
 
         # ── API Keys handlers ───────────────────────────────────────
-        from src.auth_keys import save_user_keys, resolve_api_key, mask_key
+        from src.auth_keys import save_user_keys, resolve_api_key, mask_key, load_user_keys
+
+        def _load_keys_status(uid):
+            """Return masked previews of saved keys for display."""
+            ds = resolve_api_key(uid, "DEEPSEEK_KEY")
+            ocr = resolve_api_key(uid, "BYTEZ_API_KEY")
+            lines = []
+            if ds:
+                lines.append(f"🔑 **DeepSeek/LLM:** `{mask_key(ds)}` (saved)")
+            if ocr:
+                lines.append(f"🔑 **Bytez OCR:** `{mask_key(ocr)}` (saved)")
+            if not lines:
+                lines.append("💡 No keys saved yet. Paste keys above and click Save.")
+            return "\n".join(lines), mask_key(ds), mask_key(ocr)
 
         def _handle_save_keys(uid, ds, ocr):
             msg = save_user_keys(uid, {"DEEPSEEK_KEY": ds, "BYTEZ_API_KEY": ocr})
-            return msg, mask_key(resolve_api_key(uid, "DEEPSEEK_KEY")), mask_key(resolve_api_key(uid, "BYTEZ_API_KEY"))
+            info, m_ds, m_ocr = _load_keys_status(uid)
+            return msg, m_ds, m_ocr, info
 
         def _handle_clear_keys(uid):
             save_user_keys(uid, {"DEEPSEEK_KEY": "", "BYTEZ_API_KEY": ""})
-            return "✅ Keys cleared.", "", ""
+            return "✅ Keys cleared.", "", "", "💡 No keys saved yet. Paste keys above and click Save."
 
         save_keys_btn.click(
             fn=_handle_save_keys,
             inputs=[user_state, user_ds_key, user_ocr_key],
-            outputs=[key_status, user_ds_key, user_ocr_key],
+            outputs=[key_status, user_ds_key, user_ocr_key, saved_keys_info],
         )
         clear_keys_btn.click(
             fn=_handle_clear_keys,
             inputs=[user_state],
-            outputs=[key_status, user_ds_key, user_ocr_key],
+            outputs=[key_status, user_ds_key, user_ocr_key, saved_keys_info],
         )
 
         # ── OCR handlers ────────────────────────────────────────────
@@ -1111,6 +1126,10 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             outputs=[project_container, workspace_container,
                      active_proj_header, project_state,
                      rdf_output, graph_output, obsidian_output],
+        ).then(
+            fn=_load_keys_status,
+            inputs=[user_state],
+            outputs=[saved_keys_info, user_ds_key, user_ocr_key],
         )
 
     return app
