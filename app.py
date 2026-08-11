@@ -496,10 +496,16 @@ function sendMsg(){
         # ── Status ──────────────────────────────────────────────────
         status = gr.Markdown("")
 
+        # ── Output tab checkboxes (always visible) ───────────────────
+        with gr.Row():
+            chk_json = gr.Checkbox(value=True, label="📊 JSON Summary")
+            chk_rdf = gr.Checkbox(value=True, label="🐢 RDF Triples")
+            chk_graph = gr.Checkbox(value=False, label="🕸️ Semantic Graph")
+            chk_obsidian = gr.Checkbox(value=False, label="📝 Obsidian Note")
+
         # ── Output Tabs ─────────────────────────────────────────────
         with gr.Tabs():
             with gr.TabItem("📊 JSON Summary"):
-                chk_json = gr.Checkbox(value=True, label="☑️ Generate JSON Summary", scale=0)
                 json_output = gr.Code(
                     label="Analysis Result",
                     language="json",
@@ -508,7 +514,6 @@ function sendMsg(){
                 )
 
             with gr.TabItem("🐢 RDF Triples (Turtle)"):
-                chk_rdf = gr.Checkbox(value=True, label="☑️ Generate RDF Triples", scale=0)
                 rdf_output = gr.Code(
                     label="RDF Serialization",
                     lines=20,
@@ -516,7 +521,6 @@ function sendMsg(){
                 )
 
             with gr.TabItem("🕸️ Semantic Graph"):
-                chk_graph = gr.Checkbox(value=False, label="☑️ Generate Semantic Graph", scale=0)
                 gr.HTML("""<style>
 #graph-wrapper{position:relative}
 #graph-frame{width:100%;height:650px;border:none;border-radius:8px}
@@ -579,7 +583,6 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 )
 
             with gr.TabItem("📝 Obsidian Note"):
-                chk_obsidian = gr.Checkbox(value=False, label="☑️ Generate Obsidian Note", scale=0)
                 obsidian_output = gr.Code(
                     label="Generated Markdown",
                     language="markdown",
