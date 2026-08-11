@@ -728,7 +728,42 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                                 scale=3,
                             )
                             run_cmd_btn = gr.Button("▶️ Run", variant="primary", scale=1)
-                        gr.Markdown("*Tip: use `cd` to navigate, all commands scoped to project*")
+                        gr.Markdown("*Tip: use `cd` to navigate, press `Tab` for autocomplete*")
+                        gr.HTML("""<script>
+(function(){
+  var CMDS=['ls','pwd','cd','cat','echo','mkdir','rm','cp','mv','touch','find',
+    'grep','head','tail','wc','sort','uniq','python','python3','pip','git','clear',
+    'nano','vim','chmod','df','du','ps','kill','history','exit','transcribe'];
+  var inputEl=null, lastWord='', matchIdx=0;
+  function findInput(){
+    var inputs=document.querySelectorAll('input[type=text]');
+    for(var i=0;i<inputs.length;i++){
+      if(inputs[i].placeholder && inputs[i].placeholder.indexOf('ls')>-1){
+        inputEl=inputs[i];break;
+      }
+    }
+    if(!inputEl)setTimeout(findInput,500);
+    else inputEl.addEventListener('keydown',onKey);
+  }
+  function onKey(e){
+    if(e.key!=='Tab'){lastWord='';matchIdx=0;return;}
+    e.preventDefault();
+    var val=inputEl.value, pos=inputEl.selectionStart||0;
+    var before=val.substring(0,pos);
+    var word=before.split(' ').pop()||'';
+    if(!word)return;
+    var matches=CMDS.filter(function(c){return c.startsWith(word);});
+    if(!matches.length)return;
+    if(word!==lastWord){lastWord=word;matchIdx=0;}
+    var chosen=matches[matchIdx % matches.length];
+    matchIdx++;
+    var rest=chosen.substring(word.length);
+    inputEl.value=before+rest+val.substring(pos);
+    inputEl.selectionStart=inputEl.selectionEnd=before.length+rest.length;
+  }
+  setTimeout(findInput,300);
+})();
+</script>""")
                         cwd_state = gr.State(value="")
 
         # ── Event Handlers ──────────────────────────────────────────
