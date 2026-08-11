@@ -763,44 +763,23 @@ ls documents/
                         with gr.Row():
                             terminal_input = gr.Textbox(
                                 label="Command", placeholder="e.g. ls -la, pwd, cat readme.md",
+                                elem_id="terminal-cmd",
                                 scale=3,
                             )
                             run_cmd_btn = gr.Button("▶️ Run", variant="primary", scale=1)
-                        gr.HTML("""<script>
-(function(){
-  var CMDS=['ls','pwd','cd','cat','echo','mkdir','rm','cp','mv','touch','find',
-    'grep','head','tail','wc','sort','uniq','python','python3','pip','git','clear',
-    'nano','vim','chmod','df','du','ps','kill','history','exit','transcribe'];
-  var inputEl=null, lastWord='', matchIdx=0;
-  function findInput(){
-    var inputs=document.querySelectorAll('input[type=text]');
-    for(var i=0;i<inputs.length;i++){
-      if(inputs[i].placeholder && inputs[i].placeholder.indexOf('ls')>-1){
-        inputEl=inputs[i];break;
-      }
-    }
-    if(!inputEl)setTimeout(findInput,500);
-    else{inputEl.addEventListener('keydown',onKey,true);clearInterval(poll);}
-  }
-  function onKey(e){
-    if(!(e.key===' '&&e.ctrlKey)){lastWord='';matchIdx=0;return;}
-    e.preventDefault();e.stopPropagation();
-    var val=inputEl.value, pos=inputEl.selectionStart||0;
-    var before=val.substring(0,pos);
-    var word=before.split(' ').pop()||'';
-    if(!word)return;
-    var matches=CMDS.filter(function(c){return c.startsWith(word);});
-    if(!matches.length)return;
-    if(word!==lastWord){lastWord=word;matchIdx=0;}
-    var chosen=matches[matchIdx % matches.length];
-    matchIdx++;
-    var rest=chosen.substring(word.length);
-    inputEl.value=before+rest+val.substring(pos);
-    inputEl.selectionStart=inputEl.selectionEnd=before.length+rest.length;
-  }
-  var poll=setInterval(findInput,500);
-})();
-</script>""")
+                        gr.HTML("""<style>.cmd-chip{display:inline-block;padding:2px 8px;margin:2px;background:#e8f0fe;color:#4a6cf7;border-radius:10px;font-size:11px;cursor:pointer;border:none}.cmd-chip:hover{background:#4a6cf7;color:#fff}</style>
+<div style="margin-top:4px">
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='ls ';t.focus()}">ls</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='pwd';t.focus()}">pwd</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='cd ';t.focus()}">cd</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='cat ';t.focus()}">cat</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='ls -la';t.focus()}">ls -la</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='mkdir ';t.focus()}">mkdir</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='rm ';t.focus()}">rm</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python -m src.cli.batch_transcribe --dir ';t.focus()}">transcribe</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python -m src.cli.analyze_factions --dir-a ';t.focus()}">analyze</span>
+<span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='python run_pipeline.py --text ';t.focus()}">pipeline</span>
+</div>""")
                         cwd_state = gr.State(value="")
 
         # ── Event Handlers ──────────────────────────────────────────
