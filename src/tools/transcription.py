@@ -48,7 +48,12 @@ def transcribe_document_image(
             return f"Error reading text file: {exc}"
 
     # Build prompt
-    prompt = "Transcribe all text from this document image accurately."
+    prompt = (
+        "Transcribe all text from this document image accurately. "
+        "Return ONLY the raw transcribed text. Do NOT add any introduction, "
+        "commentary, headers, footers, markdown formatting, or any text "
+        "that is not present in the original document."
+    )
     if target_language == "Translate to English":
         prompt += " Translate the extracted text into English."
     elif target_language == "Translate to Greek":
