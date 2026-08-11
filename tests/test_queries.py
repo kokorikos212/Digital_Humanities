@@ -73,6 +73,8 @@ class TestCaseAwareQueries:
 
         qs = get_queries_for_case("nonexistent")
         assert isinstance(qs, dict)
+        assert len(qs) == 4  # Talos General SPARQL Presets
+        assert "Explore All Triples (LIMIT 10)" in qs
 
     def test_execute_sparql_all_cases(self):
         from src.queries import CASE_QUERIES, execute_sparql

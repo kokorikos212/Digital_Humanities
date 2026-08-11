@@ -106,6 +106,21 @@ WHERE {
 """,
     },
 
+    "Talos General SPARQL Presets": {
+        "Explore All Triples (LIMIT 10)": """
+SELECT * WHERE { ?s ?p ?o } LIMIT 10
+""",
+        "List All Entity Types": """
+SELECT DISTINCT ?type WHERE { ?s a ?type }
+""",
+        "List Labels (LIMIT 20)": """
+SELECT ?s ?label WHERE { ?s rdfs:label ?label } LIMIT 20
+""",
+        "CONSTRUCT Sub-Graph (LIMIT 50)": """
+CONSTRUCT { ?s ?p ?o } WHERE { ?s ?p ?o } LIMIT 50
+""",
+    },
+
     "Case 3: Reified Events (Dr. Chen Presentation)": {
         "Use Case 1: Event-Centric Activity Resolution": """
 PREFIX prov:   <http://www.w3.org/ns/prov#>
@@ -163,6 +178,6 @@ def execute_sparql(ttl_code: str, query_str: str) -> pd.DataFrame:
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
 def get_queries_for_case(case_title: str) -> Dict[str, str]:
-    """Return the query map for a specific case, resolving aliases."""
+    """Return the query map for a specific case, falling back to Talos general presets."""
     real = _CASE_ALIASES.get(case_title, case_title)
-    return CASE_QUERIES.get(real, PRESET_SPARQL_QUERIES)
+    return CASE_QUERIES.get(real, CASE_QUERIES.get("Talos General SPARQL Presets", {}))
