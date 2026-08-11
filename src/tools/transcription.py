@@ -1,11 +1,11 @@
 """
 Image transcription ingestion — converts image files and PDF scans to plain text
-with optional Greek/English translation via Bytez VLM API.
+with optional Greek/English translation via Hugging Face Inference API.
 """
 
 from __future__ import annotations
 
-import os
+import base64
 from pathlib import Path
 from typing import Optional
 
@@ -16,7 +16,7 @@ def transcribe_document_image(
     user_id: Optional[str] = None,
     api_key: Optional[str] = None,
 ) -> str:
-    """Extract text from a document image or PDF scan.
+    """Extract text from a document image or PDF scan via HF VLM.
 
     Parameters
     ----------
@@ -28,7 +28,7 @@ def transcribe_document_image(
     user_id:
         Active user for key resolution (user-saved → env → config).
     api_key:
-        Explicit Bytez API key (overrides resolution).
+        Explicit HF token (overrides resolution).
 
     Returns
     -------
@@ -47,47 +47,49 @@ def transcribe_document_image(
         except Exception as exc:
             return f"Error reading text file: {exc}"
 
-    # Build translation prompt
+    # Build prompt
     prompt = "Transcribe all text from this document image accurately."
     if target_language == "Translate to English":
         prompt += " Translate the extracted text into English."
     elif target_language == "Translate to Greek":
         prompt += " Translate the extracted text into Greek."
 
-    # Resolve key: explicit → user-saved → env vars
+    # Resolve HF token
     from src.auth_keys import resolve_api_key
-
     from src.config import config as _cfg
 
-    bytez_key = (
+    token = (
         api_key
-        or (resolve_api_key(user_id, "BYTEZ_API_KEY") if user_id else "")
-        or (resolve_api_key(user_id, "LLM_API_KEY") if user_id else "")
-        or _cfg.bytez_key
-        or _cfg.llm_api_key
+        or (resolve_api_key(user_id, "HF_TOKEN") if user_id else "")
+        or _cfg.hf_token
     )
-    if bytez_key:
+    if not token:
+        token = _cfg.llm_api_key  # fallback: try LLM key
+
+    if token:
         try:
-            import requests
+            from huggingface_hub import InferenceClient
 
             with open(p, "rb") as f:
-                response = requests.post(
-                    _cfg.bytez_api_url,
-                    headers={"Authorization": f"Bearer {bytez_key}"},
-                    files={"file": f},
-                    data={
-                        "model": _cfg.bytez_vl_model,
-                        "prompt": prompt,
-                    },
-                    timeout=60,
-                )
-            if response.status_code == 200:
-                data = response.json()
-                return data.get("output", data.get("text", str(data)))
-            else:
-                print(f"[Warning] Bytez API returned {response.status_code}: {response.text[:300]}")
+                img_b64 = base64.b64encode(f.read()).decode("utf-8")
+            ext = suffix.lstrip(".").replace("jpeg", "jpg")
+            data_uri = f"data:image/{ext};base64,{img_b64}"
+
+            client = InferenceClient(api_key=token)
+            completion = client.chat.completions.create(
+                model=_cfg.vl_model,
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {"type": "text", "text": prompt},
+                        {"type": "image_url", "image_url": {"url": data_uri}},
+                    ],
+                }],
+                max_tokens=2000,
+            )
+            return completion.choices[0].message.content or ""
         except Exception as exc:
-            print(f"[Warning] Bytez OCR API failed: {exc}")
+            print(f"[Warning] HF VLM API failed: {exc}")
 
     # PDF → try pdftotext if available
     if suffix == ".pdf":
@@ -104,5 +106,5 @@ def transcribe_document_image(
 
     return (
         f"[OCR Notice] File '{p.name}' received. "
-        "Configure BYTEZ_API_KEY or LLM_API_KEY to enable live text extraction."
+        "Configure HF_TOKEN to enable VLM transcription."
     )
