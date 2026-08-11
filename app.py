@@ -50,7 +50,7 @@ from src.pipeline import run_pipeline
 from src.prompts import get_system_prompt, NAMED_PROMPTS
 from src.tools import TOOL_UI_LABELS
 from src.visualizer import render_rdf_graph
-from src.queries import PRESET_SPARQL_QUERIES, execute_sparql, get_queries_for_case
+from src.queries import PRESET_SPARQL_QUERIES, execute_sparql, get_queries_for_case, compute_ttl_metadata
 from src.precomputed import load_precomputed_asset
 from src.ingestion import save_uploaded_files
 
@@ -608,6 +608,9 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                     label="Query Results",
                     interactive=False,
                 )
+                with gr.Accordion("📊 Graph Metadata", open=False):
+                    metadata_btn = gr.Button("🔍 Analyze Active TTL", size="sm")
+                    metadata_display = gr.Markdown("")
 
             with gr.TabItem("💻 Terminal & Files"):
                 with gr.Row():
@@ -724,6 +727,32 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             if df is None or df.empty:
                 return pd.DataFrame({"Result": ["No matches found or query failed."]})
             return df
+
+        def _show_metadata(ttl_data: str) -> str:
+            if not ttl_data.strip():
+                return "⚠️ No RDF data loaded."
+            meta = compute_ttl_metadata(ttl_data)
+            if "error" in meta:
+                return f"❌ {meta['error']}"
+            ns_md = "\n".join(
+                f"- `{n['prefix']}:` <{n['uri']}>"
+                for n in meta["namespaces"][:15]
+            )
+            return (
+                f"### 📊 Graph Statistics\n"
+                f"| Metric | Value |\n|--------|-------|\n"
+                f"| Total Triples | **{meta['total_triples']}** |\n"
+                f"| Object Properties | {meta['object_properties']} |\n"
+                f"| Data Properties | {meta['data_properties']} |\n"
+                f"| Annotation Properties | {meta['annotation_properties']} |\n\n"
+                f"### 🏷️ Namespaces ({len(meta['namespaces'])})\n{ns_md}"
+            )
+
+        metadata_btn.click(
+            fn=_show_metadata,
+            inputs=[rdf_output],
+            outputs=[metadata_display],
+        )
 
         preset_dropdown.change(
             fn=_update_query,

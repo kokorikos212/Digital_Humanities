@@ -175,6 +175,51 @@ def execute_sparql(ttl_code: str, query_str: str) -> pd.DataFrame:
         return pd.DataFrame([{"Error": f"SPARQL Execution Failed: {str(e)}"}])
 
 
+# ── Metadata extraction (Talos viewer) ──────────────────────────────────────
+
+
+def compute_ttl_metadata(ttl_code: str) -> dict:
+    """Parse a TTL string and return graph statistics + namespace info.
+
+    Returns a dict with keys: ``total_triples``, ``object_properties``,
+    ``data_properties``, ``annotation_properties``, ``namespaces``.
+    """
+    if not ttl_code or not ttl_code.strip():
+        return {"total_triples": 0, "object_properties": 0,
+                "data_properties": 0, "annotation_properties": 0,
+                "namespaces": [], "error": "No RDF data."}
+
+    import rdflib
+    from rdflib import URIRef
+
+    g = rdflib.Graph()
+    try:
+        g.parse(data=ttl_code, format="turtle")
+    except Exception as e:
+        return {"total_triples": 0, "object_properties": 0,
+                "data_properties": 0, "annotation_properties": 0,
+                "namespaces": [], "error": str(e)}
+
+    obj, data, ann = set(), set(), set()
+    for s, p, o in g:
+        if isinstance(o, URIRef):
+            obj.add(str(p))
+        elif "label" in str(p).lower() or "comment" in str(p).lower():
+            ann.add(str(p))
+        else:
+            data.add(str(p))
+
+    ns_list = [{"prefix": p, "uri": str(n)} for p, n in g.namespaces() if p]
+
+    return {
+        "total_triples": len(g),
+        "object_properties": len(obj),
+        "data_properties": len(data),
+        "annotation_properties": len(ann),
+        "namespaces": ns_list,
+    }
+
+
 # ── Helpers ─────────────────────────────────────────────────────────────────
 
 def get_queries_for_case(case_title: str) -> Dict[str, str]:
