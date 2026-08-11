@@ -11,10 +11,10 @@ from src.tools.terminal import execute_project_bash
 class TestTerminal:
     """Verify execute_project_bash sandboxing."""
 
-    def test_pwd_returns_inside_project(self):
-        """pwd should show a path inside the project directory."""
-        out, cwd = execute_project_bash("term_user", "term_proj", "pwd")
-        assert "data/users/term_user/projects/term_proj" in out
+    def test_pwd_returns_project_root(self):
+        """pwd should show `/` for the project root."""
+        out, _ = execute_project_bash("term_user", "term_proj", "pwd")
+        assert out == "/"
         shutil.rmtree(config.project_root / "data" / "users" / "term_user", ignore_errors=True)
 
     def test_ls_lists_documents(self):

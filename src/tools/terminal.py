@@ -60,6 +60,12 @@ def execute_project_bash(
             str(target_cwd.relative_to(project_root)),
         )
 
+    # Intercept pwd — show project-relative path as root
+    if cmd_parts[0] == "pwd":
+        rel = str(target_cwd.relative_to(project_root))
+        display = "/" if rel == "." else f"/{rel}"
+        return display, str(target_cwd.relative_to(project_root))
+
     # Handle cd internally (subprocess can't change the parent's cwd)
     if cmd_parts[0] == "cd":
         dest = cmd_parts[1] if len(cmd_parts) > 1 else ""
