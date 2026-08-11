@@ -67,7 +67,7 @@ class Config:
     )
     bytez_key: str = field(default_factory=lambda: os.getenv("BYTEZ_API_KEY", ""))
     bytez_vl_model: str = field(
-        default_factory=lambda: os.getenv("BYTEZ_VL_MODEL", "microsoft/Florence-2-large")
+        default_factory=lambda: os.getenv("BYTEZ_VL_MODEL", "Salesforce/blip2-opt-2.7b")
     )
     bytez_api_url: str = field(
         default_factory=lambda: os.getenv("BYTEZ_API_URL", "https://api.bytez.com/v1/model/run")
