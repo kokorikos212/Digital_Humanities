@@ -656,6 +656,17 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                             interactive=False,
                         )
                         refresh_files_btn = gr.Button("🔄 Refresh")
+                        with gr.Accordion("📤 Upload Files", open=False):
+                            upload_files = gr.File(
+                                label="Select Files",
+                                file_count="multiple",
+                                file_types=[".txt", ".md", ".ttl", ".json", ".pdf", ".csv", ".py"],
+                            )
+                            upload_subfolder = gr.Textbox(
+                                label="Target Subfolder", placeholder="documents", value="documents"
+                            )
+                            upload_btn = gr.Button("📤 Upload to Project", variant="primary")
+                            upload_status_msg = gr.Markdown("")
                         with gr.Accordion("Delete Item", open=False):
                             delete_path = gr.Textbox(label="Relative Path to Delete")
                             delete_btn = gr.Button("🗑️ Delete", variant="stop")
@@ -766,10 +777,12 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
 
         # ── Terminal & File Manager handlers ─────────────────────────
 
+        import shutil as _shutil
         from src.tools.terminal import execute_project_bash
         from src.tools.file_manager import (
             list_project_directory, delete_project_item, prepare_download,
         )
+        from src.config import resolve_project_dir
 
         def _handle_terminal(uid, pid, cmd, cwd):
             if not cmd.strip():
@@ -818,6 +831,28 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             fn=_handle_delete,
             inputs=[user_state, project_state, delete_path],
             outputs=[delete_status],
+        )
+
+        def _handle_project_upload(files, uid, pid, subfolder):
+            if not files:
+                return "No files selected."
+            if not uid or not pid:
+                return "⚠️ Open a project first."
+            proj = resolve_project_dir(uid, pid)
+            target = (proj / (subfolder.strip() or "documents")).resolve()
+            if not str(target).startswith(str(proj)):
+                return "⚠️ Invalid subfolder path."
+            target.mkdir(parents=True, exist_ok=True)
+            saved = []
+            for f in files:
+                fname = _shutil.copy(str(f.name), str(target / f.name.split("/")[-1]))
+                saved.append(f.name.split("/")[-1])
+            return f"✅ Uploaded {len(saved)} file(s): {', '.join(saved)}"
+
+        upload_btn.click(
+            fn=_handle_project_upload,
+            inputs=[upload_files, user_state, project_state, upload_subfolder],
+            outputs=[upload_status_msg],
         )
 
         dl_btn.click(
