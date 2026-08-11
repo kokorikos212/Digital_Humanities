@@ -590,6 +590,20 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                     elem_classes="output-box",
                 )
 
+            with gr.TabItem("📊 Vocabulary Stats"):
+                gr.Markdown("### 📊 Statistical Vocabulary Divergence")
+                with gr.Row():
+                    stat_text_a = gr.Textbox(label="Faction A Text", lines=4,
+                        placeholder="Paste faction A claims/positions here...", scale=1)
+                    stat_text_b = gr.Textbox(label="Faction B Text", lines=4,
+                        placeholder="Paste faction B claims/positions here...", scale=1)
+                with gr.Row():
+                    stat_run_btn = gr.Button("🔬 Compute Divergence", variant="primary")
+                with gr.Row():
+                    stat_metrics = gr.Markdown("")
+                gr.Markdown("#### 🔝 Discriminative Terms (Log-Odds Z-Scores)")
+                stat_table = gr.Dataframe(label="Top Terms", interactive=False)
+
             with gr.TabItem("🔍 SPARQL Queries"):
                 with gr.Row():
                     preset_dropdown = gr.Dropdown(
@@ -844,6 +858,28 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             fn=_handle_download,
             inputs=[user_state, project_state, dl_path],
             outputs=[dl_output],
+        )
+
+        def _handle_stats(ta, tb):
+            import pandas as _pd
+            from src.tools.statistics import compute_corpus_divergence, compute_log_odds_ratio
+            if not ta.strip() or not tb.strip():
+                return "⚠️ Paste text for both factions.", _pd.DataFrame()
+            div = compute_corpus_divergence(ta, tb)
+            df = compute_log_odds_ratio(ta, tb, top_n=12)
+            sig = "✅ **Statistically significant**" if div["statistically_significant"] else "⚠️ Not significant"
+            md = (
+                f"| Metric | Value |\n|--------|-------|\n"
+                f"| Jensen-Shannon Divergence | **{div['jsd']}** |\n"
+                f"| χ² p-value | **{div['chi2_p_value']}** ({sig}) |\n"
+                f"| Cosine Similarity | **{div['cosine_similarity']}** |\n"
+            )
+            return md, df
+
+        stat_run_btn.click(
+            fn=_handle_stats,
+            inputs=[stat_text_a, stat_text_b],
+            outputs=[stat_metrics, stat_table],
         )
 
         run_query_btn.click(
