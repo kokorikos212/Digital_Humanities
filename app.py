@@ -1013,25 +1013,32 @@ ls documents/
 
         def _single_vocab(text):
             import pandas as _pd
-            from src.tools.statistics import compute_log_odds_ratio
+            from src.tools.statistics import compute_log_odds_ratio, EmptyCorpusError
             if not text.strip():
                 return "⚠️ No text to analyze.", _pd.DataFrame()
-            # Compare first half vs second half as proxy for discriminative
             words = text.split()
             mid = len(words) // 2
             ta, tb = " ".join(words[:mid]), " ".join(words[mid:])
             if len(ta) < 20 or len(tb) < 20:
                 ta, tb = text[:len(text)//2], text[len(text)//2:]
-            df = compute_log_odds_ratio(ta, tb, top_n=15)
-            return f"**{len(words)} words, {df.shape[0]} discriminative terms**", df
+            try:
+                df = compute_log_odds_ratio(ta, tb, top_n=15)
+                return f"**{len(words)} words, {df.shape[0]} discriminative terms**", df
+            except EmptyCorpusError:
+                return "⚠️ Not enough vocabulary tokens found.", _pd.DataFrame()
 
         def _comp_vocab(ta, tb):
             import pandas as _pd
-            from src.tools.statistics import compute_corpus_divergence, compute_log_odds_ratio
+            from src.tools.statistics import (
+                compute_corpus_divergence, compute_log_odds_ratio, EmptyCorpusError,
+            )
             if not ta.strip() or not tb.strip():
                 return "⚠️ Paste text for both corpora.", _pd.DataFrame()
-            div = compute_corpus_divergence(ta, tb)
-            df = compute_log_odds_ratio(ta, tb, top_n=15)
+            try:
+                div = compute_corpus_divergence(ta, tb)
+                df = compute_log_odds_ratio(ta, tb, top_n=15)
+            except EmptyCorpusError:
+                return "⚠️ Not enough vocabulary tokens in one or both corpora.", _pd.DataFrame()
             sig = "✅ Significant" if div["statistically_significant"] else "⚠️ Not significant"
             md = (
                 f"| Metric | Value |\n|--------|-------|\n"

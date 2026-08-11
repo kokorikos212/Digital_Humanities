@@ -37,7 +37,9 @@ class TestStatistics:
         assert div["cosine_similarity"] > 0.9
 
     def test_empty_inputs(self):
-        df = compute_log_odds_ratio("", "")
-        assert df.empty
-        div = compute_corpus_divergence("", "")
-        assert div["jsd"] == 0.0
+        from src.tools.statistics import EmptyCorpusError
+        import pytest
+        with pytest.raises(EmptyCorpusError):
+            compute_log_odds_ratio("", "")
+        with pytest.raises(EmptyCorpusError):
+            compute_corpus_divergence("", "")
