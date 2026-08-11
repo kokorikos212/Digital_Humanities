@@ -363,6 +363,12 @@ def create_ui() -> gr.Blocks:
 
         with gr.Column(visible=False, elem_id="workspace-view") as workspace_container:
             active_proj_header = gr.Markdown("## 🔬 Active Workspace")
+            with gr.Row():
+                project_switcher = gr.Dropdown(
+                    label="🔄 Switch Project", choices=[], value=None,
+                    scale=3, interactive=True,
+                )
+                switch_btn = gr.Button("📂 Open", variant="secondary", scale=1)
 
             # ── Chat widget (collapsed bar, expands on click) ───────────
         gr.HTML("""<style>
@@ -1101,7 +1107,8 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         def _handle_open_project(u, proj):
             if not u or not proj:
                 return (gr.update(visible=True), gr.update(visible=False),
-                        "", None, "", "", "")
+                        "", None, "", "", "", gr.update())
+            from src.auth import list_user_projects
             from src.config import resolve_project_dir
             from src.precomputed import load_project_artifacts
             p_dir = resolve_project_dir(u, proj)
@@ -1110,6 +1117,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 "<p style='color:#888;padding:2em;text-align:center'>"
                 "No graph generated yet for this project.</p>"
             )
+            projects = list_user_projects(u)
             return (
                 gr.update(visible=False),     # dashboard
                 gr.update(visible=True),      # workspace
@@ -1118,14 +1126,29 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 ttl,                          # RDF output
                 graph_html,                   # Graph HTML
                 md if md else "# No notes yet.",
+                gr.update(choices=projects, value=proj),  # switcher
             )
+
+        def _handle_switch_project(u, proj):
+            """Switch project from workspace dropdown without returning to dashboard."""
+            return _handle_open_project(u, proj)
+
+        switch_btn.click(
+            fn=_handle_switch_project,
+            inputs=[user_state, project_switcher],
+            outputs=[project_container, workspace_container,
+                     active_proj_header, project_state,
+                     rdf_output, graph_output, obsidian_output,
+                     project_switcher],
+        )
 
         open_project_btn.click(
             _handle_open_project,
             inputs=[user_state, project_dropdown],
             outputs=[project_container, workspace_container,
                      active_proj_header, project_state,
-                     rdf_output, graph_output, obsidian_output],
+                     rdf_output, graph_output, obsidian_output,
+                     project_switcher],
         ).then(
             fn=_load_keys_status,
             inputs=[user_state],
