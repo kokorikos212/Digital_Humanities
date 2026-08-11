@@ -305,8 +305,6 @@ UI_CSS = """
 footer { display: none !important; }
 #title { text-align: center; margin-bottom: 0; }
 #subtitle { text-align: center; color: #888; margin-top: 0; }
-.terminal-box { min-height:120px; max-height:53em; overflow-y:auto !important; height:auto !important; }
-.terminal-box textarea, .terminal-box pre, .terminal-box code { min-height:120px; max-height:none !important; height:auto !important; }
 """
 
 
@@ -759,7 +757,7 @@ ls documents/
                     # Right: Text Terminal (single-shot bash with stateful cwd)
                     with gr.Column(scale=1):
                         gr.Markdown("### 💻 Bash Terminal")
-                        terminal_output = gr.Code(label="Output", lines=10, interactive=False, elem_classes="terminal-box")
+                        terminal_output = gr.Code(label="Output", lines=52, interactive=False)
                         with gr.Row():
                             terminal_input = gr.Textbox(
                                 label="Command", placeholder="e.g. ls -la, pwd, cat readme.md",
@@ -900,7 +898,8 @@ ls documents/
         from src.config import resolve_project_dir
 
         def _handle_terminal(uid, pid, cmd, cwd):
-            if not cmd.strip():
+            cmd = (cmd or "").strip()
+            if not cmd:
                 return "", cwd, ""
             out, new_cwd = execute_project_bash(uid, pid, cmd, cwd)
             return f"$ {cmd}\n{out}\n", new_cwd, ""
@@ -923,12 +922,14 @@ ls documents/
             return df, path_label
 
         def _handle_delete(uid, pid, rel):
-            if not rel.strip():
+            rel = (rel or "").strip()
+            if not rel:
                 return "⚠️ Enter a relative path to delete."
             return delete_project_item(uid, pid, rel)
 
         def _handle_download(uid, pid, rel):
-            if not rel.strip():
+            rel = (rel or "").strip()
+            if not rel:
                 return None
             result = prepare_download(uid, pid, rel)
             if result.startswith("Error:"):
@@ -1160,6 +1161,7 @@ ls documents/
         )
 
         def _handle_create_project(u, name):
+            name = (name or "").strip()
             success, result = create_project(u, name)
             if success:
                 projects = list_user_projects(u)
