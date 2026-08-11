@@ -1,6 +1,6 @@
 """
 Vocabulary divergence engine — log-odds ratios, JSD, chi-square tests for
-comparing faction discourse in multi-turn debates.
+comparing two text corpora.
 """
 
 from __future__ import annotations

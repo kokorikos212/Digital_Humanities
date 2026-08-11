@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 """
-Batch corpus divergence analysis — ingests two faction document directories,
+Batch corpus divergence analysis — ingests two document directories,
 computes weighted log-odds z-scores, distribution metrics, and exports reports.
 
 Usage (from project root)::
 
-    python -m src.cli.analyze_factions --dir-a factions/faction_a \\
-                                       --dir-b factions/faction_b \\
+    python -m src.cli.analyze_factions --dir-a corpus_a \\
+                                       --dir-b corpus_b \\
                                        --out-dir analysis_results
 """
 
@@ -41,15 +41,15 @@ def load_directory_corpus(dir_path: Path) -> str:
 
 def main(argv: list[str] | None = None) -> None:
     parser = argparse.ArgumentParser(
-        description="Batch Statistical Analysis — Faction Vocabulary Divergence"
+        description="Batch Statistical Analysis — Corpus Vocabulary Divergence"
     )
     parser.add_argument(
         "--dir-a", type=str, required=True,
-        help="Relative path to Faction A documents folder",
+        help="Relative path to Corpus A documents folder",
     )
     parser.add_argument(
         "--dir-b", type=str, required=True,
-        help="Relative path to Faction B documents folder",
+        help="Relative path to Corpus B documents folder",
     )
     parser.add_argument(
         "--out-dir", type=str, default="analysis_results",
@@ -57,7 +57,7 @@ def main(argv: list[str] | None = None) -> None:
     )
     parser.add_argument(
         "--top-n", type=int, default=20,
-        help="Number of top log-odds terms per faction",
+        help="Number of top log-odds terms per corpus",
     )
     args = parser.parse_args(argv)
 
@@ -73,7 +73,7 @@ def main(argv: list[str] | None = None) -> None:
         print("[Error] One or both directory corpora are empty or unreadable.")
         return
 
-    print(f"[*] Processing Faction A ({len(text_a):,} chars) vs Faction B ({len(text_b):,} chars)...")
+    print(f"[*] Processing Corpus A ({len(text_a):,} chars) vs Corpus B ({len(text_b):,} chars)...")
 
     # 1. Divergence metrics
     metrics = compute_corpus_divergence(text_a, text_b)
@@ -86,8 +86,8 @@ def main(argv: list[str] | None = None) -> None:
     summary_path.write_text(
         json.dumps({
             "metrics": metrics,
-            "faction_a_char_count": len(text_a),
-            "faction_b_char_count": len(text_b),
+            "corpus_a_char_count": len(text_a),
+            "corpus_b_char_count": len(text_b),
             "dir_a": str(args.dir_a),
             "dir_b": str(args.dir_b),
         }, indent=2),
@@ -105,7 +105,7 @@ def main(argv: list[str] | None = None) -> None:
         if metrics["statistically_significant"]
         else "⚠️ Not Statistically Significant"
     )
-    report_md = f"""# 📊 Faction Vocabulary Divergence Analysis
+    report_md = f"""# 📊 Corpus Vocabulary Divergence Analysis
 
 ## Executive Summary
 - **Jensen-Shannon Divergence (JSD):** `{metrics['jsd']}` (Scale 0–1)
