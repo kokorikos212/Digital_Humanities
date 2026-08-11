@@ -305,6 +305,8 @@ UI_CSS = """
 footer { display: none !important; }
 #title { text-align: center; margin-bottom: 0; }
 #subtitle { text-align: center; color: #888; margin-top: 0; }
+.terminal-box { max-height: 53em !important; overflow-y: auto !important; }
+.terminal-box pre { max-height: 53em !important; overflow-y: auto !important; }
 """
 
 
@@ -757,7 +759,7 @@ ls documents/
                     # Right: Text Terminal (single-shot bash with stateful cwd)
                     with gr.Column(scale=1):
                         gr.Markdown("### 💻 Bash Terminal")
-                        terminal_output = gr.Code(label="Output", lines=52, interactive=False)
+                        terminal_output = gr.Code(label="Output", lines=6, interactive=False, elem_classes="terminal-box")
                         with gr.Row():
                             terminal_input = gr.Textbox(
                                 label="Command", placeholder="e.g. ls -la, pwd, cat readme.md",
