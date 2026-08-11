@@ -1,5 +1,5 @@
----
-title: Agentic Linguistic Analysis & Semantic Graphs
+Markdown---
+title: Talos Agentic Discourse Analysis Engine
 emoji: 🕸️
 colorFrom: blue
 colorTo: purple
@@ -9,7 +9,7 @@ python_version: "3.10"
 app_file: app.py
 fullWidth: true
 header: mini
-short_description: Discourse to RDF graphs and Obsidian vaults via DeepSeek
+short_description: Discourse to RDF knowledge graphs and Obsidian vaults via DeepSeek
 tags:
   - nlp
   - knowledge-graph
@@ -20,151 +20,117 @@ disable_embedding: false
 pinned: false
 ---
 
-# Agentic Ontological Discourse Analysis
+# 🏛️ Talos: Agentic Discourse Extraction Engine for Democratic Deliberation
 
-[![Python 3.10+](https://img.shields.io/badge/python-3.10+-3776AB.svg?style=flat-square&logo=python&logoColor=white)](https://www.python.org/)
-[![Gradio UI](https://img.shields.io/badge/Gradio-Live_Demo-orange.svg?style=flat-square)](https://nospadiss-agentic-linguistic-analysis.hf.space)
-[![RDF/OWL](https://img.shields.io/badge/Ontology-RDF%2FTurtle-blue.svg?style=flat-square)](https://www.w3.org/TR/turtle/)
-[![License: MIT](https://img.shields.io/badge/License-MIT-green.svg?style=flat-square)](LICENSE)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10+-blue.svg)](https://www.python.org/downloads/)
+[![Gradio](https://img.shields.io/badge/UI-Gradio%204.44.1-orange.svg)](app.py)
+[![RDF Standards](https://img.shields.io/badge/RDF-W3C%20Compliant-green.svg)](https://www.w3.org/TR/prov-o/)
 
-An interdisciplinary framework bridging **Computational Linguistics**, **Knowledge Representation (RDF/OWL)**, and **Agentic LLM Workflows**. The pipeline autonomously extracts structured semantic networks from natural language text and serializes discourse into interactive knowledge graphs and Obsidian graph vaults.
-
-Originally presented at the **Semantic Annotation for the Ancient World (SAW 2026)** conference at the University of Crete.
-
-[**Live Interactive Demo**](https://nospadiss-agentic-linguistic-analysis.hf.space) &nbsp;|&nbsp; [**GitHub Pages Portfolio**](https://kokorikos212.github.io/Digital_Humanities/) &nbsp;|&nbsp; [**Research Poster (PDF)**](resources/poster.pdf)
+An interdisciplinary framework integrating **Computational Social Science**, **Semantic Web Technologies (RDF/OWL)**, and **Agentic LLM Workflows**. **Talos** translates unstructured deliberative text—such as student assembly minutes, parliamentary debates, and structured notes—into deterministic, fully-connected RDF knowledge graphs $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \mathcal{L})$, interactive PyVis networks, and Obsidian knowledge vaults.
 
 ---
 
-## Architectural Workflow
+## 🌟 Key Features
+
+* **Multi-Tenant Sandboxed Workspaces:** Complete user registration, login authentication, and project isolation (`data/users/{uid}/projects/{pid}/`) ensuring secure data handling.
+* **Micro-Ontology Synthesis Stack:** Combines **IBIS**, **AIF**, **SKOS**, **PROV-O**, and **Schema.org** to eliminate custom ontology silos and represent complex discourse topologies.
+* **Deterministic Pipeline Invariants:** Five post-processing invariants guarantee 100% single-component graph connectivity, speech-act filtering, and canonical URI resolution.
+* **Pre-Computed Benchmark Suite & SPARQL Engine:** Instant loading of verified case study graphs with an in-browser SPARQL query execution suite for thesis metrics (Node Divergence $D_{\text{nd}}$ and Hub Centrality $W_{\text{hub}}$).
+* **Embedded PTY Linux Terminal & File Manager:** Web-based `xterm.js` terminal over WebSockets with file browser, direct upload/zip-download capabilities, and CLI tool support (including Claude Code integration).
+* **Interactive Talos Viewer:** Client-side graph physics visualization with node filtering, freeze-canvas controls, wildcard searching, and live node deletion.
+
+---
+
+## 🏗️ System Architecture
 
 ```text
-               +-------------------------------------------------------+
-               |                  Unstructured Text                    |
-               +---------------------------+---------------------------+
-                                           |
-                                           v
-               +-------------------------------------------------------+
-               |              DeepSeek Agent Orchestrator             |
-               +---------------------------+---------------------------+
-                                           |
-                   +-----------------------+-----------------------+
-                   |                       |                       |
-                   v                       v                       v
-        +---------------------+ +---------------------+ +---------------------+
-        |  Linguistic Tool    | |   RDF Serializer    | | Pyvis Network Graph |
-        |  (spaCy POS/NER)    | |  (rdflib Turtle)    | |  (Interactive HTML) |
-        +----------+----------+ +----------+----------+ +----------+----------+
-                   |                       |                       |
-                   +-----------------------+-----------------------+
-                                           |
-                                           v
-               +-------------------------------------------------------+
-               |        Obsidian Vault Node Generation ([[links]])    |
-               +-------------------------------------------------------+
-```
-
-## Technical Highlights
-
-- **Dynamic Tool Gating:** The agent toolset is conditionally initialized at runtime based on user selection, preventing redundant computation during API execution.
-- **Formal Semantic Serialization:** Generates valid RDF/Turtle triples with predefined namespaces (`owl:`, `rdf:`, `rdfs:`, custom domain ontologies).
-- **Obsidian Graph Integration:** Generates `.md` notes complete with YAML frontmatter metadata and `[[wikilinks]]` for direct graph visualization inside Obsidian.
-- **Deterministic Output Contract:** Employs Pydantic schemas (`OntologicalAnalysis`) to guarantee structured outputs across agent execution cycles.
-
-## Tool Dispatch Registry
-
-The agent autonomously orchestrates execution across a modular tool suite:
-
-| Component | Class / Module | Primary Responsibility | Target Output |
-|-----------|---------------|----------------------|---------------|
-| Linguistics | `LinguisticTools` | POS tagging, dependency trees, NER, noun chunks | Struct Dict / SVG render |
-| Triples Engine | `TripleGenerator` | Entity-relation extraction & RDF predicate binding | Turtle (.ttl) / JSON-LD |
-| Graph Visualizer | `GraphBuilder` | Semantic network construction & layout physics | Pyvis HTML network |
-| Vault Engine | `ObsidianBuilder` | Structured Markdown page generation with graph linkages | .md with [[wikilinks]] |
-| Conversation | `ConversationAnalyzer` | Utterance structure, pragmatic attributes, reply graphs | Structural JSON |
-| File Dispatch | `FolderRestrictedAgent` | Safe file persistence within project boundaries | Markdown reports |
-
-## Quickstart & Local Setup
-
-### 1. Environment Configuration
-
-```bash
-# Clone repository
-git clone https://github.com/kokorikos212/Digital_Humanities.git
+                                 [ User Input / Assembly Text ]
+                                               │
+                                               ▼
+                                   ┌───────────────────────┐
+                                   │  src/pipeline.py      │
+                                   │  DeepSeek Agent Loop  │
+                                   └───────────┬───────────┘
+                                               │ Dynamic Tool Gating
+                                               ▼
+                   ┌───────────────────────────────────────────────────────┐
+                   │                 src/tools/ Registry                   │
+                   ├───────────────┬───────────────────────┬───────────────┤
+                   │  linguistics  │       triples         │   obsidian    │
+                   │ (spaCy POS/   │ (RDFLib Multi-Graph   │ (Markdown     │
+                   │  NER/dep)     │  + Invariants I-V)    │  Wikilinks)   │
+                   └───────────────┴───────────┬───────────┴───────────────┘
+                                               │ Verified Turtle (.ttl)
+                                               ▼
+                                   ┌───────────────────────┐
+                                   │   Talos Graph Viewer  │
+                                   │ (PyVis HTML Network)  │
+                                   └───────────────────────┘
+🌐 Micro-Ontology Synthesis StackTalos maps natural language arguments across five established open standards:OntologyNamespace URICore Classes / PredicatesSystem Mapping ScopeIBIShttp://purl.org/ibis#ibis:Issue, ibis:Position, ibis:rebutsDeliberative friction, questions, stances, counter-argumentsAIFhttp://www.arg.tech/aif#aif:I-node, aif:conflicts, aif:supportsFormal argument schemes, claim reification, edge linksSKOShttp://www.w3.org/2004/02/skos/core#skos:Concept, skos:relatedInstitutional hub concepts, Mental-Tool taxonomiesPROV-Ohttp://www.w3.org/ns/prov#prov:Activity, prov:wasAssociatedWithReified speech events, provenance, agent attributionSchema.orghttp://schema.org/schema:Person, schema:Organization, schema:aboutReal-world entities, job titles, metadata, aboutness links⚙️ Deterministic Pipeline InvariantsTo guarantee valid, computable multi-graphs without floating entities or label clutter, the backend enforces five strict invariants:Entity Binding Invariant (_bind_isolated_nodes): Any degree-0 entity extracted is automatically bound to the primary ibis:Issue node via schema:about, guaranteeing 100% connected single-component graphs.Speech-Act Noise Filter: Phatic turns, polite chatter, and administrative scheduling are discarded at extraction time, restricting ibis:Position nodes to empirical/normative claims.Typed Edge Directionality: Rebuttals emit ibis:rebuts, partial concessions emit aif:supports, and compromise proposals emit ibis:reframes.Concise Label Abstraction: Restricts rdfs:label strings to 3–7 words, placing unabridged verbatim text into literal aif:claimText or schema:text nodes.Canonical URI Normalization: Resolves surface-form entity variations to unified URIs prior to graph instantiation, eliminating node duplication.📂 Repository StructurePlaintextDigital_Humanities/
+├── app.py                      # Stage-driven Gradio UI & FastAPI app server
+├── run_pipeline.py             # CLI entry point for batch graph processing
+├── requirements.txt            # Lightweight production dependencies
+├── assets/
+│   └── precomputed/            # Benchmark case assets (.ttl, .html, .md, .json)
+├── data/
+│   └── users/                  # Multi-tenant user project sandboxes
+│       └── {uid}/projects/{pid}/
+│           ├── documents/      # Raw uploaded texts and transcripts
+│           ├── notes/          # Generated Obsidian Markdown vault
+│           └── graph.ttl       # Project RDF Knowledge Graph
+└── src/
+    ├── config.py               # Dataclass configuration & environment loader
+    ├── ingestion.py            # Sandboxed file ingestion & user directory resolver
+    ├── pipeline.py             # Core LLM tool-calling orchestration engine
+    ├── prompts.py              # Invariant extraction prompts & System instructions
+    ├── queries.py              # Case-aware SPARQL query benchmark registry
+    ├── schemas.py              # Pydantic v2 schemas (OntologicalAnalysis, MentalTool)
+    └── tools/                  # Modular tool suite
+        ├── file_manager.py     # File tree browser, zip packager, and downloader
+        ├── graph.py            # PyVis interactive network visualization generator
+        ├── linguistics.py      # spaCy NLP (POS, NER, Dependency Trees)
+        ├── obsidian.py         # Obsidian Markdown vault builder
+        ├── terminal_pty.py     # xterm.js WebSocket PTY terminal engine
+        ├── triples.py          # RDFLib triple generator & Invariant binder
+        └── writer.py           # Path-restricted file persistence agent
+🚀 Quickstart & Setup1. InstallationBash# Clone the repository
+git clone [https://github.com/kokorikos212/Digital_Humanities.git](https://github.com/kokorikos212/Digital_Humanities.git)
 cd Digital_Humanities
 
-# Virtual environment & lightweight core install
+# Create virtual environment & activate
 python3 -m venv venv
 source venv/bin/activate
+
+# Install dependencies and download spaCy model
 pip install -r requirements.txt
-
-# Download spaCy language model
 python -m spacy download en_core_web_sm
-```
+2. Environment ConfigurationCreate a .env file in the project root:BashDEEPSEEK_KEY=sk-your-deepseek-api-key-here
+3. Running the Web ApplicationLaunch the interactive web portal (Auth $\rightarrow$ Project Dashboard $\rightarrow$ Workspace):Bashpython3 app.py
+Access the interface locally at http://localhost:7860.4. CLI Batch ExecutionProcess a local text file directly via the command line:Bashpython run_pipeline.py --input data/example_convo.txt --output-dir output/
+📊 Benchmark SPARQL Queries & Thesis MetricsTalos enables direct computation of computational social choice metrics using SPARQL queries over generated .ttl outputs:Node Divergence ($D_{\text{nd}}$) Baseline QueryExtracts opposing positions and asserted sub-triples across student council factions to compute semantic distance:Code snippetPREFIX ibis:   [http://purl.org/ibis#](http://purl.org/ibis#)
+PREFIX aif:    [http://www.arg.tech/aif#](http://www.arg.tech/aif#)
+PREFIX prov:   [http://www.w3.org/ns/prov#](http://www.w3.org/ns/prov#)
+PREFIX schema: [http://schema.org/](http://schema.org/)
+PREFIX rdfs:   [http://www.w3.org/2000/01/rdf-schema#](http://www.w3.org/2000/01/rdf-schema#)
 
-### 2. API Key Provisioning
+SELECT ?issueLabel ?faction1 ?pos1Label ?pos2Label
+WHERE {
+  ?issue a ibis:Issue ;
+         rdfs:label ?issueLabel .
 
-```bash
-cp .env.example .env
-# Open .env and populate DEEPSEEK_KEY=sk-...
-```
+  ?pos1 ibis:respondsTo ?issue ;
+        prov:wasAttributedTo ?faction1 ;
+        rdfs:label ?pos1Label ;
+        ibis:rebuts ?pos2 .
 
-### 3. CLI Execution
-
-```bash
-# Analyze a single statement
-python run_pipeline.py --text "Dr. Chen presented the research at Stanford University."
-
-# Analyze a conversational exchange
-python run_pipeline.py --text "Alice: Could you review my thesis?
-Bob: Of course, Alice. I'll have comments by Friday."
-```
-
-### 4. Interactive Web Interface
-
-```bash
-# Launch local Gradio dashboard
-python app.py
-```
-
-## Project Structure
-
-```text
-.
-├── app.py                     # Gradio UI application entry point
-├── run_pipeline.py            # CLI entry point wrapper
-├── requirements.txt           # Core lightweight deployment dependencies
-├── requirements-dev.txt       # Full research stack (Convokit, PyTorch)
-├── src/                       # Package core
-│   ├── config.py              # Centralized environment & path resolver
-│   ├── pipeline.py            # Agent orchestration & tool execution loop
-│   ├── schemas.py             # Pydantic data contracts
-│   ├── prompts.py             # System prompt definitions & templates
-│   ├── cli.py                 # CLI argument parsing
-│   └── tools/                 # Tool implementations
-│       ├── linguistics.py     # spaCy & displaCy integration
-│       ├── triples.py         # rdflib Turtle generation
-│       ├── graph.py           # pyvis network visualizer
-│       ├── obsidian.py        # Obsidian vault writer
-│       ├── conversation.py    # Discourse structure analyzer
-│       └── writer.py          # Sandboxed file persistence
-├── tests/                     # Offline test suite (pytest)
-└── docs/                      # GitHub Pages landing site & integration notes
-```
-
-## Academic Context & Citation
-
-Developed as part of the Digital Humanities Minor (Talos Project) at the University of Crete and presented at the **Semantic Annotation for the Ancient World (SAW 2026)** conference in Rethymno, Crete.
-
-```bibtex
-@inproceedings{mavroudis2026agentic,
-  title={Argument Modeling with Agentic Workflows for Discourse Analysis},
-  author={Mavroudis, Panagiotis},
-  booktitle={Semantic Annotation for the Ancient World (SAW 2026)},
-  year={2026},
-  organization={University of Crete & Talos AI4SSH}
+  ?pos2 ibis:respondsTo ?issue ;
+        rdfs:label ?pos2Label .
 }
-```
-
-## License
-
-Distributed under the MIT License.
+🎓 Academic Context & CitationDeveloped as part of the Digital Humanities Minor (Talos Project) at the University of Crete and presented at the Semantic Annotation for the Ancient World (SAW 2026) conference in Rethymno, Crete.Code snippet@article{talos2026discourse,
+  title={Talos: An Agentic Discourse Extraction Engine for Democratic Deliberation via Micro-Ontology Synthesis},
+  author={Department of Applied Mathematics \& Digital Humanities},
+  institution={University of Crete},
+  year={2026}
+}
+📄 LicenseDistributed under the MIT License.
