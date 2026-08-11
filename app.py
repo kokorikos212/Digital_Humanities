@@ -718,6 +718,44 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                             dl_btn = gr.Button("📥 Prepare Download", variant="secondary")
                             dl_output = gr.File(label="Download", visible=True)
 
+                        with gr.Accordion("📋 CLI Cheat Sheet", open=False):
+                            gr.Markdown("""
+**Image Transcription**
+```bash
+python -m src.cli.batch_transcribe --dir assets/ --user demo --project default
+```
+**Batch Corpus Comparison**
+```bash
+python -m src.cli.analyze_factions --dir-a corpus_a --dir-b corpus_b --out-dir results/
+```
+**Pipeline Analysis (inline text)**
+```bash
+python run_pipeline.py --text "Dr. Chen presented at Stanford." --visualize
+```
+**Pipeline Analysis (file input)**
+```bash
+python run_pipeline.py --file documents/transcript.txt --output results/
+```
+**List Available Prompts**
+```bash
+python run_pipeline.py --list-prompts
+```
+**Run Named Benchmark Prompt**
+```bash
+python run_pipeline.py --prompt bench_1_1_rebuttal --visualize
+```
+**Download Single File**
+```bash
+# Relative path from project root
+cat documents/readme.md
+```
+**Upload File via Terminal**
+```bash
+# Files uploaded via UI appear in documents/
+ls documents/
+```
+""")
+
                     # Right: Text Terminal (single-shot bash with stateful cwd)
                     with gr.Column(scale=1):
                         gr.Markdown("### 💻 Bash Terminal")
@@ -728,7 +766,6 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                                 scale=3,
                             )
                             run_cmd_btn = gr.Button("▶️ Run", variant="primary", scale=1)
-                        gr.Markdown("*Tip: use `cd` to navigate, press `Tab` for autocomplete*")
                         gr.HTML("""<script>
 (function(){
   var CMDS=['ls','pwd','cd','cat','echo','mkdir','rm','cp','mv','touch','find',
