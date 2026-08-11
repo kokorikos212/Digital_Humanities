@@ -493,6 +493,17 @@ function sendMsg(){
             )
             upload_status = gr.Textbox(label="Upload Status", interactive=False, scale=1)
 
+        # ── API Keys Settings ────────────────────────────────────────
+        with gr.Accordion("⚙️ API Keys & Settings", open=False):
+            gr.Markdown("Manage personal API keys (saved in your user sandbox).")
+            with gr.Row():
+                user_ds_key = gr.Textbox(label="DeepSeek / LLM API Key", type="password", placeholder="sk-...")
+                user_ocr_key = gr.Textbox(label="Bytez OCR API Key", type="password", placeholder="Bytez key...")
+            with gr.Row():
+                save_keys_btn = gr.Button("💾 Save Keys", variant="primary")
+                clear_keys_btn = gr.Button("🗑️ Clear Keys")
+            key_status = gr.Markdown("")
+
         # ── OCR Transcriber ──────────────────────────────────────────
         with gr.Accordion("📷 Image & Document OCR Transcriber", open=False):
             gr.Markdown("Extract or translate text from document photos & PDF scans.")
@@ -947,6 +958,28 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
 
         vocab_run.click(fn=_single_vocab, inputs=[vocab_text], outputs=[vocab_metrics, vocab_table])
         comp_run.click(fn=_comp_vocab, inputs=[comp_text_a, comp_text_b], outputs=[comp_metrics, comp_table])
+
+        # ── API Keys handlers ───────────────────────────────────────
+        from src.auth_keys import save_user_keys, resolve_api_key, mask_key
+
+        def _handle_save_keys(uid, ds, ocr):
+            msg = save_user_keys(uid, {"DEEPSEEK_KEY": ds, "BYTEZ_API_KEY": ocr})
+            return msg, mask_key(resolve_api_key(uid, "DEEPSEEK_KEY")), mask_key(resolve_api_key(uid, "BYTEZ_API_KEY"))
+
+        def _handle_clear_keys(uid):
+            save_user_keys(uid, {"DEEPSEEK_KEY": "", "BYTEZ_API_KEY": ""})
+            return "✅ Keys cleared.", "", ""
+
+        save_keys_btn.click(
+            fn=_handle_save_keys,
+            inputs=[user_state, user_ds_key, user_ocr_key],
+            outputs=[key_status, user_ds_key, user_ocr_key],
+        )
+        clear_keys_btn.click(
+            fn=_handle_clear_keys,
+            inputs=[user_state],
+            outputs=[key_status, user_ds_key, user_ocr_key],
+        )
 
         # ── OCR handlers ────────────────────────────────────────────
         def _handle_ocr(file_obj, lang):

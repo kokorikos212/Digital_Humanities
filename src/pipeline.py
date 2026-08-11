@@ -68,6 +68,7 @@ def run_pipeline(
     max_iterations: int = 30,
     model: str | None = None,
     enabled_tools: Optional[Set[str]] = None,
+    user_id: str = "",
 ) -> str:
     """Execute the agentic tool-calling loop.
 
@@ -103,10 +104,13 @@ def run_pipeline(
     if model is None:
         model = config.llm_model
 
+    # ── Resolve API key (user-saved → env → config fallback) ──────────
+    from src.auth_keys import resolve_api_key
+    active_key = resolve_api_key(user_id, "DEEPSEEK_KEY") or config.llm_api_key
+    active_url = config.llm_base_url
+
     # ── Create API client ─────────────────────────────────────────────
-    client = openai.OpenAI(
-        api_key=config.llm_api_key, base_url=config.llm_base_url
-    )
+    client = openai.OpenAI(api_key=active_key, base_url=active_url)
 
     # ── Messages ──────────────────────────────────────────────────────
     messages = [
