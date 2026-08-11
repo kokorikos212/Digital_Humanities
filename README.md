@@ -86,12 +86,16 @@ An interdisciplinary framework integrating **Computational Social Science**, **S
     ├── prompts.py              # Invariant extraction prompts & System instructions
     ├── queries.py              # Case-aware SPARQL query benchmark registry
     ├── schemas.py              # Pydantic v2 schemas (OntologicalAnalysis, MentalTool)
+    ├── cli/
+    │   ├── pipeline.py         # Pipeline CLI (text → ontology)
+    │   └── analyze_factions.py # Batch faction vocabulary divergence
     └── tools/                  # Modular tool suite
         ├── file_manager.py     # File tree browser, zip packager, and downloader
         ├── graph.py            # PyVis interactive network visualization generator
         ├── linguistics.py      # spaCy NLP (POS, NER, Dependency Trees)
         ├── obsidian.py         # Obsidian Markdown vault builder
-        ├── terminal_pty.py     # xterm.js WebSocket PTY terminal engine
+        ├── statistics.py       # Log-odds ratio, JSD, chi-square divergence
+        ├── terminal.py         # Sandboxed bash terminal engine
         ├── triples.py          # RDFLib triple generator & Invariant binder
         └── writer.py           # Path-restricted file persistence agent
 🚀 Quickstart & Setup1. InstallationBash# Clone the repository
@@ -107,7 +111,79 @@ pip install -r requirements.txt
 python -m spacy download en_core_web_sm
 2. Environment ConfigurationCreate a .env file in the project root:BashDEEPSEEK_KEY=sk-your-deepseek-api-key-here
 3. Running the Web ApplicationLaunch the interactive web portal (Auth $\rightarrow$ Project Dashboard $\rightarrow$ Workspace):Bashpython3 app.py
-Access the interface locally at http://localhost:7860.4. CLI Batch ExecutionProcess a local text file directly via the command line:Bashpython run_pipeline.py --input data/example_convo.txt --output-dir output/
+Access the interface locally at http://localhost:7860.4. CLI Batch ExecutionProcess a local text file directly via the command line:Bashpython run_pipeline.py --text "Dr. Chen presented at Stanford."
+
+---
+
+## 💻 CLI Reference
+
+Talos provides two CLI entry points for batch and headless workflows.
+
+### Pipeline Analysis (`run_pipeline.py` / `src/cli/pipeline.py`)
+
+Process a single text or file through the full ontological pipeline:
+
+```bash
+# Analyze inline text
+python run_pipeline.py --text "Dr. Chen presented the research at Stanford."
+
+# Analyze a text file
+python run_pipeline.py --file data/example_convo.txt
+
+# Use a named prompt
+python run_pipeline.py --prompt bench_1_1_rebuttal
+
+# Export the RDF graph as HTML
+python run_pipeline.py --text "..." --visualize
+
+# List all available prompts
+python run_pipeline.py --list-prompts
+
+# Full options
+python run_pipeline.py --help
+```
+
+### Faction Vocabulary Divergence (`src/cli/analyze_factions.py`)
+
+Batch-compare two directories of faction documents and export statistical reports:
+
+```bash
+# Compare faction A vs faction B corpora
+python -m src.cli.analyze_factions \
+  --dir-a factions/faction_a \
+  --dir-b factions/faction_b \
+  --out-dir analysis_results
+
+# Customize top-N discriminative terms
+python -m src.cli.analyze_factions \
+  --dir-a factions/faction_a \
+  --dir-b factions/faction_b \
+  --top-n 25
+
+# Outputs written to analysis_results/:
+#   summary.json             — JSD, chi-square p-value, cosine similarity
+#   discriminative_terms.csv — weighted log-odds z-scores
+#   divergence_report.md     — executive summary in Markdown
+```
+
+**Workflow Example:**
+
+```bash
+# 1. Create faction directories and upload documents (via UI or terminal)
+mkdir -p factions/faction_a factions/faction_b
+
+# 2. Run batch analysis from the terminal
+python -m src.cli.analyze_factions \
+  --dir-a factions/faction_a \
+  --dir-b factions/faction_b \
+  --out-dir analysis_results
+
+# 3. View results
+cat analysis_results/divergence_report.md
+```
+
+---
+
 📊 Benchmark SPARQL Queries & Thesis MetricsTalos enables direct computation of computational social choice metrics using SPARQL queries over generated .ttl outputs:Node Divergence ($D_{\text{nd}}$) Baseline QueryExtracts opposing positions and asserted sub-triples across student council factions to compute semantic distance:Code snippetPREFIX ibis:   [http://purl.org/ibis#](http://purl.org/ibis#)
 PREFIX aif:    [http://www.arg.tech/aif#](http://www.arg.tech/aif#)
 PREFIX prov:   [http://www.w3.org/ns/prov#](http://www.w3.org/ns/prov#)
