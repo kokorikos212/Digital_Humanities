@@ -53,6 +53,7 @@ from src.visualizer import render_rdf_graph
 from src.queries import PRESET_SPARQL_QUERIES, execute_sparql, get_queries_for_case, compute_ttl_metadata
 from src.precomputed import load_precomputed_asset
 from src.ingestion import save_uploaded_files
+from src.debug_utils import trace, log
 
 # ═══════════════════════════════════════════════════════════════════════════
 # Constants
@@ -67,6 +68,7 @@ DEFAULT_EXAMPLE = "bench_1_1_rebuttal"
 # ═══════════════════════════════════════════════════════════════════════════
 
 
+@trace("ANALYZE")
 def run_analysis(
     text: str,
     enable_json: bool = True,
@@ -1003,6 +1005,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         )
 
         # ── OCR handlers ────────────────────────────────────────────
+        @trace("OCR")
         def _handle_ocr(file_obj, lang, uid):
             if file_obj is None:
                 return "Please upload an image or PDF scan."
@@ -1050,6 +1053,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         # ROUTING LOGIC
         # ═══════════════════════════════════════════════════════════════
 
+        @trace("LOGIN")
         def _handle_login(u, p):
             success, msg = authenticate_user(u, p)
             if success:
@@ -1102,6 +1106,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             outputs=[dash_msg, project_dropdown],
         )
 
+        @trace("PROJECT")
         def _handle_open_project(u, proj):
             if not u or not proj:
                 return (gr.update(visible=True), gr.update(visible=False),
