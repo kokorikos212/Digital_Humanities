@@ -1,4 +1,4 @@
-Markdown---
+---
 title: Talos Agentic Discourse Analysis Engine
 emoji: 🕸️
 colorFrom: blue
@@ -67,7 +67,10 @@ An interdisciplinary framework integrating **Computational Social Science**, **S
                                    │   Talos Graph Viewer  │
                                    │ (PyVis HTML Network)  │
                                    └───────────────────────┘
-🌐 Micro-Ontology Synthesis StackTalos maps natural language arguments across five established open standards:OntologyNamespace URICore Classes / PredicatesSystem Mapping ScopeIBIShttp://purl.org/ibis#ibis:Issue, ibis:Position, ibis:rebutsDeliberative friction, questions, stances, counter-argumentsAIFhttp://www.arg.tech/aif#aif:I-node, aif:conflicts, aif:supportsFormal argument schemes, claim reification, edge linksSKOShttp://www.w3.org/2004/02/skos/core#skos:Concept, skos:relatedInstitutional hub concepts, Mental-Tool taxonomiesPROV-Ohttp://www.w3.org/ns/prov#prov:Activity, prov:wasAssociatedWithReified speech events, provenance, agent attributionSchema.orghttp://schema.org/schema:Person, schema:Organization, schema:aboutReal-world entities, job titles, metadata, aboutness links⚙️ Deterministic Pipeline InvariantsTo guarantee valid, computable multi-graphs without floating entities or label clutter, the backend enforces five strict invariants:Entity Binding Invariant (_bind_isolated_nodes): Any degree-0 entity extracted is automatically bound to the primary ibis:Issue node via schema:about, guaranteeing 100% connected single-component graphs.Speech-Act Noise Filter: Phatic turns, polite chatter, and administrative scheduling are discarded at extraction time, restricting ibis:Position nodes to empirical/normative claims.Typed Edge Directionality: Rebuttals emit ibis:rebuts, partial concessions emit aif:supports, and compromise proposals emit ibis:reframes.Concise Label Abstraction: Restricts rdfs:label strings to 3–7 words, placing unabridged verbatim text into literal aif:claimText or schema:text nodes.Canonical URI Normalization: Resolves surface-form entity variations to unified URIs prior to graph instantiation, eliminating node duplication.📂 Repository StructurePlaintextDigital_Humanities/
+🌐 Micro-Ontology Synthesis StackTalos maps natural language arguments across five established open standards:OntologyNamespace URICore Classes / PredicatesSystem Mapping ScopeIBIShttp://purl.org/ibis#ibis:Issue, ibis:Position, ibis:rebutsDeliberative friction, questions, stances, counter-argumentsAIFhttp://www.arg.tech/aif#aif:I-node, aif:conflicts, aif:supportsFormal argument schemes, claim reification, edge linksSKOShttp://www.w3.org/2004/02/skos/core#skos:Concept, skos:relatedInstitutional hub concepts, Mental-Tool taxonomiesPROV-Ohttp://www.w3.org/ns/prov#prov:Activity, prov:wasAssociatedWithReified speech events, provenance, agent attributionSchema.orghttp://schema.org/schema:Person, schema:Organization, schema:aboutReal-world entities, job titles, metadata, aboutness links⚙️ Deterministic Pipeline InvariantsTo guarantee valid, computable multi-graphs without floating entities or label clutter, the backend enforces five strict invariants:Entity Binding Invariant (_bind_isolated_nodes): Any degree-0 entity extracted is automatically bound to the primary ibis:Issue node via schema:about, guaranteeing 100% connected single-component graphs.Speech-Act Noise Filter: Phatic turns, polite chatter, and administrative scheduling are discarded at extraction time, restricting ibis:Position nodes to empirical/normative claims.Typed Edge Directionality: Rebuttals emit ibis:rebuts, partial concessions emit aif:supports, and compromise proposals emit ibis:reframes.Concise Label Abstraction: Restricts rdfs:label strings to 3–7 words, placing unabridged verbatim text into literal aif:claimText or schema:text nodes.Canonical URI Normalization: Resolves surface-form entity variations to unified URIs prior to graph instantiation, eliminating node duplication.## 📂 Repository Structure
+
+```text
+Digital_Humanities/
 ├── app.py                      # Stage-driven Gradio UI & FastAPI app server
 ├── run_pipeline.py             # CLI entry point for batch graph processing
 ├── requirements.txt            # Lightweight production dependencies
@@ -98,8 +101,13 @@ An interdisciplinary framework integrating **Computational Social Science**, **S
         ├── terminal.py         # Sandboxed bash terminal engine
         ├── triples.py          # RDFLib triple generator & Invariant binder
         └── writer.py           # Path-restricted file persistence agent
-🚀 Quickstart & Setup1. InstallationBash# Clone the repository
-git clone [https://github.com/kokorikos212/Digital_Humanities.git](https://github.com/kokorikos212/Digital_Humanities.git)
+## 🚀 Quickstart & Setup
+
+### 1. Installation
+
+```bash
+# Clone the repository
+git clone https://github.com/kokorikos212/Digital_Humanities.git
 cd Digital_Humanities
 
 # Create virtual environment & activate
@@ -109,9 +117,29 @@ source venv/bin/activate
 # Install dependencies and download spaCy model
 pip install -r requirements.txt
 python -m spacy download en_core_web_sm
-2. Environment ConfigurationCreate a .env file in the project root:BashDEEPSEEK_KEY=sk-your-deepseek-api-key-here
-3. Running the Web ApplicationLaunch the interactive web portal (Auth $\rightarrow$ Project Dashboard $\rightarrow$ Workspace):Bashpython3 app.py
-Access the interface locally at http://localhost:7860.4. CLI Batch ExecutionProcess a local text file directly via the command line:Bashpython run_pipeline.py --text "Dr. Chen presented at Stanford."
+```
+
+### 2. Environment Configuration
+
+Create a `.env` file in the project root:
+```bash
+DEEPSEEK_KEY=sk-your-deepseek-api-key-here
+```
+
+### 3. Running the Web Application
+
+Launch the interactive web portal (Auth → Project Dashboard → Workspace):
+```bash
+python3 app.py
+```
+Access the interface locally at `http://localhost:7860`.
+
+### 4. CLI Pipeline Execution
+
+Process a local text file directly via the command line:
+```bash
+python run_pipeline.py --text "Dr. Chen presented at Stanford."
+```
 
 ---
 
@@ -184,7 +212,35 @@ cat analysis_results/divergence_report.md
 
 ---
 
-📊 Benchmark SPARQL Queries & Thesis MetricsTalos enables direct computation of computational social choice metrics using SPARQL queries over generated .ttl outputs:Node Divergence ($D_{\text{nd}}$) Baseline QueryExtracts opposing positions and asserted sub-triples across student council factions to compute semantic distance:Code snippetPREFIX ibis:   [http://purl.org/ibis#](http://purl.org/ibis#)
+## 📊 Benchmark SPARQL Queries & Thesis Metrics
+
+Talos enables direct computation of computational social choice metrics using SPARQL queries over generated `.ttl` outputs.
+
+### Node Divergence ($D_{\text{nd}}$) Baseline Query
+
+Extracts opposing positions across student council factions:
+
+```sparql
+PREFIX ibis:   <http://purl.org/ibis#>
+PREFIX aif:    <http://www.arg.tech/aif#>
+PREFIX prov:   <http://www.w3.org/ns/prov#>
+PREFIX schema: <http://schema.org/>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?issueLabel ?faction1 ?pos1Label ?pos2Label
+WHERE {
+  ?issue a ibis:Issue ;
+         rdfs:label ?issueLabel .
+
+  ?pos1 ibis:respondsTo ?issue ;
+        prov:wasAttributedTo ?faction1 ;
+        rdfs:label ?pos1Label ;
+        ibis:rebuts ?pos2 .
+
+  ?pos2 ibis:respondsTo ?issue ;
+        rdfs:label ?pos2Label .
+}
+```
 PREFIX aif:    [http://www.arg.tech/aif#](http://www.arg.tech/aif#)
 PREFIX prov:   [http://www.w3.org/ns/prov#](http://www.w3.org/ns/prov#)
 PREFIX schema: [http://schema.org/](http://schema.org/)
@@ -203,10 +259,17 @@ WHERE {
   ?pos2 ibis:respondsTo ?issue ;
         rdfs:label ?pos2Label .
 }
-🎓 Academic Context & CitationDeveloped as part of the Digital Humanities Minor (Talos Project) at the University of Crete and presented at the Semantic Annotation for the Ancient World (SAW 2026) conference in Rethymno, Crete.Code snippet@article{talos2026discourse,
+## 🎓 Academic Context & Citation
+
+Developed as part of the Digital Humanities Minor (Talos Project) at the University of Crete and presented at the **Semantic Annotation for the Ancient World (SAW 2026)** conference in Rethymno, Crete.
+
+```bibtex
+@article{talos2026discourse,
   title={Talos: An Agentic Discourse Extraction Engine for Democratic Deliberation via Micro-Ontology Synthesis},
   author={Department of Applied Mathematics \& Digital Humanities},
   institution={University of Crete},
   year={2026}
 }
-📄 LicenseDistributed under the MIT License.
+## 📄 License
+
+Distributed under the MIT License.
