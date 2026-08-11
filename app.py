@@ -767,7 +767,7 @@ ls documents/
                                 scale=3,
                             )
                             run_cmd_btn = gr.Button("▶️ Run", variant="primary", scale=1)
-                        gr.HTML("""<style>.cmd-chip{display:inline-block;padding:2px 8px;margin:2px;background:#e8f0fe;color:#4a6cf7;border-radius:10px;font-size:11px;cursor:pointer;border:none}.cmd-chip:hover{background:#4a6cf7;color:#fff}</style>
+                        gr.HTML("""<style>.cmd-chip{display:inline-block;padding:2px 8px;margin:2px;background:#e8f0fe;color:#1a1a2e;border-radius:10px;font-size:11px;cursor:pointer;border:none;font-weight:500}.cmd-chip:hover{background:#1a1a2e;color:#fff}</style>
 <div style="margin-top:4px">
 <span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='ls ';t.focus()}">ls</span>
 <span class="cmd-chip" onclick="var t=document.querySelector('#terminal-cmd textarea')||document.querySelector('#terminal-cmd input');if(t){t.value+='pwd';t.focus()}">pwd</span>
