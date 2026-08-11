@@ -88,5 +88,5 @@ def compute_corpus_divergence(text_a: str, text_b: str) -> Dict[str, Any]:
         "jsd": round(jsd_val, 4),
         "chi2_p_value": round(float(p_val), 5),
         "cosine_similarity": round(cos_sim, 4),
-        "statistically_significant": p_val < 0.05,
+        "statistically_significant": bool(p_val < 0.05),
     }
