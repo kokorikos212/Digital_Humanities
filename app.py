@@ -591,18 +591,33 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                 )
 
             with gr.TabItem("📊 Vocabulary Stats"):
-                gr.Markdown("### 📊 Statistical Vocabulary Divergence")
-                with gr.Row():
-                    stat_text_a = gr.Textbox(label="Faction A Text", lines=4,
-                        placeholder="Paste faction A claims/positions here...", scale=1)
-                    stat_text_b = gr.Textbox(label="Faction B Text", lines=4,
-                        placeholder="Paste faction B claims/positions here...", scale=1)
-                with gr.Row():
-                    stat_run_btn = gr.Button("🔬 Compute Divergence", variant="primary")
-                with gr.Row():
-                    stat_metrics = gr.Markdown("")
-                gr.Markdown("#### 🔝 Discriminative Terms (Log-Odds Z-Scores)")
-                stat_table = gr.Dataframe(label="Top Terms", interactive=False)
+                with gr.Tabs():
+                    # --- Single-text analysis (feeds from main text input) ---
+                    with gr.TabItem("📄 Single Text Analysis"):
+                        gr.Markdown("Analyze the active text from the main input box.")
+                        with gr.Row():
+                            vocab_text = gr.Textbox(
+                                label="Text to Analyze", lines=6,
+                                placeholder="Paste text or use the main analysis box first...")
+                            vocab_upload = gr.UploadButton("📂 Upload Text", file_types=[".txt", ".md"], size="sm")
+                        vocab_run = gr.Button("🔬 Analyze Vocabulary", variant="primary")
+                        vocab_metrics = gr.Markdown("")
+                        vocab_table = gr.Dataframe(label="Top Discriminative Terms", interactive=False)
+
+                    # --- Comparative analysis (two corpora) ---
+                    with gr.TabItem("⚖️ Comparative Analysis"):
+                        gr.Markdown("Compare two text corpora for divergence metrics.")
+                        with gr.Row():
+                            comp_text_a = gr.Textbox(label="Corpus A", lines=4,
+                                placeholder="Paste corpus A...", scale=1)
+                            comp_text_b = gr.Textbox(label="Corpus B", lines=4,
+                                placeholder="Paste corpus B...", scale=1)
+                        with gr.Row():
+                            comp_upload_a = gr.UploadButton("📂 Upload A", file_types=[".txt", ".md"], size="sm")
+                            comp_upload_b = gr.UploadButton("📂 Upload B", file_types=[".txt", ".md"], size="sm")
+                        comp_run = gr.Button("🔬 Compute Divergence", variant="primary")
+                        comp_metrics = gr.Markdown("")
+                        comp_table = gr.Dataframe(label="Discriminative Terms (Z-Scores)", interactive=False)
 
             with gr.TabItem("🔍 SPARQL Queries"):
                 with gr.Row():
@@ -725,6 +740,10 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             fn=run_analysis,
             inputs=[text_input, chk_json, chk_rdf, chk_graph, chk_obsidian],
             outputs=[json_output, rdf_output, graph_output, obsidian_output],
+        ).then(
+            fn=lambda txt: txt,  # auto-fill vocab text
+            inputs=[text_input],
+            outputs=[vocab_text],
         ).then(
             fn=lambda: "✅ Analysis complete.",
             outputs=[status],
@@ -860,14 +879,35 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             outputs=[dl_output],
         )
 
-        def _handle_stats(ta, tb):
+        # ── Vocabulary Stats handlers ──────────────────────────────────
+
+        def _vocab_upload(file):
+            if file is None:
+                return ""
+            return Path(file.name).read_text(encoding="utf-8", errors="replace")
+
+        def _single_vocab(text):
+            import pandas as _pd
+            from src.tools.statistics import compute_log_odds_ratio
+            if not text.strip():
+                return "⚠️ No text to analyze.", _pd.DataFrame()
+            # Compare first half vs second half as proxy for discriminative
+            words = text.split()
+            mid = len(words) // 2
+            ta, tb = " ".join(words[:mid]), " ".join(words[mid:])
+            if len(ta) < 20 or len(tb) < 20:
+                ta, tb = text[:len(text)//2], text[len(text)//2:]
+            df = compute_log_odds_ratio(ta, tb, top_n=15)
+            return f"**{len(words)} words, {df.shape[0]} discriminative terms**", df
+
+        def _comp_vocab(ta, tb):
             import pandas as _pd
             from src.tools.statistics import compute_corpus_divergence, compute_log_odds_ratio
             if not ta.strip() or not tb.strip():
-                return "⚠️ Paste text for both factions.", _pd.DataFrame()
+                return "⚠️ Paste text for both corpora.", _pd.DataFrame()
             div = compute_corpus_divergence(ta, tb)
-            df = compute_log_odds_ratio(ta, tb, top_n=12)
-            sig = "✅ **Statistically significant**" if div["statistically_significant"] else "⚠️ Not significant"
+            df = compute_log_odds_ratio(ta, tb, top_n=15)
+            sig = "✅ Significant" if div["statistically_significant"] else "⚠️ Not significant"
             md = (
                 f"| Metric | Value |\n|--------|-------|\n"
                 f"| Jensen-Shannon Divergence | **{div['jsd']}** |\n"
@@ -876,11 +916,12 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             )
             return md, df
 
-        stat_run_btn.click(
-            fn=_handle_stats,
-            inputs=[stat_text_a, stat_text_b],
-            outputs=[stat_metrics, stat_table],
-        )
+        vocab_upload.upload(fn=_vocab_upload, inputs=[vocab_upload], outputs=[vocab_text])
+        comp_upload_a.upload(fn=_vocab_upload, inputs=[comp_upload_a], outputs=[comp_text_a])
+        comp_upload_b.upload(fn=_vocab_upload, inputs=[comp_upload_b], outputs=[comp_text_b])
+
+        vocab_run.click(fn=_single_vocab, inputs=[vocab_text], outputs=[vocab_metrics, vocab_table])
+        comp_run.click(fn=_comp_vocab, inputs=[comp_text_a, comp_text_b], outputs=[comp_metrics, comp_table])
 
         run_query_btn.click(
             fn=_run_query,
