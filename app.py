@@ -506,7 +506,7 @@ function sendMsg(){
             gr.Markdown("Manage personal API keys (stored in `.env` and your user sandbox).")
             with gr.Row():
                 user_ds_key = gr.Textbox(label="DeepSeek / LLM API Key", type="password", placeholder="sk-...")
-                user_ocr_key = gr.Textbox(label="Bytez OCR API Key", type="password", placeholder="Bytez key...")
+                user_ocr_key = gr.Textbox(label="OCR Token (HF)", type="password", placeholder="hf_...")
             saved_keys_info = gr.Markdown("")
             with gr.Row():
                 save_keys_btn = gr.Button("💾 Save Keys", variant="primary")
@@ -974,23 +974,23 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         def _load_keys_status(uid):
             """Return masked previews of saved keys for display."""
             ds = resolve_api_key(uid, "DEEPSEEK_KEY")
-            ocr = resolve_api_key(uid, "BYTEZ_API_KEY")
+            ocr = resolve_api_key(uid, "HF_TOKEN")
             lines = []
             if ds:
                 lines.append(f"🔑 **DeepSeek/LLM:** `{mask_key(ds)}` (saved)")
             if ocr:
-                lines.append(f"🔑 **Bytez OCR:** `{mask_key(ocr)}` (saved)")
+                lines.append(f"🔑 **OCR Token (HF):** `{mask_key(ocr)}` (saved)")
             if not lines:
                 lines.append("💡 No keys saved yet. Paste keys above and click Save.")
             return "\n".join(lines), mask_key(ds), mask_key(ocr)
 
         def _handle_save_keys(uid, ds, ocr):
-            msg = save_user_keys(uid, {"DEEPSEEK_KEY": ds, "BYTEZ_API_KEY": ocr})
+            msg = save_user_keys(uid, {"DEEPSEEK_KEY": ds, "HF_TOKEN": ocr})
             info, m_ds, m_ocr = _load_keys_status(uid)
             return msg, m_ds, m_ocr, info
 
         def _handle_clear_keys(uid):
-            save_user_keys(uid, {"DEEPSEEK_KEY": "", "BYTEZ_API_KEY": ""})
+            save_user_keys(uid, {"DEEPSEEK_KEY": "", "HF_TOKEN": ""})
             return "✅ Keys cleared.", "", "", "💡 No keys saved yet. Paste keys above and click Save."
 
         save_keys_btn.click(
@@ -1009,6 +1009,7 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
         def _handle_ocr(file_obj, lang, uid):
             if file_obj is None:
                 return "Please upload an image or PDF scan."
+            config.load_env()
             from src.tools.transcription import transcribe_document_image
             return transcribe_document_image(file_obj.name, target_language=lang, user_id=uid)
 
