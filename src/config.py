@@ -54,12 +54,34 @@ class Config:
     def verse_dir(self) -> Path:
         return self.output_dir / "verse"
 
-    # ── API settings ───────────────────────────────────────────────────
+    # ── LLM provider ────────────────────────────────────────────────────
+
+    provider: str = "deepseek"  # deepseek | huggingface | groq | ollama
+    model: str = "deepseek-chat"
+    max_iterations: int = 30
+
+    # ── Provider-specific keys & endpoints ──────────────────────────────
 
     deepseek_key: str = ""
     deepseek_base_url: str = "https://api.deepseek.com"
-    model: str = "deepseek-chat"
-    max_iterations: int = 30
+
+    huggingface_key: str = ""
+    huggingface_base_url: str = "https://api-inference.huggingface.co/models/"
+
+    groq_key: str = ""
+    groq_base_url: str = "https://api.groq.com/openai/v1"
+
+    ollama_base_url: str = "http://localhost:11434/v1"
+
+    @property
+    def api_key(self) -> str:
+        """Return the active provider's API key."""
+        return getattr(self, f"{self.provider}_key", self.deepseek_key)
+
+    @property
+    def api_base_url(self) -> str:
+        """Return the active provider's base URL."""
+        return getattr(self, f"{self.provider}_base_url", self.deepseek_base_url)
 
     # ── NLP settings ───────────────────────────────────────────────────
 
@@ -68,7 +90,10 @@ class Config:
     # ── Methods ────────────────────────────────────────────────────────
 
     def load_env(self, env_file: Path | None = None) -> None:
-        """Load ``DEEPSEEK_KEY`` from the project ``.env`` file.
+        """Load API keys from the project ``.env`` file.
+
+        Supports ``DEEPSEEK_KEY``, ``HF_TOKEN``, ``GROQ_API_KEY``,
+        ``OLLAMA_BASE_URL``, and ``BYTEZ_API_KEY``.
 
         Parameters
         ----------

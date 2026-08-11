@@ -101,7 +101,7 @@ def run_pipeline(
 
     # ── Create API client ─────────────────────────────────────────────
     client = openai.OpenAI(
-        api_key=config.deepseek_key, base_url=config.deepseek_base_url
+        api_key=config.api_key, base_url=config.api_base_url
     )
 
     # ── Messages ──────────────────────────────────────────────────────
