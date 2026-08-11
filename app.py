@@ -697,10 +697,10 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
                             interactive=False,
                         )
                         refresh_files_btn = gr.Button("🔄 Refresh")
-                        with gr.Accordion("📤 Upload Files", open=False):
+                        with gr.Accordion("📤 Upload Files / Folders", open=False):
                             upload_files = gr.File(
-                                label="Select Files",
-                                file_count="multiple",
+                                label="Select Files or Folder",
+                                file_count="directory",
                                 file_types=[".txt", ".md", ".ttl", ".json", ".pdf", ".csv", ".py"],
                             )
                             upload_subfolder = gr.Textbox(
@@ -908,9 +908,21 @@ setTimeout(function(){f.contentWindow.postMessage('talos-fit','*')},200);
             target.mkdir(parents=True, exist_ok=True)
             saved = []
             for f in files:
-                fname = _shutil.copy(str(f.name), str(target / f.name.split("/")[-1]))
-                saved.append(f.name.split("/")[-1])
-            return f"✅ Uploaded {len(saved)} file(s): {', '.join(saved)}"
+                # f.name is the full path; preserve subfolder structure
+                src = Path(f.name)
+                if not src.exists():
+                    continue
+                # Determine relative path: strip common prefix with project root
+                rel = src.relative_to(src.parent.parent) if src.parent != src.parent.parent else Path(src.name)
+                dest = target / rel.name
+                if src.is_dir():
+                    _shutil.copytree(str(src), str(dest), dirs_exist_ok=True)
+                    saved.append(f"{rel.name}/")
+                else:
+                    dest.parent.mkdir(parents=True, exist_ok=True)
+                    _shutil.copy2(str(src), str(dest))
+                    saved.append(rel.name)
+            return f"✅ Uploaded {len(saved)} item(s): {', '.join(saved[:10])}{'...' if len(saved) > 10 else ''}"
 
         upload_btn.click(
             fn=_handle_project_upload,
