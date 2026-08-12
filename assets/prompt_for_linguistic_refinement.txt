@@ -1,0 +1,42 @@
+# AGENT INITIALIZATION: Linguistic Refinements & Semantic Extraction for Democratic Data Analysis
+
+You are an expert NLP engineer and Semantic Web architect. You are working on a civic-tech data journalism and computational linguistics platform designed to analyze democratic discourse.
+
+---
+
+## 1. Project Context & Academic Mission
+
+### Thesis Topic
+**Democratic Data Analysis: Evaluating Student Union Assemblies at the University of Crete (Department of Applied Mathematics).**
+
+### Core Research Question
+*Do rival political factions produce substantive policy divergence on student-centric issues, or are practical differences minimal—leading to escalated rhetorical tones and ideological posturing to capture attention?*
+
+### Theoretical Framework
+When concrete policy proposals exhibit high semantic overlap, political entities elevate ideological framing, emotional intensity, and adversarial rhetoric. The goal of this platform is to extract, quantify, and map these linguistic dynamics from raw assembly text records.
+
+---
+
+## 2. Technical Architecture & Codebase Map
+
+The project is structured under `Digital_Humanities/`:
+
+```text
+├── app.py                     # Gradio 4.x Web Interface (tabs: JSON, Turtle, Markdown, Semantic Graph)
+├── run_pipeline.py            # Local execution script
+├── cli.py                     # Command-line entrypoint (--visualize, --render-graph)
+├── src/
+│   ├── schemas.py             # Pydantic v2 schemas (Conversation, Speaker, OntologicalEntity, etc.)
+│   ├── pipeline.py            # Core agentic extraction workflow
+│   ├── prompts.py             # System prompts and extraction instructions
+│   ├── config.py              # System configuration and environment settings
+│   ├── visualizer.py          # Refactored PyVis graph generator (render_rdf_graph)
+│   ├── Talos/                 # Legacy viewer archives
+│   └── tools/
+│       ├── conversation.py    # Utterance & pragmatics processing
+│       ├── linguistics.py     # NLP/Spacy/Transformer pipeline hooks
+│       ├── triples.py         # RDF triple extraction logic
+│       ├── obsidian.py        # Markdown frontmatter formatting
+│       ├── writer.py          # Disk I/O exporter (.json, .ttl, .html)
+│       └── utils.py           # Schema sanitization & helpers
+└── tests/                     # Pytest suite

@@ -1,0 +1,119 @@
+@prefix aif: <http://www.argumentinterchange.org/> .
+@prefix ex: <http://example.org/> .
+@prefix ibis: <http://purl.org/ibis/> .
+@prefix prov: <http://www.w3.org/ns/prov#> .
+@prefix rdfs: <http://www.w3.org/2000/01/rdf-schema#> .
+@prefix schema1: <http://schema.org/> .
+
+ex:Claim_Algorithms a ibis:Position ;
+    rdfs:label "AI agents as programming actors" ;
+    ibis:respondsTo ex:Position_AIResponsibility .
+
+ex:Claim_DecisionPoints a ibis:Position ;
+    rdfs:label "Decision-making fixed point analysis" ;
+    ibis:respondsTo ex:Position_InternetDemocracy .
+
+ex:Claim_Tools a ibis:Position ;
+    rdfs:label "Tools shape tomorrow's tools" ;
+    ibis:respondsTo ex:Position_AIToolsMotivation .
+
+ex:Concept_Abstention a schema1:Thing ;
+    rdfs:label "50 percent abstention" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Concept_Bias a schema1:Thing ;
+    rdfs:label "Political bias concept" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Event_Podcast a prov:Activity ;
+    rdfs:label "Vaxevanis podcast listening" .
+
+ex:Event_StudentAssembly a prov:Activity ;
+    rdfs:label "Student assembly session" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Organization_Maya a schema1:Organization ;
+    rdfs:label "Maya platform project" ;
+    prov:wasAssociatedWith ex:Event_MayaDesign .
+
+ex:Organization_University a schema1:Organization ;
+    rdfs:label "University community" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Person_MayaAuthor a schema1:Person ;
+    rdfs:label "Maya project author" ;
+    schema1:performer ex:Event_MayaDesign .
+
+ex:Person_Prot a schema1:Person ;
+    rdfs:label "Prot speaker" ;
+    ibis:asserts ex:Position_Democracy .
+
+ex:Person_Vaxevanis a schema1:Person ;
+    rdfs:label "Vaxevanis journalist" ;
+    prov:wasAssociatedWith ex:Event_Podcast .
+
+ex:Position_AIToolsMotivation a ibis:Position ;
+    rdfs:label "Automation reduces personal improvement incentive" ;
+    aif:supports ex:Position_AIResponsibility .
+
+ex:Position_Abstention a ibis:Position ;
+    rdfs:label "Seat denial due to abstention" ;
+    ibis:respondsTo ex:Position_Democracy ;
+    aif:conflicts ex:Concept_Abstention .
+
+ex:Position_AgentAnalysis a ibis:Position ;
+    rdfs:label "Agent RDF graph for bias detection" ;
+    ex:detects ex:Concept_Bias ;
+    ibis:respondsTo ex:Position_Thesis_DataCommunity .
+
+ex:Position_FixedPointSystem a ibis:Position ;
+    rdfs:label "Stable point needed for change" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Position_InterestInPolitics a ibis:Position ;
+    rdfs:label "Everyone serves personal interest" ;
+    schema1:about ex:Issue_StudentAssembly ;
+    prov:wasAttributedTo ex:Person_Vaxevanis .
+
+ex:Position_InternetDemocracy a ibis:Position ;
+    rdfs:label "Online democracy effectiveness question" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Position_MayaCrypto a ibis:Position ;
+    rdfs:label "Cryptocurrency rewards user contributions" ;
+    aif:supports ex:Position_MayaPlatform .
+
+ex:Position_MayaPlatform a ibis:Position ;
+    rdfs:label "Maya value through useful ideas" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Position_Thesis_DataCommunity a ibis:Position ;
+    rdfs:label "Thesis on student participation motivation" ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Event_MayaDesign a prov:Activity ;
+    rdfs:label "Maya platform design" .
+
+ex:Position_AIResponsibility a ibis:Position ;
+    rdfs:label "AI action entails human responsibility" ;
+    schema1:about ex:Issue_StudentAssembly ;
+    prov:wasAttributedTo ex:Person_Prot .
+
+ex:Position_Democracy a ibis:Position ;
+    rdfs:label "Democracy as collective voice mechanism" ;
+    ibis:asserts ex:Event_StudentAssembly ;
+    schema1:about ex:Issue_StudentAssembly .
+
+ex:Issue_StudentAssembly a ibis:Issue ;
+    rdfs:label "Student assembly participation debate" ;
+    schema1:about ex:Claim_Algorithms,
+        ex:Claim_DecisionPoints,
+        ex:Claim_Tools,
+        ex:Organization_Maya,
+        ex:Organization_University,
+        ex:Person_MayaAuthor,
+        ex:Position_Abstention,
+        ex:Position_AgentAnalysis,
+        ex:Position_FixedPointSystem,
+        ex:Position_InterestInPolitics,
+        ex:Position_MayaCrypto .

@@ -1,0 +1,44 @@
+====================================================================
+               DIGITAL HUMANITIES - LOCAL DEV SETUP
+====================================================================
+
+1. ACTIVATE VIRTUAL ENVIRONMENT
+--------------------------------------------------------------------
+Open your terminal in the project root folder and run:
+
+   source venv/bin/activate
+
+
+2. VERIFY / INSTALL DEPENDENCIES
+--------------------------------------------------------------------
+Ensure your local dependencies match the environment:
+
+   pip install -r requirements.txt
+   pip install -r requirements-dev.txt
+
+
+3. ENVIRONMENT VARIABLES (.env)
+--------------------------------------------------------------------
+Make sure you have a `.env` file in the root directory containing 
+your API credentials:
+
+   DEEPSEEK_KEY=sk-your-actual-api-key-here
+
+
+4. LAUNCH THE GRADIO APPLICATION
+--------------------------------------------------------------------
+Execute the main entry point:
+
+   python app.py
+
+Once running, open your web browser and navigate to:
+   http://127.0.0.1:7860
+
+
+5. OPTIONAL: RUN OFFLINE TEST SUITE
+--------------------------------------------------------------------
+To verify components and tools locally before making pushes:
+
+   pytest tests/ -v
+
+====================================================================

@@ -1,0 +1,225 @@
+<html>
+    <head>
+        <meta charset="utf-8">
+        
+            <script src="lib/bindings/utils.js"></script>
+            <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/dist/vis-network.min.css" integrity="sha512-WgxfT5LWjfszlPHXRmBWHkV2eceiWTOBvrKCNbdgDYTHrT2AeLCGbF4sZlZw3UMN3WtL0tGUoIAKsu8mllg/XA==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+            <script src="https://cdnjs.cloudflare.com/ajax/libs/vis-network/9.1.2/dist/vis-network.min.js" integrity="sha512-LnvoEWDFrqGHlHmDD2101OrLcbsfkrzoSpvtSQtxK3RMnRV0eOkhhBN2dXHKRrUU8p2DGRTk35n4O8nWSVe1mQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+            
+        
+<center>
+<h1></h1>
+</center>
+
+<!-- <link rel="stylesheet" href="../node_modules/vis/dist/vis.min.css" type="text/css" />
+<script type="text/javascript" src="../node_modules/vis/dist/vis.js"> </script>-->
+        <link
+          href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/css/bootstrap.min.css"
+          rel="stylesheet"
+          integrity="sha384-eOJMYsd53ii+scO/bJGFsiCZc+5NDVN2yr8+0RDqr0Ql0h+rP48ckxlpbzKgwra6"
+          crossorigin="anonymous"
+        />
+        <script
+          src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.0-beta3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-JEW9xMcG8R+pH31jmWH6WWP0WintQrMb4s7ZOdauHnUtxwoG2vI5DkLtS3qm9Ekf"
+          crossorigin="anonymous"
+        ></script>
+
+
+        <center>
+          <h1></h1>
+        </center>
+        <style type="text/css">
+
+             #mynetwork {
+                 width: 100%;
+                 height: 650px;
+                 background-color: #ffffff;
+                 border: 1px solid lightgray;
+                 position: relative;
+                 float: left;
+             }
+
+             
+
+             
+
+             
+        </style>
+    </head>
+
+
+    <body>
+        <div class="card" style="width: 100%">
+            
+            
+            
+<div style="padding:10px;background:linear-gradient(135deg,#f5f7fa 0%,#c3cfe2 100%);border:1px solid #ddd;border-radius:8px;margin-bottom:10px;box-shadow:0 2px 4px rgba(0,0,0,0.1);">
+  <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;">
+    <input type="text" id="nodeSearch" placeholder="Search node (use * as wildcard)..."
+      style="padding:6px 12px;border:1px solid #ccc;border-radius:4px;font-size:14px;min-width:200px;flex:1;max-width:300px;">
+    <button onclick="searchNode()"
+      style="padding:6px 12px;background:#4CAF50;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Search</button>
+    <button onclick="resetAll()"
+      style="padding:6px 12px;background:#2196F3;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Reset</button>
+    <button id="freezeBtn" onclick="toggleFreeze()"
+      style="padding:6px 12px;background:#F5B027;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Freeze (OFF)</button>
+    <button onclick="deleteSelectedNode()"
+      style="padding:6px 12px;background:#F54927;color:white;border:none;border-radius:4px;cursor:pointer;font-size:14px;">Delete node</button>
+  </div>
+</div>
+<style>
+  button:hover{opacity:0.8;transform:translateY(-1px);}
+  #nodeSearch:focus{outline:none;border-color:#4CAF50;box-shadow:0 0 5px rgba(76,175,80,0.3);}
+  body,html{margin:0;padding:0;height:100%;overflow:hidden;}
+  #mynetwork{height:calc(100vh - 120px)!important;width:100%!important;}
+</style>
+<script>
+  var isPhysicsEnabled=true;
+  var isDragMode=false;
+  function searchNode(){
+    var pattern=document.getElementById('nodeSearch').value;
+    if(!pattern){alert("Please enter a search term");return;}
+    var matches=[];
+    try{var regex=new RegExp(pattern.replace(/\*/g,'.*'),'i');}
+    catch(e){alert("Invalid expression: "+e.message);return;}
+    network.body.data.nodes.forEach(function(node){
+      if(regex.test(node.label)||regex.test(node.title)){
+        matches.push(node.id);
+        network.body.data.nodes.update({id:node.id,color:{background:'yellow'},font:{bold:true}});
+      }
+    });
+    if(matches.length>0){network.selectNodes(matches);network.fit({nodes:matches,animation:true});alert(matches.length+" node(s) found");}
+    else{alert("No matching nodes found.");}
+  }
+  function resetAll(){window.location.reload();}
+  function deleteSelectedNode(){
+    var selectedNodes=network.getSelectedNodes();
+    if(selectedNodes.length===0){alert("Please select a node to delete");return;}
+    if(selectedNodes.length>1){alert("Please select only one node to delete");return;}
+    if(confirm("Delete this node and all its connections?")){
+      network.body.data.edges.remove(network.getConnectedEdges(selectedNodes[0]));
+      network.body.data.nodes.remove(selectedNodes[0]);
+      network.redraw();
+    }
+  }
+  function toggleFreeze(){
+    var btn=document.getElementById('freezeBtn');
+    isPhysicsEnabled=!isPhysicsEnabled;
+    if(isPhysicsEnabled){
+      network.setOptions({physics:{enabled:true,stabilization:{iterations:100}}});
+      btn.innerHTML='Freeze (OFF)';btn.style.background='#F5B027';isDragMode=false;
+      setTimeout(function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});},200);
+    }else{
+      network.setOptions({physics:{enabled:false},edges:{smooth:{enabled:true,type:'straightCross',forceDirection:'none'}}});
+      btn.innerHTML='Freeze (ON)';btn.style.background='#F44336';isDragMode=true;
+      network.on('dragEnd',function(p){if(isDragMode&&p.nodes.length>0)network.redraw();});
+      network.on('dragging',function(p){if(isDragMode&&p.nodes.length>0)network.redraw();});
+    }
+  }
+  document.getElementById('nodeSearch').addEventListener('keypress',function(e){if(e.key==='Enter')searchNode();});
+  network.once('stabilizationIterationsDone',function(){network.fit({animation:{duration:1000,easingFunction:'easeInOutQuad'}});});
+  window.addEventListener('resize',function(){if(network){network.redraw();network.fit();}});
+  window.addEventListener('message',function(e){if(e.data==='talos-fit'){setTimeout(function(){if(network){network.fit({animation:{duration:500}})}},100);}});
+</script>
+
+<div id="mynetwork" class="card-body"></div>
+        </div>
+
+        
+        
+
+        <script type="text/javascript">
+
+              // initialize global variables.
+              var edges;
+              var nodes;
+              var allNodes;
+              var allEdges;
+              var nodeColors;
+              var originalNodes;
+              var network;
+              var container;
+              var options, data;
+              var filter = {
+                  item : '',
+                  property : '',
+                  value : []
+              };
+
+              
+
+              
+
+              // This method is responsible for drawing the graph, returns the drawn network
+              function drawGraph() {
+                  var container = document.getElementById('mynetwork');
+
+                  
+
+                  // parsing and collecting nodes and edges from the python
+                  nodes = new vis.DataSet([{"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_Thesis_DataCommunity", "label": "Thesis on stude...tion motivation", "shape": "ellipse", "title": "http://example.org/Position_Thesis_DataCommunity"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://purl.org/ibis/Position", "label": "Position", "shape": "ellipse", "title": "http://purl.org/ibis/Position"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_Abstention", "label": "Seat denial due to abstention", "shape": "ellipse", "title": "http://example.org/Position_Abstention"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Concept_Abstention", "label": "50 percent abstention", "shape": "ellipse", "title": "http://example.org/Concept_Abstention"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Issue_StudentAssembly", "label": "Student assembl...cipation debate", "shape": "ellipse", "title": "http://example.org/Issue_StudentAssembly"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://purl.org/ibis/Issue", "label": "Issue", "shape": "ellipse", "title": "http://purl.org/ibis/Issue"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Event_MayaDesign", "label": "Maya platform design", "shape": "ellipse", "title": "http://example.org/Event_MayaDesign"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://www.w3.org/ns/prov#Activity", "label": "Activity", "shape": "ellipse", "title": "http://www.w3.org/ns/prov#Activity"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Claim_DecisionPoints", "label": "Decision-making... point analysis", "shape": "ellipse", "title": "http://example.org/Claim_DecisionPoints"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Decision-making... point analysis_label_Decision-making fixed point analysis", "label": "Decision-making... point analysis", "shape": "box", "title": "Decision-making fixed point analysis"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_AIResponsibility", "label": "AI action entai... responsibility", "shape": "ellipse", "title": "http://example.org/Position_AIResponsibility"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Claim_Tools", "label": "Tools shape tomorrow\u0027s tools", "shape": "ellipse", "title": "http://example.org/Claim_Tools"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Tools shape tomorrow\u0027s tools_label_Tools shape tomorrow\u0027s tools", "label": "Tools shape tomorrow\u0027s tools", "shape": "box", "title": "Tools shape tomorrow\u0027s tools"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_FixedPointSystem", "label": "Stable point needed for change", "shape": "ellipse", "title": "http://example.org/Position_FixedPointSystem"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_AgentAnalysis", "label": "Agent RDF graph for bias detection", "shape": "ellipse", "title": "http://example.org/Position_AgentAnalysis"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Agent RDF graph for bias detection_label_Agent RDF graph for bias detection", "label": "Agent RDF graph for bias detection", "shape": "box", "title": "Agent RDF graph for bias detection"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_Democracy", "label": "Democracy as co...voice mechanism", "shape": "ellipse", "title": "http://example.org/Position_Democracy"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Thesis on stude...tion motivation_label_Thesis on student participation motivation", "label": "Thesis on stude...tion motivation", "shape": "box", "title": "Thesis on student participation motivation"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_AIToolsMotivation", "label": "Automation redu...ement incentive", "shape": "ellipse", "title": "http://example.org/Position_AIToolsMotivation"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Concept_Bias", "label": "Political bias concept", "shape": "ellipse", "title": "http://example.org/Concept_Bias"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Political bias concept_label_Political bias concept", "label": "Political bias concept", "shape": "box", "title": "Political bias concept"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_InterestInPolitics", "label": "Everyone serves personal interest", "shape": "ellipse", "title": "http://example.org/Position_InterestInPolitics"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Person_Prot", "label": "Prot speaker", "shape": "ellipse", "title": "http://example.org/Person_Prot"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Everyone serves personal interest_label_Everyone serves personal interest", "label": "Everyone serves personal interest", "shape": "box", "title": "Everyone serves personal interest"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Event_Podcast", "label": "Vaxevanis podcast listening", "shape": "ellipse", "title": "http://example.org/Event_Podcast"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Vaxevanis podcast listening_label_Vaxevanis podcast listening", "label": "Vaxevanis podcast listening", "shape": "box", "title": "Vaxevanis podcast listening"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Organization_University", "label": "University community", "shape": "ellipse", "title": "http://example.org/Organization_University"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Claim_Algorithms", "label": "AI agents as programming actors", "shape": "ellipse", "title": "http://example.org/Claim_Algorithms"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "AI agents as programming actors_label_AI agents as programming actors", "label": "AI agents as programming actors", "shape": "box", "title": "AI agents as programming actors"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_MayaCrypto", "label": "Cryptocurrency ...r contributions", "shape": "ellipse", "title": "http://example.org/Position_MayaCrypto"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_MayaPlatform", "label": "Maya value through useful ideas", "shape": "ellipse", "title": "http://example.org/Position_MayaPlatform"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Person_MayaAuthor", "label": "Maya project author", "shape": "ellipse", "title": "http://example.org/Person_MayaAuthor"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Student assembl...cipation debate_label_Student assembly participation debate", "label": "Student assembl...cipation debate", "shape": "box", "title": "Student assembly participation debate"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Person_Vaxevanis", "label": "Vaxevanis journalist", "shape": "ellipse", "title": "http://example.org/Person_Vaxevanis"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Vaxevanis journalist_label_Vaxevanis journalist", "label": "Vaxevanis journalist", "shape": "box", "title": "Vaxevanis journalist"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Organization_Maya", "label": "Maya platform project", "shape": "ellipse", "title": "http://example.org/Organization_Maya"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Maya platform project_label_Maya platform project", "label": "Maya platform project", "shape": "box", "title": "Maya platform project"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Democracy as co...voice mechanism_label_Democracy as collective voice mechanism", "label": "Democracy as co...voice mechanism", "shape": "box", "title": "Democracy as collective voice mechanism"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Person", "label": "Person", "shape": "ellipse", "title": "http://schema.org/Person"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Cryptocurrency ...r contributions_label_Cryptocurrency rewards user contributions", "label": "Cryptocurrency ...r contributions", "shape": "box", "title": "Cryptocurrency rewards user contributions"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Position_InternetDemocracy", "label": "Online democrac...veness question", "shape": "ellipse", "title": "http://example.org/Position_InternetDemocracy"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Online democrac...veness question_label_Online democracy effectiveness question", "label": "Online democrac...veness question", "shape": "box", "title": "Online democracy effectiveness question"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "University community_label_University community", "label": "University community", "shape": "box", "title": "University community"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "50 percent abstention_label_50 percent abstention", "label": "50 percent abstention", "shape": "box", "title": "50 percent abstention"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Maya value through useful ideas_label_Maya value through useful ideas", "label": "Maya value through useful ideas", "shape": "box", "title": "Maya value through useful ideas"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Thing", "label": "Thing", "shape": "ellipse", "title": "http://schema.org/Thing"}, {"color": "#DFF2FF", "font": {"color": "black"}, "id": "http://example.org/Event_StudentAssembly", "label": "Student assembly session", "shape": "ellipse", "title": "http://example.org/Event_StudentAssembly"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Student assembly session_label_Student assembly session", "label": "Student assembly session", "shape": "box", "title": "Student assembly session"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Seat denial due to abstention_label_Seat denial due to abstention", "label": "Seat denial due to abstention", "shape": "box", "title": "Seat denial due to abstention"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Automation redu...ement incentive_label_Automation reduces personal improvement incentive", "label": "Automation redu...ement incentive", "shape": "box", "title": "Automation reduces personal improvement incentive"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Maya project author_label_Maya project author", "label": "Maya project author", "shape": "box", "title": "Maya project author"}, {"color": "#FFA07A", "font": {"color": "black"}, "id": "http://schema.org/Organization", "label": "Organization", "shape": "ellipse", "title": "http://schema.org/Organization"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Prot speaker_label_Prot speaker", "label": "Prot speaker", "shape": "box", "title": "Prot speaker"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Maya platform design_label_Maya platform design", "label": "Maya platform design", "shape": "box", "title": "Maya platform design"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "Stable point needed for change_label_Stable point needed for change", "label": "Stable point needed for change", "shape": "box", "title": "Stable point needed for change"}, {"color": "#E0E0E0", "font": {"color": "black"}, "id": "AI action entai... responsibility_label_AI action entails human responsibility", "label": "AI action entai... responsibility", "shape": "box", "title": "AI action entails human responsibility"}]);
+                  edges = new vis.DataSet([{"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_Thesis_DataCommunity", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#F7DC6F", "from": "http://example.org/Position_Abstention", "label": "conflicts", "title": "http://www.argumentinterchange.org/conflicts", "to": "http://example.org/Concept_Abstention"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Issue_StudentAssembly", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Issue"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Event_MayaDesign", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://www.w3.org/ns/prov#Activity"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Claim_DecisionPoints", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Decision-making... point analysis_label_Decision-making fixed point analysis"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_AIResponsibility", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Claim_Tools", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Tools shape tomorrow\u0027s tools_label_Tools shape tomorrow\u0027s tools"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_FixedPointSystem", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_AgentAnalysis", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Agent RDF graph for bias detection_label_Agent RDF graph for bias detection"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_Democracy", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_Thesis_DataCommunity", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Thesis on stude...tion motivation_label_Thesis on student participation motivation"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Claim_Tools", "label": "respondsTo", "title": "http://purl.org/ibis/respondsTo", "to": "http://example.org/Position_AIToolsMotivation"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Concept_Bias", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Political bias concept_label_Political bias concept"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Position_InterestInPolitics"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Person_Prot", "label": "asserts", "title": "http://purl.org/ibis/asserts", "to": "http://example.org/Position_Democracy"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_InterestInPolitics", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Everyone serves personal interest_label_Everyone serves personal interest"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Event_Podcast", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Vaxevanis podcast listening_label_Vaxevanis podcast listening"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Organization_University", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Claim_Algorithms", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "AI agents as programming actors_label_AI agents as programming actors"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_Abstention", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/Position_MayaCrypto", "label": "supports", "title": "http://www.argumentinterchange.org/supports", "to": "http://example.org/Position_MayaPlatform"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Position_AgentAnalysis", "label": "respondsTo", "title": "http://purl.org/ibis/respondsTo", "to": "http://example.org/Position_Thesis_DataCommunity"}, {"arrows": "to", "color": "#85C1E9", "from": "http://example.org/Person_MayaAuthor", "label": "performer", "title": "http://schema.org/performer", "to": "http://example.org/Event_MayaDesign"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Issue_StudentAssembly", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Student assembl...cipation debate_label_Student assembly participation debate"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Position_FixedPointSystem"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_FixedPointSystem", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_AgentAnalysis", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Person_Vaxevanis", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Vaxevanis journalist_label_Vaxevanis journalist"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Organization_Maya", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Maya platform project_label_Maya platform project"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_Democracy", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Democracy as co...voice mechanism_label_Democracy as collective voice mechanism"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Person_MayaAuthor", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Position_Abstention", "label": "respondsTo", "title": "http://purl.org/ibis/respondsTo", "to": "http://example.org/Position_Democracy"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Organization_University"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Claim_Algorithms"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Claim_Tools", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_Democracy", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_MayaPlatform", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_MayaCrypto", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Cryptocurrency ...r contributions_label_Cryptocurrency rewards user contributions"}, {"arrows": "to", "color": "#4ECDC4", "from": "http://example.org/Position_AgentAnalysis", "label": "detects", "title": "http://example.org/detects", "to": "http://example.org/Concept_Bias"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_InternetDemocracy", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Online democrac...veness question_label_Online democracy effectiveness question"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Organization_University", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "University community_label_University community"}, {"arrows": "to", "color": "#98D8C8", "from": "http://example.org/Position_AIToolsMotivation", "label": "supports", "title": "http://www.argumentinterchange.org/supports", "to": "http://example.org/Position_AIResponsibility"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Position_AgentAnalysis"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Concept_Abstention", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "50 percent abstention_label_50 percent abstention"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Claim_Tools"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Position_MayaCrypto"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_InterestInPolitics", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_MayaPlatform", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Maya value through useful ideas_label_Maya value through useful ideas"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Concept_Bias", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Thing"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Claim_DecisionPoints", "label": "respondsTo", "title": "http://purl.org/ibis/respondsTo", "to": "http://example.org/Position_InternetDemocracy"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Event_StudentAssembly", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Student assembly session_label_Student assembly session"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Concept_Abstention", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Thing"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Person_MayaAuthor"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Claim_DecisionPoints"}, {"arrows": "to", "color": "#DDA0DD", "from": "http://example.org/Claim_Algorithms", "label": "respondsTo", "title": "http://purl.org/ibis/respondsTo", "to": "http://example.org/Position_AIResponsibility"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_MayaCrypto", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_Abstention", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Seat denial due to abstention_label_Seat denial due to abstention"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Organization_Maya"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Claim_DecisionPoints", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#45B7D1", "from": "http://example.org/Person_Vaxevanis", "label": "wasAssociatedWith", "title": "http://www.w3.org/ns/prov#wasAssociatedWith", "to": "http://example.org/Event_Podcast"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Position_InterestInPolitics", "label": "wasAttributedTo", "title": "http://www.w3.org/ns/prov#wasAttributedTo", "to": "http://example.org/Person_Vaxevanis"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_InterestInPolitics", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Event_StudentAssembly", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://www.w3.org/ns/prov#Activity"}, {"arrows": "to", "color": "#45B7D1", "from": "http://example.org/Organization_Maya", "label": "wasAssociatedWith", "title": "http://www.w3.org/ns/prov#wasAssociatedWith", "to": "http://example.org/Event_MayaDesign"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Concept_Bias", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Event_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_AIToolsMotivation", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Automation redu...ement incentive_label_Automation reduces personal improvement incentive"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Concept_Abstention", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Issue_StudentAssembly", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Position_Abstention"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Person_MayaAuthor", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Maya project author_label_Maya project author"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Organization_Maya", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Organization"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Claim_Algorithms", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Person_Prot", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Prot speaker_label_Prot speaker"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_AIToolsMotivation", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#96CEB4", "from": "http://example.org/Position_AIResponsibility", "label": "wasAttributedTo", "title": "http://www.w3.org/ns/prov#wasAttributedTo", "to": "http://example.org/Person_Prot"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Event_MayaDesign", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Maya platform design_label_Maya platform design"}, {"arrows": "to", "color": "#BB8FCE", "from": "http://example.org/Position_Democracy", "label": "asserts", "title": "http://purl.org/ibis/asserts", "to": "http://example.org/Event_StudentAssembly"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Organization_University", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Organization"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_InternetDemocracy", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_FixedPointSystem", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "Stable point needed for change_label_Stable point needed for change"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Person_Vaxevanis", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_Thesis_DataCommunity", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_MayaPlatform", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Person_Prot", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://schema.org/Person"}, {"arrows": "to", "color": "#FFEAA7", "from": "http://example.org/Position_AIResponsibility", "label": "about", "title": "http://schema.org/about", "to": "http://example.org/Issue_StudentAssembly"}, {"arrows": "to", "color": "#F8C471", "from": "http://example.org/Position_AIResponsibility", "label": "label", "title": "http://www.w3.org/2000/01/rdf-schema#label", "to": "AI action entai... responsibility_label_AI action entails human responsibility"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Position_InternetDemocracy", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://purl.org/ibis/Position"}, {"arrows": "to", "color": "#FF6B6B", "from": "http://example.org/Event_Podcast", "label": "type", "title": "http://www.w3.org/1999/02/22-rdf-syntax-ns#type", "to": "http://www.w3.org/ns/prov#Activity"}]);
+
+                  nodeColors = {};
+                  allNodes = nodes.get({ returnType: "Object" });
+                  for (nodeId in allNodes) {
+                    nodeColors[nodeId] = allNodes[nodeId].color;
+                  }
+                  allEdges = edges.get({ returnType: "Object" });
+                  // adding nodes and edges to the graph
+                  data = {nodes: nodes, edges: edges};
+
+                  var options = {
+    "configure": {
+        "enabled": false
+    },
+    "edges": {
+        "color": {
+            "inherit": true
+        },
+        "smooth": {
+            "enabled": true,
+            "type": "dynamic"
+        }
+    },
+    "interaction": {
+        "dragNodes": true,
+        "hideEdgesOnDrag": false,
+        "hideNodesOnDrag": false
+    },
+    "physics": {
+        "enabled": true,
+        "stabilization": {
+            "enabled": true,
+            "fit": true,
+            "iterations": 1000,
+            "onlyDynamicEdges": false,
+            "updateInterval": 50
+        }
+    }
+};
+
+                  
+
+
+                  
+
+                  network = new vis.Network(container, data, options);
+
+                  
+
+                  
+
+                  
+
+
+                  
+
+                  return network;
+
+              }
+              drawGraph();
+        </script>
+    </body>
+</html>
