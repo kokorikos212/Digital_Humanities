@@ -15,8 +15,6 @@ tags:
   - knowledge-graph
   - rdf
   - deepseek
-  - digital-humanities
-  - computational-social-science
 disable_embedding: false
 pinned: false
 ---
