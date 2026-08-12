@@ -9,13 +9,14 @@ python_version: "3.10"
 app_file: app.py
 fullWidth: true
 header: mini
-short_description: Discourse to RDF graphs and Obsidian vaults via DeepSeek
+short_description: Discourse to RDF graphs, statistics, and Obsidian vaults
 tags:
   - nlp
   - knowledge-graph
   - rdf
   - deepseek
   - digital-humanities
+  - computational-social-science
 disable_embedding: false
 pinned: false
 ---
@@ -27,18 +28,21 @@ pinned: false
 [![Gradio](https://img.shields.io/badge/UI-Gradio%204.44.1-orange.svg)](app.py)
 [![RDF Standards](https://img.shields.io/badge/RDF-W3C%20Compliant-green.svg)](https://www.w3.org/TR/prov-o/)
 
-An interdisciplinary framework integrating **Computational Social Science**, **Semantic Web Technologies (RDF/OWL)**, and **Agentic LLM Workflows**. **Talos** translates unstructured deliberative text—such as student assembly minutes, parliamentary debates, and structured notes—into deterministic, fully-connected RDF knowledge graphs $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \mathcal{L})$, interactive PyVis networks, and Obsidian knowledge vaults.
+An interdisciplinary framework integrating **Computational Social Science**, **Linguistic Statistics**, **Semantic Web Technologies (RDF/OWL)**, and **Agentic LLM Workflows**. **Talos** translates unstructured deliberative text—such as student assembly minutes, parliamentary debates, and structured notes—into deterministic, fully-connected RDF knowledge graphs $\mathcal{G} = (\mathcal{V}, \mathcal{E}, \mathcal{L})$, interactive PyVis networks, statistical divergence reports, and Obsidian knowledge vaults.
 
 ---
 
 ## 🌟 Key Features
 
-* **Multi-Tenant Sandboxed Workspaces:** Complete user registration, login authentication, and project isolation (`data/users/{uid}/projects/{pid}/`) ensuring secure data handling.
+* **Multi-Tenant Sandboxed Workspaces:** Complete user registration, login authentication, and project isolation (`data/users/{uid}/projects/{pid}/`) ensuring secure data handling and persistent session state.
 * **Micro-Ontology Synthesis Stack:** Combines **IBIS**, **AIF**, **SKOS**, **PROV-O**, and **Schema.org** to eliminate custom ontology silos and represent complex discourse topologies.
-* **Deterministic Pipeline Invariants:** Five post-processing invariants guarantee 100% single-component graph connectivity, speech-act filtering, and canonical URI resolution.
-* **Pre-Computed Benchmark Suite & SPARQL Engine:** Instant loading of verified case study graphs with an in-browser SPARQL query execution suite for thesis metrics (Node Divergence $D_{\text{nd}}$ and Hub Centrality $W_{\text{hub}}$).
-* **Embedded PTY Linux Terminal & File Manager:** Web-based `xterm.js` terminal over WebSockets with file browser, direct upload/zip-download capabilities, and CLI tool support (including Claude Code integration).
-* **Interactive Talos Viewer:** Client-side graph physics visualization with node filtering, freeze-canvas controls, wildcard searching, and live node deletion.
+* **Context-Agnostic Vocabulary Engine:**
+  * *Single Text Analysis:* Auto-populates from workspace text (or manual `.txt`/`.md` file uploads) and splits corpus halves to isolate internal term imbalances via Weighted Log-Odds ($z$-scores) with uninformative Dirichlet priors.
+  * *Comparative Corpus Analysis:* Ingests dual text corpora to calculate Jensen-Shannon Divergence ($JSD \in [0, 1]$), Pearson's Chi-Square ($\chi^2$) independence test ($p$-value), Vector Cosine Similarity, and discriminative term tables.
+* **Five Deterministic Pipeline Invariants:** Automated post-processing guarantees 100% single-component graph connectivity, speech-act noise filtering, typed edge directionality, label abstraction, and canonical URI resolution.
+* **Pre-Computed Benchmark Suite & Interactive SPARQL Runner:** Instant loading of verified case study graphs with an in-browser SPARQL query execution suite for thesis metrics (Node Divergence $D_{\text{nd}}$ and Hub Centrality $W_{\text{hub}}$).
+* **Embedded PTY Linux Terminal & File Manager:** Web-based `xterm.js` terminal over WebSockets with a file tree browser, direct upload/zip-download capabilities, and CLI batch tools (`src/cli/analyze_factions.py`).
+* **Interactive Talos Graph Viewer:** Client-side graph physics visualization with node filtering, freeze-canvas controls, wildcard searching, and live node deletion.
 
 ---
 
@@ -52,22 +56,52 @@ An interdisciplinary framework integrating **Computational Social Science**, **S
                                    │  src/pipeline.py      │
                                    │  DeepSeek Agent Loop  │
                                    └───────────┬───────────┘
-                                               │ Dynamic Tool Gating
+                                               │ Dynamic Output Checkboxes
                                                ▼
-                   ┌───────────────────────────────────────────────────────┐
-                   │                 src/tools/ Registry                   │
-                   ├───────────────┬───────────────────────┬───────────────┤
-                   │  linguistics  │       triples         │   obsidian    │
-                   │ (spaCy POS/   │ (RDFLib Multi-Graph   │ (Markdown     │
-                   │  NER/dep)     │  + Invariants I-V)    │  Wikilinks)   │
-                   └───────────────┴───────────┬───────────┴───────────────┘
-                                               │ Verified Turtle (.ttl)
-                                               ▼
-                                   ┌───────────────────────┐
-                                   │   Talos Graph Viewer  │
-                                   │ (PyVis HTML Network)  │
-                                   └───────────────────────┘
-🌐 Micro-Ontology Synthesis StackTalos maps natural language arguments across five established open standards:OntologyNamespace URICore Classes / PredicatesSystem Mapping ScopeIBIShttp://purl.org/ibis#ibis:Issue, ibis:Position, ibis:rebutsDeliberative friction, questions, stances, counter-argumentsAIFhttp://www.arg.tech/aif#aif:I-node, aif:conflicts, aif:supportsFormal argument schemes, claim reification, edge linksSKOShttp://www.w3.org/2004/02/skos/core#skos:Concept, skos:relatedInstitutional hub concepts, Mental-Tool taxonomiesPROV-Ohttp://www.w3.org/ns/prov#prov:Activity, prov:wasAssociatedWithReified speech events, provenance, agent attributionSchema.orghttp://schema.org/schema:Person, schema:Organization, schema:aboutReal-world entities, job titles, metadata, aboutness links⚙️ Deterministic Pipeline InvariantsTo guarantee valid, computable multi-graphs without floating entities or label clutter, the backend enforces five strict invariants:Entity Binding Invariant (_bind_isolated_nodes): Any degree-0 entity extracted is automatically bound to the primary ibis:Issue node via schema:about, guaranteeing 100% connected single-component graphs.Speech-Act Noise Filter: Phatic turns, polite chatter, and administrative scheduling are discarded at extraction time, restricting ibis:Position nodes to empirical/normative claims.Typed Edge Directionality: Rebuttals emit ibis:rebuts, partial concessions emit aif:supports, and compromise proposals emit ibis:reframes.Concise Label Abstraction: Restricts rdfs:label strings to 3–7 words, placing unabridged verbatim text into literal aif:claimText or schema:text nodes.Canonical URI Normalization: Resolves surface-form entity variations to unified URIs prior to graph instantiation, eliminating node duplication.## 📂 Repository Structure
+     ┌──────────────────────────────────────────────────────────────────────────────────┐
+     │                             src/tools/ Registry                                  │
+     ├───────────────┬───────────────────────┬───────────────┬──────────────────────────┤
+     │  linguistics  │       triples         │   obsidian    │        statistics        │
+     │ (spaCy POS/   │ (RDFLib Multi-Graph   │ (Markdown     │ (Monroe Dirichlet        │
+     │  NER/dep)     │  + Invariants I-V)    │  Wikilinks)   │  Log-Odds, JSD, Chi-Sq)  │
+     └───────────────┴───────────┬───────────┴───────────────┴──────────────────────────┘
+                                 │
+                                 ▼
+                     ┌───────────────────────┐
+                     │   Talos Graph Viewer  │
+                     │ (PyVis HTML Network)  │
+                     └───────────────────────┘
+```
+
+---
+
+## 🌐 Micro-Ontology Synthesis Stack
+
+Talos maps natural language arguments across five established open standards:
+
+| Ontology | Namespace URI | Core Classes / Predicates | System Mapping Scope |
+|----------|--------------|---------------------------|---------------------|
+| **IBIS** | `http://purl.org/ibis#` | `ibis:Issue`, `ibis:Position`, `ibis:rebuts` | Deliberative friction, questions, stances, counter-arguments |
+| **AIF** | `http://www.arg.tech/aif#` | `aif:I-node`, `aif:conflicts`, `aif:supports` | Formal argument schemes, claim reification, edge links |
+| **SKOS** | `http://www.w3.org/2004/02/skos/core#` | `skos:Concept`, `skos:related` | Institutional hub concepts, Mental-Tool taxonomies |
+| **PROV-O** | `http://www.w3.org/ns/prov#` | `prov:Activity`, `prov:wasAssociatedWith` | Reified speech events, provenance, agent attribution |
+| **Schema.org** | `http://schema.org/` | `schema:Person`, `schema:Organization`, `schema:about` | Real-world entities, job titles, metadata, aboutness links |
+
+---
+
+## ⚙️ Deterministic Pipeline Invariants
+
+To guarantee valid, computable multi-graphs without floating entities or label clutter, the backend enforces five strict invariants:
+
+1. **Entity Binding Invariant** (`_bind_isolated_nodes`): Any degree-0 entity extracted is automatically bound to the primary `ibis:Issue` node via `schema:about`, guaranteeing 100% connected single-component graphs.
+2. **Speech-Act Noise Filter**: Phatic turns, polite chatter, and administrative scheduling are discarded at extraction time, restricting `ibis:Position` nodes to empirical/normative claims.
+3. **Typed Edge Directionality**: Rebuttals emit `ibis:rebuts`, partial concessions emit `aif:supports`, and compromise proposals emit `ibis:reframes`.
+4. **Concise Label Abstraction**: Restricts `rdfs:label` strings to 3–7 words, placing unabridged verbatim text into literal `aif:claimText` or `schema:text` nodes.
+5. **Canonical URI Normalization**: Resolves surface-form entity variations to unified URIs prior to graph instantiation, eliminating node duplication.
+
+---
+
+## 📂 Repository Structure
 
 ```text
 Digital_Humanities/
@@ -89,18 +123,25 @@ Digital_Humanities/
     ├── prompts.py              # Invariant extraction prompts & System instructions
     ├── queries.py              # Case-aware SPARQL query benchmark registry
     ├── schemas.py              # Pydantic v2 schemas (OntologicalAnalysis, MentalTool)
+    ├── analytics/
+    │   └── health_diagnostics.py # Microdemocratic health metrics & path analysis
     ├── cli/
-    │   ├── pipeline.py         # Pipeline CLI (text → ontology)
-    │   └── analyze_factions.py # Batch faction vocabulary divergence
+    │   ├── analyze_factions.py # CLI batch vocabulary divergence engine
+    │   └── metrics.py          # Standalone CLI metrics wrapper
     └── tools/                  # Modular tool suite
         ├── file_manager.py     # File tree browser, zip packager, and downloader
         ├── graph.py            # PyVis interactive network visualization generator
         ├── linguistics.py      # spaCy NLP (POS, NER, Dependency Trees)
         ├── obsidian.py         # Obsidian Markdown vault builder
-        ├── statistics.py       # Log-odds ratio, JSD, chi-square divergence
+        ├── semantics.py        # Micro-ontology mapping layer (IBIS/AIF/SKOS)
+        ├── statistics.py       # Dirichlet Log-Odds, JSD, Chi-Square engine
         ├── terminal.py         # Sandboxed bash terminal engine
         ├── triples.py          # RDFLib triple generator & Invariant binder
         └── writer.py           # Path-restricted file persistence agent
+```
+
+---
+
 ## 🚀 Quickstart & Setup
 
 ### 1. Installation
@@ -122,6 +163,7 @@ python -m spacy download en_core_web_sm
 ### 2. Environment Configuration
 
 Create a `.env` file in the project root:
+
 ```bash
 DEEPSEEK_KEY=sk-your-deepseek-api-key-here
 ```
@@ -129,85 +171,28 @@ DEEPSEEK_KEY=sk-your-deepseek-api-key-here
 ### 3. Running the Web Application
 
 Launch the interactive web portal (Auth → Project Dashboard → Workspace):
+
 ```bash
 python3 app.py
 ```
+
 Access the interface locally at `http://localhost:7860`.
 
-### 4. CLI Pipeline Execution
+### 4. CLI Batch Execution
 
-Process a local text file directly via the command line:
+**A. Graph Extraction Pipeline** — Process a local text file directly via the command line:
+
 ```bash
-python run_pipeline.py --text "Dr. Chen presented at Stanford."
+python run_pipeline.py --input data/example_convo.txt --output-dir output/
 ```
 
----
-
-## 💻 CLI Reference
-
-Talos provides two CLI entry points for batch and headless workflows.
-
-### Pipeline Analysis (`run_pipeline.py` / `src/cli/pipeline.py`)
-
-Process a single text or file through the full ontological pipeline:
+**B. Terminal Batch Statistical Divergence Analysis** — Analyze two document directories:
 
 ```bash
-# Analyze inline text
-python run_pipeline.py --text "Dr. Chen presented the research at Stanford."
-
-# Analyze a text file
-python run_pipeline.py --file data/example_convo.txt
-
-# Use a named prompt
-python run_pipeline.py --prompt bench_1_1_rebuttal
-
-# Export the RDF graph as HTML
-python run_pipeline.py --text "..." --visualize
-
-# List all available prompts
-python run_pipeline.py --list-prompts
-
-# Full options
-python run_pipeline.py --help
-```
-
-### Faction Vocabulary Divergence (`src/cli/analyze_factions.py`)
-
-Batch-compare two directories of faction documents and export statistical reports:
-
-```bash
-# Compare faction A vs faction B corpora
 python -m src.cli.analyze_factions \
-  --dir-a factions/faction_a \
-  --dir-b factions/faction_b \
-  --out-dir analysis_results
-
-# Customize top-N discriminative terms
-python -m src.cli.analyze_factions \
-  --dir-a factions/faction_a \
-  --dir-b factions/faction_b \
-  --top-n 25
-
-# Outputs written to analysis_results/:
-#   summary.json             — JSD, chi-square p-value, cosine similarity
-#   discriminative_terms.csv — weighted log-odds z-scores
-#   divergence_report.md     — executive summary in Markdown
-```
-
-**Workflow Example:**
-
-```bash
-# 1. Create faction directories and upload documents (via UI or terminal)
-mkdir -p factions/faction_a factions/faction_b
-
-# 2. Run batch analysis from the terminal
-python -m src.cli.analyze_factions \
-  --dir-a factions/faction_a \
-  --dir-b factions/faction_b \
-  --out-dir analysis_results
-
-# 3. View results
-cat analysis_results/divergence_report.md
+    --dir-a data/users/default/projects/demo/factions/faction_a \
+    --dir-b data/users/default/projects/demo/factions/faction_b \
+    --out-dir analysis_results
 ```
 
 ---
@@ -218,7 +203,7 @@ Talos enables direct computation of computational social choice metrics using SP
 
 ### Node Divergence ($D_{\text{nd}}$) Baseline Query
 
-Extracts opposing positions across student council factions:
+Extracts opposing positions and asserted sub-triples across student council factions to compute semantic distance:
 
 ```sparql
 PREFIX ibis:   <http://purl.org/ibis#>
@@ -241,24 +226,30 @@ WHERE {
         rdfs:label ?pos2Label .
 }
 ```
-PREFIX aif:    [http://www.arg.tech/aif#](http://www.arg.tech/aif#)
-PREFIX prov:   [http://www.w3.org/ns/prov#](http://www.w3.org/ns/prov#)
-PREFIX schema: [http://schema.org/](http://schema.org/)
-PREFIX rdfs:   [http://www.w3.org/2000/01/rdf-schema#](http://www.w3.org/2000/01/rdf-schema#)
 
-SELECT ?issueLabel ?faction1 ?pos1Label ?pos2Label
+### Hub-Node Centrality ($W_{\text{hub}}$) SKOS Query
+
+Calculates network centrality over institutional and moral concepts:
+
+```sparql
+PREFIX skos:   <http://www.w3.org/2004/02/skos/core#>
+PREFIX rdfs:   <http://www.w3.org/2000/01/rdf-schema#>
+
+SELECT ?conceptLabel (COUNT(?connectedNode) AS ?degreeCentrality)
 WHERE {
-  ?issue a ibis:Issue ;
-         rdfs:label ?issueLabel .
+  ?concept a skos:Concept ;
+           rdfs:label ?conceptLabel .
 
-  ?pos1 ibis:respondsTo ?issue ;
-        prov:wasAttributedTo ?faction1 ;
-        rdfs:label ?pos1Label ;
-        ibis:rebuts ?pos2 .
-
-  ?pos2 ibis:respondsTo ?issue ;
-        rdfs:label ?pos2Label .
+  { ?concept ?p ?connectedNode . }
+  UNION
+  { ?connectedNode ?p2 ?concept . }
 }
+GROUP BY ?concept ?conceptLabel
+ORDER BY DESC(?degreeCentrality)
+```
+
+---
+
 ## 🎓 Academic Context & Citation
 
 Developed as part of the Digital Humanities Minor (Talos Project) at the University of Crete and presented at the **Semantic Annotation for the Ancient World (SAW 2026)** conference in Rethymno, Crete.
@@ -270,6 +261,10 @@ Developed as part of the Digital Humanities Minor (Talos Project) at the Univers
   institution={University of Crete},
   year={2026}
 }
+```
+
+---
+
 ## 📄 License
 
 Distributed under the MIT License.

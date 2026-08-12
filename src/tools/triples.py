@@ -71,6 +71,7 @@ class TripleGenerator:
     def __init__(self):
         config.ensure_output_dirs()
         self._has_rdflib = False
+        self._entity_registry: Dict[str, str] = {}  # per-instance → thread-safe
         try:
             import rdflib  # noqa: F401
 
@@ -119,8 +120,6 @@ class TripleGenerator:
 
     # ── Internals ─────────────────────────────────────────────────────
 
-    _entity_registry: Dict[str, str] = {}  # normalized label → canonical URI
-
     @staticmethod
     def _normalize_label(label: str) -> str:
         """Normalize a label to a canonical form for deduplication."""
@@ -133,9 +132,8 @@ class TripleGenerator:
         norm = norm.strip("_")
         return norm
 
-    @classmethod
-    def _canonical_id(cls, raw_id: str, label: str | None = None) -> str:
-        """Return a canonical entity ID, deduplicating via the registry.
+    def _canonical_id(self, raw_id: str, label: str | None = None) -> str:
+        """Return a canonical entity ID, deduplicating via the instance registry.
 
         If *raw_id* looks like a CURIE (contains ':'), use it as-is.
         Otherwise normalize *label* (or *raw_id*) and look up / register
@@ -151,16 +149,16 @@ class TripleGenerator:
             return raw_id
 
         # Plain string — normalize and register
-        norm = cls._normalize_label(label or raw_id)
-        if norm in cls._entity_registry:
-            return cls._entity_registry[norm]
+        norm = self._normalize_label(label or raw_id)
+        if norm in self._entity_registry:
+            return self._entity_registry[norm]
 
         # Mint a clean ex: URI
         canonical = "ex:" + "".join(
             c for c in norm.replace("_", " ").title().replace(" ", "_")
             if c.isalnum() or c == "_"
         )
-        cls._entity_registry[norm] = canonical
+        self._entity_registry[norm] = canonical
         return canonical
 
     def _build_triples(
@@ -414,3 +412,270 @@ class TripleGenerator:
 triple_generator_registry = [
     ("generate_triples", TripleGeneratorInput),
 ]
+
+
+# ── Centrality & Cognitive Distillation ────────────────────────────────────
+
+
+def compute_hub_nodes(
+    rdf_graph: "rdflib.Graph",  # noqa: F821
+    top_n: int = 5,
+) -> list:
+    r"""Calculate centrality metrics for :math:`\text{skos:Concept}` nodes.
+
+    Computes **degree centrality** :math:`C_D(v)` and **closeness
+    centrality** :math:`C_C(v)` over the subset of nodes typed as
+    ``skos:Concept``, then returns the *top_n* hub nodes ranked by
+    degree centrality (descending).
+
+    .. math::
+
+        C_D(v) = \text{deg}(v)
+
+        C_C(v) = \frac{|\mathcal{V}| - 1}
+                      {\sum_{u \neq v} d(v, u)}
+
+    For disconnected components, :math:`C_C(v) = 0.0` (the sum of
+    distances is infinite but we guard with a zero fallback).
+
+    Parameters
+    ----------
+    rdf_graph:
+        An :class:`rdflib.Graph` containing the discourse ontology.
+    top_n:
+        Number of top hub nodes to return (default 5).
+
+    Returns
+    -------
+    list[dict]
+        Each dict has keys ``node`` (URI string), ``label`` (rdfs:label),
+        ``degree_centrality`` (:math:`C_D`), ``closeness_centrality``
+        (:math:`C_C`), and ``type`` (rdf:type).  Sorted by
+        ``degree_centrality`` descending.
+
+        Returns an **empty list** if the graph has :math:`|\mathcal{V}| \le 1`
+        or contains no ``skos:Concept`` nodes.
+
+    Raises
+    ------
+    InvalidParameterError
+        If *top_n* ≤ 0.
+
+    Examples
+    --------
+    >>> from rdflib import Graph, Namespace, RDF, RDFS
+    >>> SKOS = Namespace("http://www.w3.org/2004/02/skos/core#")
+    >>> EX = Namespace("http://example.org/")
+    >>> g = Graph()
+    >>> g.add((EX.A, RDF.type, SKOS.Concept))
+    >>> g.add((EX.A, RDFS.label, "Budget"))
+    >>> g.add((EX.B, RDF.type, SKOS.Concept))
+    >>> g.add((EX.B, RDFS.label, "Housing"))
+    >>> g.add((EX.A, EX.reframes, EX.B))
+    >>> hubs = compute_hub_nodes(g, top_n=3)
+    >>> len(hubs) == 2
+    True
+    >>> hubs[0]["degree_centrality"] > 0
+    True
+    """
+    from src.analytics.health_diagnostics import InvalidParameterError
+
+    if top_n <= 0:
+        raise InvalidParameterError(
+            f"top_n must be a positive integer, got {top_n}"
+        )
+
+    try:
+        import rdflib
+        from rdflib.namespace import RDF, RDFS
+    except ImportError as exc:
+        raise ImportError(
+            "rdflib is required for hub-node centrality. "
+            "Install it with: pip install rdflib"
+        ) from exc
+
+    import networkx as nx
+
+    SKOS = rdflib.Namespace("http://www.w3.org/2004/02/skos/core#")
+
+    # ── Identify skos:Concept nodes ─────────────────────────────────────
+    concept_nodes: set = set()
+    for s in rdf_graph.subjects(RDF.type, SKOS.Concept):
+        concept_nodes.add(str(s))
+
+    if len(concept_nodes) <= 1:
+        return []
+
+    # ── Build networkx DiGraph from the RDF graph ────────────────────────
+    G = nx.DiGraph()
+    for s, p, o in rdf_graph:
+        s_str, o_str = str(s), str(o)
+        G.add_node(s_str)
+        G.add_node(o_str)
+        G.add_edge(s_str, o_str, predicate=str(p))
+
+    total_nodes = G.number_of_nodes()
+    if total_nodes <= 1:
+        return []
+
+    # ── Compute centrality for each skos:Concept ─────────────────────────
+    degree_cent = nx.degree_centrality(G)
+    try:
+        closeness_cent = nx.closeness_centrality(G)
+    except ZeroDivisionError:
+        # All nodes isolated — closeness is undefined
+        closeness_cent = {n: 0.0 for n in G.nodes()}
+
+    results: list = []
+    for node_uri in concept_nodes:
+        label = _resolve_rdf_label(rdf_graph, node_uri)
+        rdf_types = _resolve_rdf_types(rdf_graph, node_uri)
+
+        results.append({
+            "node": node_uri,
+            "label": label,
+            "degree_centrality": round(degree_cent.get(node_uri, 0.0), 6),
+            "closeness_centrality": round(closeness_cent.get(node_uri, 0.0), 6),
+            "type": rdf_types,
+        })
+
+    results.sort(key=lambda d: d["degree_centrality"], reverse=True)
+    return results[:top_n]
+
+
+def distill_cognitive_tools(
+    rdf_graph: "rdflib.Graph",  # noqa: F821
+) -> list:
+    r"""Extract reframing edge paths — the cognitive distillation filter.
+
+    Queries the RDF graph for paths matching:
+
+    .. math::
+
+        (\text{?source}) \xrightarrow{\text{ibis:reframes / ibis:resolves}}
+        (\text{?target})
+
+    These edges represent the *cognitive tool* of reframing: moments where
+    a deliberative turn synthesises or resolves a friction point rather
+    than rebutting it.  This implements an automated digital Grounded Theory
+    coding pass over the extracted ontology.
+
+    Parameters
+    ----------
+    rdf_graph:
+        An :class:`rdflib.Graph` containing the discourse ontology.
+
+    Returns
+    -------
+    list[dict]
+        Each dict has keys ``source``, ``predicate``, ``target``,
+        ``source_label``, ``target_label``, ``source_type``, ``target_type``
+        describing one reframing edge.  Empty list if no reframing edges
+        exist.
+
+    Examples
+    --------
+    >>> from rdflib import Graph, Namespace, RDF, RDFS
+    >>> IBIS = Namespace("http://purl.org/ibis#")
+    >>> EX = Namespace("http://example.org/")
+    >>> g = Graph()
+    >>> g.add((EX.StudentObs, IBIS.reframes, EX.Issue_Budget))
+    >>> g.add((EX.StudentObs, RDF.type, EX.StudentObservation))
+    >>> g.add((EX.Issue_Budget, RDF.type, IBIS.Issue))
+    >>> paths = distill_cognitive_tools(g)
+    >>> len(paths) == 1
+    True
+    >>> paths[0]["predicate"] == "http://purl.org/ibis#reframes"
+    True
+    """
+    try:
+        import rdflib
+        from rdflib.namespace import RDF
+    except ImportError as exc:
+        raise ImportError(
+            "rdflib is required for cognitive-tool distillation. "
+            "Install it with: pip install rdflib"
+        ) from exc
+
+    IBIS = rdflib.Namespace("http://purl.org/ibis#")
+
+    reframing_predicates = [
+        IBIS.reframes,
+        IBIS.resolves,
+        # Also match full URIs in case prefixes aren't bound
+        rdflib.URIRef("http://purl.org/ibis#reframes"),
+        rdflib.URIRef("http://purl.org/ibis#resolves"),
+    ]
+
+    # Deduplicate while preserving order
+    seen: set = set()
+    unique_preds = []
+    for p in reframing_predicates:
+        if p not in seen:
+            seen.add(p)
+            unique_preds.append(p)
+
+    results: list = []
+    for pred in unique_preds:
+        for s, o in rdf_graph.subject_objects(pred):
+            s_str, o_str = str(s), str(o)
+            results.append({
+                "source": s_str,
+                "predicate": str(pred),
+                "target": o_str,
+                "source_label": _resolve_rdf_label(rdf_graph, s_str),
+                "target_label": _resolve_rdf_label(rdf_graph, o_str),
+                "source_type": _resolve_rdf_types(rdf_graph, s_str),
+                "target_type": _resolve_rdf_types(rdf_graph, o_str),
+            })
+
+    return results
+
+
+# ── RDF utility helpers ────────────────────────────────────────────────────
+
+
+def _resolve_rdf_label(
+    graph: "rdflib.Graph",  # noqa: F821
+    uri_str: str,
+) -> str:
+    """Resolve the ``rdfs:label`` for a URI node, falling back to its local name."""
+    try:
+        import rdflib
+        from rdflib.namespace import RDFS
+    except ImportError:
+        return uri_str.rsplit("/", 1)[-1].rsplit("#", 1)[-1] if "/" in uri_str or "#" in uri_str else uri_str
+
+    try:
+        uri = rdflib.URIRef(uri_str)
+    except Exception:
+        return uri_str
+
+    for label in graph.objects(uri, RDFS.label):
+        return str(label)
+
+    # Fallback: local name
+    if "#" in uri_str:
+        return uri_str.rsplit("#", 1)[-1]
+    if "/" in uri_str:
+        return uri_str.rsplit("/", 1)[-1]
+    return uri_str
+
+
+def _resolve_rdf_types(
+    graph: "rdflib.Graph",  # noqa: F821
+    uri_str: str,
+) -> list:
+    """Return the list of ``rdf:type`` values for a URI node."""
+    try:
+        import rdflib
+        from rdflib.namespace import RDF
+    except ImportError:
+        return []
+
+    try:
+        uri = rdflib.URIRef(uri_str)
+    except Exception:
+        return []
+
+    return [str(t) for t in graph.objects(uri, RDF.type)]
